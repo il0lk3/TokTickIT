@@ -9,9 +9,7 @@ describe("App", () => {
     expect(screen.getByText(/TokTickIT/i)).toBeInTheDocument();
   });
 
-  // Issue 4 — write these yourself. Hint: mock the api module with
-  // vi.spyOn(api, "checkSystem").mockResolvedValue(...) / .mockRejectedValue(...)
-  // then click the button and assert the Online list / Offline message.
+
   it("shows Online and the seeded categories on success", async () => {
     vi.spyOn(api, "checkSystem").mockResolvedValue({
       online: true,
