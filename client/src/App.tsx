@@ -16,6 +16,8 @@ export default function App() {
       if (result.online) {
         setCategories(result.categories);
         setState("success");
+      } else {
+        setState("error");
       }
     } catch (err) {
       setState("error");
