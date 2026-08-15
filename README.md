@@ -1,5 +1,3 @@
-# TokTickIT 
-
 ## Database Setup
 This project uses PostgreSQL and Prisma for database management.
 
@@ -15,5 +13,6 @@ To create the database tables and insert initial seed data (Categories), navigat
 ```bash
 cd server
 npx prisma migrate dev
+npx prisma db seed
 ```
-This command will automatically apply migrations and run the seed script.
+This will apply migrations and explicitly run the seed script to populate initial Categories.
