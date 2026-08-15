@@ -1,4 +1,4 @@
-# Lab 1 — AI Use and Reflection  (fill this in)
+# Lab 1 — AI Use and Reflection  
 
 **LLM/agent used:** Antigravity (Google Deepmind)
 
@@ -15,3 +15,4 @@
 ## Reflection
 Two or three sentences: what made your prompts better, and one place you had to correct or reject what the agent produced.
 The agent was very helpful when I gave it specific context like the exact error or the exact review comment I received from my peer. One place I had to reject/correct the agent was when the reviewer commented on an old commit; the agent and I had to verify the current code status instead of blindly changing the code again.
+แก

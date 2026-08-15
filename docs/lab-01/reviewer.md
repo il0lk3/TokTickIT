@@ -1,7 +1,6 @@
-# Lab 1 — Peer Review Record  (fill this in)
+# Lab 1 — Peer Review Record 
 
-**Author:** **ธนากร พหุลรัตน์** — **67070505204** 
-**GitHub:** @il0lk3
+**Author:** ธนากร พหุลรัตน์ 67070505204 @il0lk3
 **Peer reviewer:** Multiple Classmates
 
 ## Pull Requests I authored (reviewed by my partner)
@@ -14,35 +13,38 @@
 
 ### หลักฐานที่เพื่อนตรวจ/อนุมัติ PR ของเรา
 
-**PR5** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/5](https://github.com/il0lk3/TokTickIT/pull/5)
+**PR5: Feature 1: Project Foundation** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/5](https://github.com/il0lk3/TokTickIT/pull/5)
 - **Reviewer1:** ฑิตญา ผ่องสกุล 67070505217 @titayaaa
     - **Approve:** This PR cleanly accomplishes the goal of setting up the project foundation, project structure, TypeScript compiler settings, test harnesses, and initial stubs.
 
-**PR6** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/6](https://github.com/il0lk3/TokTickIT/pull/6)
+**PR6: Feature 2: Health Check** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/6](https://github.com/il0lk3/TokTickIT/pull/6)
 - **Reviewer1:** พัฒนาวดี แสงเงินยอด 67070505222 @jejaebubu
     - **Review:** หากในอนาคต checkSystem() คืนค่าเป็น { online: false } โดยไม่โยน Error (throw) ออกมา จะทำให้ setState("success") ไม่ทำงาน และ setState("error") ก็ไม่ถูกเรียกเช่นกัน ปุ่มจะค้างสถานะเป็น "loading" ตลอดไป แนะนำให้เติม else เพื่อรองรับกรณี online: false
     - **เราตอบกลับว่า:** ขอบคุณมากครับลืมนึกถึงเคสนี้ไปเลย ตอนนี้เติม else เพื่อเช็คกรณีที่ online: false ให้เซ็ตสถานะเป็น error เรียบร้อยแล้วครับ ลองตรวจดูอีกรอบได้เลยย
     *(ได้ทำการแก้ไขและตอบกลับเรียบร้อย และพัฒนาวดีได้ Approve ให้)*
 
-**PR7** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/7](https://github.com/il0lk3/TokTickIT/pull/7)
+**PR7: Feature 3: Category Seed** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/7](https://github.com/il0lk3/TokTickIT/pull/7)
 - **Reviewer1:** พัฒนาวดี แสงเงินยอด 67070505222 @jejaebubu
     - **Approve(ให้คำแนะนำ):** โดยรวมการทำงานของ Issue 3 เริ่ดมากค่ะครบตาม Acceptance Criteria ทั้งการสร้าง Category model, migration และการ seed ข้อมูลทั้ง 4 categories การใช้ upsert ทำให้สามารถรัน seed ซ้ำได้โดยไม่เกิดข้อมูลซ้ำ ซึ่งตรงตาม requirement เลย
     - **ข้อเสนอแนะเล็กน้อย:** แนะนำให้ลบข้อความ TODO และ console.log ที่เกี่ยวกับการ implement category seed ออกจากไฟล์ seed เนื่องจากฟีเจอร์นี้ทำเสร็จแล้ว จะช่วยให้โค้ดเรียบร้อยและไม่ทำให้เข้าใจว่ายังมีงานที่ต้องทำอยู่จ้า
     - **เราตอบกลับว่า:** จริงด้วยครับการลบโค้ดที่ไม่ใช้แล้ว หรือพวกคอมเมนต์ TODO ทิ้งหลังจากที่เราทำเสร็จแล้ว ถือเป็น Best Practice ที่ดีมากๆ ขอบคุณสำหรับคำแนะนำครับ ทำตามคำแนะนำเรียบร้อยแล้วจ้า
+
 - **Reviewer2:** ภัทร์ธิดาวดี อุ่นคำ 67070505225 @phatthidawadi
     - **Approve:** ตรวจสอบโค้ด Feature 3 แล้วว สร้างโมเดล Category ได้ถูกต้อง มีไฟล์ Migration มาครบ และ Seed ใช้ upsert จัดการข้อมูลได้ปลอดภัยดีมากจ้า Slayyyy
+
 - **Reviewer3:** ชัญญา พูลเขตกิจ 67070501058 @chanya06
     - **Approve(ให้คำแนะนำ):** จากรายละเอียด PR มีการเพิ่มส่วนของ database schema และ seed script สำหรับ Category ตามขอบเขตของ Issue 3 เบื้องต้นไม่พบปัญหาจากรายละเอียดของ PR แต่แนะนำให้ตรวจสอบเพิ่มเติมว่า
-    - Category มี field id, name และ createdAt ครบถ้วน
-    - name กำหนดเป็น unique
-    - seed สร้างข้อมูลครบ 4 categories และไม่สร้างข้อมูลซ้ำเมื่อรันซ้ำ
-    - migration สามารถทำงานกับฐานข้อมูลได้ถูกต้อง
+      - Category มี field id, name และ createdAt ครบถ้วน
+      - name กำหนดเป็น unique
+      - seed สร้างข้อมูลครบ 4 categories และไม่สร้างข้อมูลซ้ำเมื่อรันซ้ำ
+      - migration สามารถทำงานกับฐานข้อมูลได้ถูกต้อง
+
 - **Reviewer4:** ปทิตญา แก้ววิเชียร 67070505220 @lmaybelgracel
     - **Approve(ให้คำแนะนำ):** กานทำส่วน Category Seed ได้ค่อนข้างครบเลย ทั้งการเพิ่ม Category model, migration และ seed data ทำให้โครงสร้างฐานข้อมูลชัดเจนและสามารถนำไปใช้ต่อกับ feature อื่น ๆ ได้ ชอบตรงที่ใช้ upsert ในการ seed เพราะช่วยป้องกันข้อมูล category ซ้ำเวลารัน seed หลายครั้งได้ด้วย
     - **ส่วนที่อยากแนะนำเพิ่มเติม:** ใน seed.ts ยังมี comment กับ console.log ที่เป็น TODO เดิมอยู่ ถึงแม้ implementation จะทำเสร็จแล้ว แนะนำให้ลบหรือแก้ข้อความให้ตรงกับสิ่งที่ทำเสร็จแล้ว จะทำให้โค้ดดูเรียบร้อยและไม่ทำให้คนที่มาอ่านเข้าใจว่างานยังไม่เสร็จ นอกจากนี้ถ้าเพิ่มรายละเอียดวิธีรัน migration/seed ไว้ใน README อีกนิด จะช่วยให้เพื่อนในทีมสามารถ setup และทดสอบส่วนนี้ได้ง่ายขึ้นครับ โดยรวมงานตรงตาม feature และต่อยอดได้ดีเลย
     - **เราตอบกลับว่า:** อัปเดตวิธี setup Database และวิธีรัน Migration/Seed ไว้ในไฟล์ README.md ให้เรียบร้อยแล้วน้า เผื่อใครเอาไปรันต่อจะได้ทำตามสเต็ปนี้ได้เลย ขอบคุณสำหรับคำแนะนำดีๆ จ้า^^
 
-**PR8** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/8](https://github.com/il0lk3/TokTickIT/pull/8)
+**PR8: Feature 4: Category List Display** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/8](https://github.com/il0lk3/TokTickIT/pull/8)
 - **Reviewer1:** พัฒนาวดี แสงเงินยอด 67070505222 @jejaebubu
     - **Review:** โดยรวมการทำ Category List ทั้งฝั่ง API และ UI โอเคเเล้ว
     แต่มีจุดที่ต้องแก้ก่อน Merge ใน client/src/api.ts คือมี return { online: true, categories: [] } อยู่ก่อนการเรียก fetch("/api/categories") ทำให้ฟังก์ชัน return ออกไปก่อน และ API /api/categories จะไม่ถูกเรียกจริง
