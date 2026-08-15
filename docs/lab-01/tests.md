@@ -1,16 +1,19 @@
 # Lab 1 — Test Plan and Evidence  
 
-All test files live under server/tests/lab-01/ and client/tests/lab-01/.
+**โฟลเดอร์ที่เก็บไฟล์เทสต์:** ไฟล์เทสต์ทั้งหมดอยู่ในโฟลเดอร์ `server/tests/lab-01/` และ `client/tests/lab-01/`
 
-| # | Tool | Test | Result |
-|---|------|------|--------|
-| 1 | Supertest | GET /api/health returns 200, status=ok | PASS |
-| 2 | Supertest | GET /api/categories returns 4 seeded categories in id order | PASS |
-| 3 | Vitest | Heading renders | PASS |
-| 4 | Vitest | Success state shows Online + category list | PASS |
-| 5 | Vitest | Error state shows Offline + message | PASS |
+### ตารางสรุปรายการ Test Cases (Test Plan)
 
-Paste your passing terminal output / screenshot below.
+| Test File | Tool | Test Description |
+|-----------|------|------------------|
+| `server/tests/lab-01/health.test.ts` | Supertest | **API-01:** ทดสอบ Endpoint `/api/health` ต้องคืนค่าสถานะ HTTP 200 พร้อม JSON `{ "status": "ok", "service": "TokTickIT API" }` |
+| `server/tests/lab-01/categories.test.ts` | Supertest | **API-02:** ทดสอบ Endpoint `/api/categories` ต้องดึงข้อมูลทั้ง 4 หมวดหมู่ที่ Seed ไว้จาก Database ออกมาได้ถูกต้อง |
+| `client/tests/lab-01/App.test.tsx` | Vitest | **UI-01:** ทดสอบการ Render แสดงผลส่วนหัวข้อ TokTickIT บนหน้าเว็บ |
+| `client/tests/lab-01/App.test.tsx` | Vitest | **UI-02:** ทดสอบสถานะ Loading ขณะร้องขอข้อมูล และการเปลี่ยนไปแสดงผลรายการ Categories เมื่อสำเร็จ |
+| `client/tests/lab-01/App.test.tsx` | Vitest | **UI-03:** ทดสอบกรณี API ทำงานล้มเหลว (Failure) หน้าเว็บจะต้องแสดงข้อความ Error แจ้งเตือนที่เหมาะสม |
+
+### หลักฐานผลการรัน (Passing Terminal Output)
+ผลลัพธ์ข้อความจาก Terminal เพื่อยืนยันว่าการรันเทสต์ทั้งหมดผ่านครบถ้วนบน Branch main:
 
 ```
 > toktickit-server@1.0.0 test

@@ -1,18 +1,16 @@
 # Lab 1 — AI Use and Reflection  
 
-**LLM/agent used:** Antigravity (Google Deepmind)
+**รายละเอียดเครื่องมือ AI ที่ใช้งาน:**
+- **AI Coding Agent:** Antigravity (Google Deepmind)
+- **โมเดล LLM:** Gemini 2.0 Flash พร้อมระดับ Thinking
 
-## Selected key prompts (6–10)
-| # | Prompt (summarised) | What I did with the result |
-|---|---------------------|----------------------------|
-| 1 | "วิธีอัพ issue1 ขึ้น github" | Ran the suggested git commands to commit and push branch 1. |
-| 2 | "issue 2 มีเพื่อนมา review ให้แก้... ช่วยแก้หน่อย" | Applied the code fix for handling `online: false` in `App.tsx`. |
-| 3 | "ลบ approve อันเก่าได้ปะ" | Followed instructions to dismiss stale PR reviews on GitHub. |
-| 4 | "สร้างเป็น docker compose ให้หน่อยได้ปะ (Port 5435)" | Applied the provided `docker-compose.yml` to run PostgreSQL. |
-| 5 | "เพื่อนมีแนะนำมานิดหน่อย ทำตามดีไหม (Issue 3)" | Updated `README.md` and removed `TODO`/`console.log` from `seed.ts`. |
-| 6 | "มี review issue4 มาอีกกกกกก" | Verified that the code was already correct and the review was from an old commit. |
+## ตารางสรุปคำสั่งสำคัญ (Selected Key Prompts)
 
-## Reflection
-Two or three sentences: what made your prompts better, and one place you had to correct or reject what the agent produced.
-The agent was very helpful when I gave it specific context like the exact error or the exact review comment I received from my peer. One place I had to reject/correct the agent was when the reviewer commented on an old commit; the agent and I had to verify the current code status instead of blindly changing the code again.
-แก
+| Prompt Name & Actual Prompt Text | My Reflection (ข้อคิดเห็น/บทเรียน) |
+|----------------------------------|------------------------------------|
+| **1. การวางแผนและจัดการ Git**<br>*"วิธีอัพ issue1 ขึ้น github"* | เป็นคำสั่งแบบ One shot ที่ AI สามารถให้ชุดคำสั่ง Git สำหรับการ Commit และ Push ขึ้น Branch ใหม่บน Repository ได้อย่างถูกต้องครบถ้วน |
+| **2. การแก้ไขโค้ดตาม Peer Review (Issue 2)**<br>*"issue 2 มีเพื่อนมา review ให้แก้... ช่วยแก้หน่อย"* | ผลลัพธ์ตรงตามขอบเขต AI วิเคราะห์ Context จากโค้ดเดิม และช่วยเพิ่มเงื่อนไข `else` จัดการกรณี `online: false` ใน UI ได้ตรงตามคำแนะนำของเพื่อนอย่างแม่นยำ |
+| **3. การจัดการปัญหาบน GitHub PR**<br>*"ลบ approve อันเก่าได้ปะ"* | ได้บทเรียนใหม่ๆ จากคำแนะนำของ AI ว่าเราสามารถเข้าไปกด Dismiss review ของเพื่อนในหน้าเว็บ GitHub ได้เพื่อรีเซ็ตสถานะการตรวจ |
+| **4. การเตรียม Database Setup (Issue 3)**<br>*"สร้างเป็น docker compose ให้หน่อยได้ปะ (Port 5435)"* | คำสั่งทำงานเสร็จสิ้นสมบูรณ์ (One shot) AI เขียนไฟล์ `docker-compose.yml` ให้พร้อมกำหนดพอร์ตและตัวแปรระบบ ทำให้รัน PostgreSQL ได้ทันทีโดยไม่ต้องไปหาวิธีเซ็ตอัปเอง |
+| **5. การทำ Clean Code**<br>*"เพื่อนมีแนะนำมานิดหน่อย ทำตามดีไหม (Issue 3)"* | การนำ Feedback ของเพื่อนมาปรึกษา AI ทำให้ได้เรียนรู้เรื่อง Best Practice เช่น การลบ TODO/console.log และการอัปเดตไฟล์ README.md เพื่อความสะดวกของเพื่อนร่วมทีม |
+| **6. การตรวจสอบ Review คลาดเคลื่อน (Issue 4)**<br>*"มี review issue4 มาอีกกกกกก"* | เป็นสถานการณ์ที่ต้องใช้ Follow-up prompt ร่วมด้วย AI ช่วยเช็คให้ว่าโค้ดปัจจุบันถูกต้องแล้ว แต่เพื่อนไปรีวิวจาก Commit เก่า ทำให้เราไม่ต้องรื้อโค้ดแก้ซ้ำซ้อน และตอบกลับเพื่อนได้ถูกประเด็น |
