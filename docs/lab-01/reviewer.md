@@ -1,4 +1,4 @@
-# Lab 1 — Peer Review Record  (fill this in)
+# Lab 1 — Peer Review Record 
 
 **Author:** ธนากร พหุลรัตน์ 67070505204 @il0lk3
 **Peer reviewer:** Multiple Classmates
