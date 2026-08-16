@@ -24,7 +24,7 @@
  ✓ tests/lab-01/categories.test.ts (1 test) 94ms
 
  Test Files  2 passed (2)
-      Tests  2 passed (2)
+      Tests  3 passed (3)
 
 > toktickit-client@1.0.0 test
 > vitest run
