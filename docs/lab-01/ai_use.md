@@ -1,16 +1,16 @@
 # Lab 1 — AI Use and Reflection  
 
-**รายละเอียดเครื่องมือ AI ที่ใช้งาน:**
-- **AI Coding Agent:** Antigravity (Google Deepmind)
-- **โมเดล LLM:** Gemini 2.0 Flash พร้อมระดับ Thinking
+I used the Antigravity coding agent. I mainly used Gemini 2.0 Flash as the LLM with a thinking level of Medium.
 
-## ตารางสรุปคำสั่งสำคัญ (Selected Key Prompts)
+**Selected Key Prompts:**
 
-| Prompt Name & Actual Prompt Text | My Reflection (ข้อคิดเห็น/บทเรียน) |
-|----------------------------------|------------------------------------|
-| **1. การวางแผนและจัดการ Git**<br>*"วิธีอัพ issue1 ขึ้น github"* | เป็นคำสั่งแบบ One shot ที่ AI สามารถให้ชุดคำสั่ง Git สำหรับการ Commit และ Push ขึ้น Branch ใหม่บน Repository ได้อย่างถูกต้องครบถ้วน |
-| **2. การแก้ไขโค้ดตาม Peer Review (Issue 2)**<br>*"issue 2 มีเพื่อนมา review ให้แก้... ช่วยแก้หน่อย"* | ผลลัพธ์ตรงตามขอบเขต AI วิเคราะห์ Context จากโค้ดเดิม และช่วยเพิ่มเงื่อนไข `else` จัดการกรณี `online: false` ใน UI ได้ตรงตามคำแนะนำของเพื่อนอย่างแม่นยำ |
-| **3. การจัดการปัญหาบน GitHub PR**<br>*"ลบ approve อันเก่าได้ปะ"* | ได้บทเรียนใหม่ๆ จากคำแนะนำของ AI ว่าเราสามารถเข้าไปกด Dismiss review ของเพื่อนในหน้าเว็บ GitHub ได้เพื่อรีเซ็ตสถานะการตรวจ |
-| **4. การเตรียม Database Setup (Issue 3)**<br>*"สร้างเป็น docker compose ให้หน่อยได้ปะ (Port 5435)"* | คำสั่งทำงานเสร็จสิ้นสมบูรณ์ (One shot) AI เขียนไฟล์ `docker-compose.yml` ให้พร้อมกำหนดพอร์ตและตัวแปรระบบ ทำให้รัน PostgreSQL ได้ทันทีโดยไม่ต้องไปหาวิธีเซ็ตอัปเอง |
-| **5. การทำ Clean Code**<br>*"เพื่อนมีแนะนำมานิดหน่อย ทำตามดีไหม (Issue 3)"* | การนำ Feedback ของเพื่อนมาปรึกษา AI ทำให้ได้เรียนรู้เรื่อง Best Practice เช่น การลบ TODO/console.log และการอัปเดตไฟล์ README.md เพื่อความสะดวกของเพื่อนร่วมทีม |
-| **6. การตรวจสอบ Review คลาดเคลื่อน (Issue 4)**<br>*"มี review issue4 มาอีกกกกกก"* | เป็นสถานการณ์ที่ต้องใช้ Follow-up prompt ร่วมด้วย AI ช่วยเช็คให้ว่าโค้ดปัจจุบันถูกต้องแล้ว แต่เพื่อนไปรีวิวจาก Commit เก่า ทำให้เราไม่ต้องรื้อโค้ดแก้ซ้ำซ้อน และตอบกลับเพื่อนได้ถูกประเด็น |
+| Prompt Name | Actual Prompt Text |
+|-------------|--------------------|
+| **Git and Branching Workflow** | "คำสั่ง Git ที่ใช้สร้าง branch ใหม่สำหรับ Issue1 คืออะไรอะ commit my changes, and push it to the github "<br><br>**My Reflection:** ตอนแรกผมยังไม่ค่อยแน่ใจกับคำสั่ง Git เลยได้ให้ AI อธิบาย ทำให้ได้เรียนรู้คำสั่งย่อยต่างๆ และเข้าใจลำดับการแตก Branch, Commit และ Push อย่างถูกต้อง |
+| **Fixing Issue 2 Feedback** | "มีเพื่อนมารีวิวให้ว่า 'Add an else condition for online: false' ควรแก้ไขฟังก์ชัน checkSystem() ใน App.tsx ยังไงดีอะ"<br><br>**My Reflection:** ทำให้ได้เรียนรู้ความสำคัญของการเขียนโค้ดดักจับข้อผิดพลาด (Error Handling) เพื่อป้องกันไม่ให้หน้า UI ค้างสถานะ Loading ตลอดไปในกรณีที่ API ตอบกลับว่า false |
+| **GitHub PR Management** | "How can I dismiss or remove an old approval from a reviewer on a GitHub Pull Request after making new changes"<br><br>**My Reflection:** ทำให้เข้าใจระบบการทำ Code Review ของ GitHub มากขึ้น ว่าเราสามารถกดยกเลิกสถานะ Approve เก่าทิ้งได้เมื่อมีการแก้โค้ดใหม่ เพื่อให้มั่นใจว่าโค้ดล่าสุดถูกตรวจซ้ำจริงๆ |
+| **Database Docker Setup** | "Can you create a docker-compose.yml file to run a PostgreSQL database for this project? Please expose it on port 5435."<br><br>**My Reflection:** ได้เรียนรู้วิธีการทำงานของ Docker ว่ามันช่วยจำลอง Database ขึ้นมาได้อย่างรวดเร็ว และเข้าใจหลักการตั้งค่า Environment (เช่น การแมป Port 5435) เพื่อให้แอปเชื่อมต่อได้ |
+| **Addressing Clean Code** | "เพื่อนที่มารีวิวแนะนำว่าให้ลบข้อความ TODO และคำสั่ง console.log ที่ไม่ได้ใช้งานออก ทำแบบนี้ดีไหมอะ ควรลบออกก่อนที่จะ merge ไหม"<br><br>**My Reflection:** AI ช่วยตอกย้ำให้เห็นว่าโค้ดที่รันผ่านยังไม่พอ แต่ต้องเป็นโค้ดที่สะอาด (Clean Code) การทิ้งคำสั่งขยะอย่าง console.log ไว้บน Production เป็นสิ่งที่ไม่ควรทำ |
+| **Verifying Outdated Reviews** | "มี review issue4 มาอีกกกกกก **โดยรวมทำได้ครบทั้งฝั่ง API และ UI และมีการเพิ่ม test สำหรับกรณี Online/Offline ด้วย แต่ใน client/src/api.ts ตรง return { online: true, categories: [] }; ยังอยู่ก่อน fetch("/api/categories") ทำให้ function return ออกไปก่อน และโค้ด fetch ด้านล่างจะไม่ถูกเรียก แนะนำให้ลบ return ตัวเดิมออก เพื่อให้สามารถดึง category จาก API มาแสดงผลได้จริง** คือ รีวิวเหมือนที่แก้ไปก่อนหน้านี้เลยปะ ช่วยดูหน่อย"<br><br>**My Reflection:** จากคำอธิบายของ AI ทำให้เข้าใจหลักการทำงานของ JavaScript มากขึ้น ว่าถ้าวางคำสั่ง return ไว้ก่อนคำสั่ง fetch() โค้ดที่เหลือจะไม่ถูกเรียกทำงาน (Unreachable code) เด็ดขาด |
+| **Generating Peer Review Logs** | "Please format these raw peer review comments into a Markdown structure for my docs/lab-01/reviewer.md file."<br><br>**My Reflection:** ได้ทบทวน Syntax การเขียน Markdown สำหรับสร้างตาราง และเห็นภาพชัดเจนว่าการจัดโครงสร้างเอกสาร (Documentation) ที่ดีช่วยให้อ่านและติดตามงานง่ายขึ้นมาก |
+| **Improving API Tests** | "เพื่อนที่มารีวิวอยากให้เพิ่มกรณีทดสอบสำหรับข้อผิดพลาดของ API และตรวจสอบว่าการตอบกลับมี 'id' และ 'name' อยู่ด้วย ชั้นจะอัปเดต categories.test.ts โดยใช้ Supertest ได้ยังไงอะ"<br><br>**My Reflection:** ทำให้ได้เรียนรู้วิธีการใช้ Supertest ในการจำลองยิง API และเข้าใจว่าการเขียน Unit Test ที่ดีต้องครอบคลุมถึงกรณีที่ระบบพัง (เช่น เช็ค Error 404) ด้วย ไม่ใช่เช็คแค่ Success |

@@ -1,6 +1,6 @@
-# Lab 1 — Peer Review Record  (fill this in)
+# Lab 1 — Peer Review Record 
 
-**Author:** ธนากร พหุลรัตน์ 67070505204 @il0lk3
+**Author:** ธนากร พหุลรัตน์ 67070505217 @il0lk3
 **Peer reviewer:** Multiple Classmates
 
 ## Pull Requests I authored (reviewed by my partner)
@@ -14,7 +14,7 @@
 ### หลักฐานที่เพื่อนตรวจ/อนุมัติ PR ของเรา
 
 **PR5: Feature 1: Project Foundation** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/5](https://github.com/il0lk3/TokTickIT/pull/5)
-- **Reviewer1:** ฑิตญา ผ่องสกุล 67070505217 @titayaaa
+- **Reviewer1:** ฑิตญา ผ่องสกุล 67070505201 @titayaaa
     - **Approve:** This PR cleanly accomplishes the goal of setting up the project foundation, project structure, TypeScript compiler settings, test harnesses, and initial stubs.
 
 **PR6: Feature 2: Health Check** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/6](https://github.com/il0lk3/TokTickIT/pull/6)
@@ -73,7 +73,7 @@
     *(ได้ทำการแก้ไขและตอบกลับเรียบร้อย และปทิตญาได้ Approve ให้)*
 
 **PR9: Lab 1 Integration to Production** ลิ้งค์ [https://github.com/il0lk3/TokTickIT/pull/9](https://github.com/il0lk3/TokTickIT/pull/9)
-- **Reviewer1:** ฑิตญา ผ่องสกุล 67070505217 @titayaaa
+- **Reviewer1:** ฑิตญา ผ่องสกุล 67070505201 @titayaaa
     - **Approve:** โดยรวมโอเคเลย โค้ดแยกส่วนค่อนข้างชัด แล้วก็มี test ให้ด้วย แต่คิดว่าน่าจะเพิ่ม test กรณีที่ API error แล้วก็ลองเช็ก response ให้ละเอียดขึ้นว่ามี id กับ name ครบไหม ส่วน void ที่ไม่ได้ใช้ ถ้าไม่จำเป็นก็อาจจะเอาออก จะได้ทำให้โค้ดดูสะอาดขึ้น
     - **เราตอบกลับว่า:** ขอบคุณสำหรับคำแนะนำดีๆ ครับ ตอนนี้เข้าไปลบ void ที่ไม่ได้ใช้ออกให้โค้ดดูสะอาดขึ้นแล้ว และได้เพิ่ม Test สำหรับเช็คค่า id กับ name ใน Response รวมถึงเขียน Test ตรวจสอบกรณี API Error เพิ่มเติมเรียบร้อยแล้วครับ!
     *(ได้ทำการแก้ไขและตอบกลับเรียบร้อย)*
@@ -88,7 +88,7 @@
 
 ## Pull Requests I reviewed for my partner
 
-**PR ของฑิตญา ผ่องสกุล 67070505217 @titayaaa**
+**PR ของฑิตญา ผ่องสกุล 67070505201 @titayaaa**
 - ลิ้งค์ [https://github.com/titayaaa/toktickit/pull/5](https://github.com/titayaaa/toktickit/pull/5)
 - **เรา Approve:** ได้ตรวจสอบโครงสร้างโปรเจกต์ (React+Vite, Express, Prisma) และการติดตั้ง package สำหรับการเทสแล้ว มีไฟล์ .env.example และ .gitignore คิดว่าถูกต้องตามที่ Issue1 ต้องการครับ Good Girl!
 
