@@ -38,16 +38,29 @@ model RelatedSystem {
   tickets   Ticket[]
 }
 
+// Enums
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TicketStatus {
+  New
+  InProgress @map("In Progress")
+  Resolved
+}
+
 // 4. Core Ticket Model
 model Ticket {
-  id                Int      @id @default(autoincrement())
-  ticketNumber      String   @unique // Format: TKT-YYYY-NNNNNN
-  summary           String   @db.VarChar(150)
-  description       String   @db.VarChar(1000)
-  requestedPriority String   // "LOW", "MEDIUM", "HIGH"
-  currentStatus     String   @default("New") // "New", "In Progress", "Resolved", etc.
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                Int            @id @default(autoincrement())
+  ticketNumber      String         @unique // Format: TKT-YYYY-NNNNNN
+  summary           String         @db.VarChar(150)
+  description       String         @db.VarChar(1000)
+  requestedPriority TicketPriority
+  currentStatus     TicketStatus   @default(New)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   // Foreign Keys & Relationships
   requesterId       Int
@@ -59,6 +72,11 @@ model Ticket {
   relatedSystem     RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
   
   attachments       Attachment[]
+
+  @@index([requesterId])
+  @@index([categoryId])
+  @@index([relatedSystemId])
+  @@index([createdAt])
 }
 
 // 5. Attachment Model (Soft Removal enabled)
@@ -77,4 +95,6 @@ model Attachment {
   
   ticketId      Int
   ticket        Ticket   @relation(fields: [ticketId], references: [id])
+
+  @@index([ticketId])
 }

@@ -50,7 +50,7 @@ The interface will follow the "Zen Green Theme" defined in `docs/lab-02/ui-spec.
 ## 7. Data Changes
 The PostgreSQL database (via Prisma) will include the following models:
 - **RequesterUser:** Stores Development Requesters. (Fields: `id`, `name`, `email`, `isActive`).
-- **TicketCategory:** Reference data (Account and Access, Hardware, Software, Network).
+- **Category:** Reference data (Account and Access, Hardware, Software, Network).
 - **RelatedSystem:** Reference data (Email, Campus Wi-Fi, VPN, LEB2 App, Grade Submission App, Printer, Corporate Laptop).
 - **Ticket:** Core entity. Fields: `id`, `ticketNumber` (unique), `requesterId` (FK), `categoryId` (FK), `relatedSystemId` (FK), `summary`, `description`, `requestedPriority`, `currentStatus`, `createdAt`, `updatedAt`.
 - **Attachment:** File metadata. Fields: `id`, `ticketId` (FK), `filename`, `originalName`, `mimeType`, `size`, `isRemoved`, `removedReason`, `createdAt`.

@@ -1,0 +1,545 @@
+diff --git a/server/prisma/migrations/20260901133659_lab2/migration.sql b/server/prisma/migrations/20260901133659_lab2/migration.sql
+new file mode 100644
+index 0000000..8fa3663
+--- /dev/null
++++ b/server/prisma/migrations/20260901133659_lab2/migration.sql
+@@ -0,0 +1,100 @@
++-- Lab 2 (Issue 6) — Ticket management data model
++-- Incremental migration on top of 20260813153617_init.
++
++-- AlterTable
++-- Extend the existing Category table from Lab 1.
++ALTER TABLE "Category" ADD COLUMN "active" BOOLEAN NOT NULL DEFAULT true;
++ALTER TABLE "Category" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
++
++-- CreateEnum
++CREATE TYPE "Priority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
++
++-- CreateEnum
++CREATE TYPE "Status" AS ENUM ('SUBMITTED', 'IN_PROGRESS', 'RESOLVED');
++
++-- CreateTable
++CREATE TABLE "DevelopmentRequester" (
++    "id" SERIAL NOT NULL,
++    "name" TEXT NOT NULL,
++    "email" TEXT NOT NULL,
++    "active" BOOLEAN NOT NULL DEFAULT true,
++    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
++    "updatedAt" TIMESTAMP(3) NOT NULL,
++
++    CONSTRAINT "DevelopmentRequester_pkey" PRIMARY KEY ("id")
++);
++
++-- CreateTable
++CREATE TABLE "RelatedSystem" (
++    "id" SERIAL NOT NULL,
++    "name" TEXT NOT NULL,
++    "type" TEXT NOT NULL,
++    "active" BOOLEAN NOT NULL DEFAULT true,
++    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
++    "updatedAt" TIMESTAMP(3) NOT NULL,
++
++    CONSTRAINT "RelatedSystem_pkey" PRIMARY KEY ("id")
++);
++
++-- CreateTable
++CREATE TABLE "Ticket" (
++    "id" SERIAL NOT NULL,
++    "ticketNumber" TEXT NOT NULL,
++    "summary" TEXT NOT NULL,
++    "description" TEXT NOT NULL,
++    "requesterId" INTEGER NOT NULL,
++    "categoryId" INTEGER NOT NULL,
++    "relatedSystemId" INTEGER NOT NULL,
++    "requestedPriority" "Priority" NOT NULL DEFAULT 'MEDIUM',
++    "itPriority" "Priority" NOT NULL DEFAULT 'MEDIUM',
++    "currentStatus" "Status" NOT NULL DEFAULT 'SUBMITTED',
++    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
++    "updatedAt" TIMESTAMP(3) NOT NULL,
++
++    CONSTRAINT "Ticket_pkey" PRIMARY KEY ("id")
++);
++
++-- CreateTable
++CREATE TABLE "Attachment" (
++    "id" SERIAL NOT NULL,
++    "ticketId" INTEGER NOT NULL,
++    "originalName" TEXT NOT NULL,
++    "storedName" TEXT NOT NULL,
++    "mimeType" TEXT NOT NULL,
++    "size" INTEGER NOT NULL,
++    "removedAt" TIMESTAMP(3),
++    "removedReason" TEXT,
++    "uploadedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
++
++    CONSTRAINT "Attachment_pkey" PRIMARY KEY ("id")
++);
++
++-- CreateIndex
++CREATE UNIQUE INDEX "DevelopmentRequester_email_key" ON "DevelopmentRequester"("email");
++
++-- CreateIndex
++CREATE UNIQUE INDEX "Ticket_ticketNumber_key" ON "Ticket"("ticketNumber");
++
++-- CreateIndex
++CREATE INDEX "Ticket_requesterId_idx" ON "Ticket"("requesterId");
++
++-- CreateIndex
++CREATE INDEX "Ticket_categoryId_idx" ON "Ticket"("categoryId");
++
++-- CreateIndex
++CREATE INDEX "Ticket_relatedSystemId_idx" ON "Ticket"("relatedSystemId");
++
++-- CreateIndex
++CREATE INDEX "Attachment_ticketId_idx" ON "Attachment"("ticketId");
++
++-- AddForeignKey
++ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_requesterId_fkey" FOREIGN KEY ("requesterId") REFERENCES "DevelopmentRequester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
++
++-- AddForeignKey
++ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
++
++-- AddForeignKey
++ALTER TABLE "Ticket" ADD CONSTRAINT "Ticket_relatedSystemId_fkey" FOREIGN KEY ("relatedSystemId") REFERENCES "RelatedSystem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
++
++-- AddForeignKey
++ALTER TABLE "Attachment" ADD CONSTRAINT "Attachment_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+\ No newline at end of file
+diff --git a/server/prisma/schema.prisma b/server/prisma/schema.prisma
+index 5ce1866..d3ad81f 100644
+--- a/server/prisma/schema.prisma
++++ b/server/prisma/schema.prisma
+@@ -11,11 +11,87 @@ datasource db {
+ }
+ 
+ // ---------------------------------------------------------------------------
+-// Issue 3 — Create and seed IT request categories
+-// Then run:  npx prisma migrate dev --name init
++// Lab 2 (Issue 6) — Ticket management data model.
++// Run:  npx prisma migrate dev --name lab2
++// Seed: npx prisma db seed  (or: npm run prisma:seed)
+ // ---------------------------------------------------------------------------
++
++enum Priority {
++  LOW
++  MEDIUM
++  HIGH
++  URGENT
++}
++
++enum Status {
++  SUBMITTED
++  IN_PROGRESS
++  RESOLVED
++}
++
++model DevelopmentRequester {
++  id        Int      @id @default(autoincrement())
++  name      String
++  email     String   @unique
++  active    Boolean  @default(true)
++  createdAt DateTime @default(now())
++  updatedAt DateTime @updatedAt
++  tickets   Ticket[]
++}
++
+ model Category {
+   id        Int      @id @default(autoincrement())
+   name      String   @unique
++  active    Boolean  @default(true)
+   createdAt DateTime @default(now())
++  updatedAt DateTime @updatedAt
++  tickets   Ticket[]
++}
++
++model RelatedSystem {
++  id        Int      @id @default(autoincrement())
++  name      String
++  type      String
++  active    Boolean  @default(true)
++  createdAt DateTime @default(now())
++  updatedAt DateTime @updatedAt
++  tickets   Ticket[]
++}
++
++model Ticket {
++  id                Int                 @id @default(autoincrement())
++  ticketNumber      String              @unique
++  summary           String
++  description       String
++  requesterId       Int
++  categoryId        Int
++  relatedSystemId   Int
++  requestedPriority Priority            @default(MEDIUM)
++  itPriority        Priority            @default(MEDIUM)
++  currentStatus     Status              @default(SUBMITTED)
++  createdAt         DateTime            @default(now())
++  updatedAt         DateTime            @updatedAt
++  requester         DevelopmentRequester @relation(fields: [requesterId], references: [id])
++  category          Category            @relation(fields: [categoryId], references: [id])
++  relatedSystem     RelatedSystem       @relation(fields: [relatedSystemId], references: [id])
++  attachments       Attachment[]
++
++  @@index([requesterId])
++  @@index([categoryId])
++  @@index([relatedSystemId])
++}
++
++model Attachment {
++  id            Int      @id @default(autoincrement())
++  ticketId      Int
++  originalName  String
++  storedName    String
++  mimeType      String
++  size          Int
++  removedAt     DateTime?
++  removedReason String?
++  uploadedAt    DateTime @default(now())
++  ticket        Ticket   @relation(fields: [ticketId], references: [id])
++
++  @@index([ticketId])
+ }
+diff --git a/server/prisma/seed.ts b/server/prisma/seed.ts
+index 60965cd..f16754a 100644
+--- a/server/prisma/seed.ts
++++ b/server/prisma/seed.ts
+@@ -2,26 +2,95 @@ import { PrismaClient } from "@prisma/client";
+ import { fileURLToPath } from "node:url";
+ import { getPrisma } from "../src/prisma.js";
+ 
+-// Issue 3 — seed the four supported categories.
+-export const CATEGORIES = ["Account and Access", "Hardware", "Software", "Network"] as const;
++// ---------------------------------------------------------------------------
++// Lab 2 (Issue 6) — idempotent seed data.
++// Each seed function upserts by a unique key so re-running is harmless.
++// ---------------------------------------------------------------------------
+ 
+-type CategoryClient = Pick<PrismaClient, "category">;
++export const CATEGORIES = [
++  "Account and Access",
++  "Hardware",
++  "Software",
++  "Network",
++  "Printing",
++  "Email",
++  "Data and Backup",
++  "Application Support",
++] as const;
+ 
+-// Exported separately from main() so the seed logic can be tested directly.
+-export async function seedCategories(prisma: CategoryClient): Promise<void> {
++export const RELATED_SYSTEMS = [
++  { name: "ERP System", type: "Application" },
++  { name: "HR System", type: "Application" },
++  { name: "CRM System", type: "Application" },
++  { name: "Email Server", type: "Infrastructure" },
++  { name: "Network Infrastructure", type: "Infrastructure" },
++  { name: "VPN Gateway", type: "Infrastructure" },
++] as const;
++
++export const REQUESTERS = [
++  { name: "Alice Anderson", email: "alice.anderson@example.com", active: true },
++  { name: "Bob Brown", email: "bob.brown@example.com", active: true },
++  { name: "Carol Chen", email: "carol.chen@example.com", active: true },
++  { name: "David Diaz", email: "david.diaz@example.com", active: true },
++  { name: "Evan Ellis", email: "evan.ellis@example.com", active: false },
++] as const;
++
++type DbClient = Pick<
++  PrismaClient,
++  "category" | "relatedSystem" | "developmentRequester"
++>;
++
++export async function seedCategories(prisma: DbClient): Promise<void> {
+   for (const name of CATEGORIES) {
+     await prisma.category.upsert({
+       where: { name },
+-      update: {},
+-      create: { name },
++      update: { active: true },
++      create: { name, active: true },
++    });
++  }
++}
++
++export async function seedRelatedSystems(prisma: DbClient): Promise<void> {
++  for (const sys of RELATED_SYSTEMS) {
++    // There is no natural unique key on RelatedSystem, so upsert by name.
++    const existing = await prisma.relatedSystem.findFirst({
++      where: { name: sys.name },
+     });
++    if (existing) {
++      await prisma.relatedSystem.update({
++        where: { id: existing.id },
++        data: { type: sys.type, active: true },
++      });
++    } else {
++      await prisma.relatedSystem.create({
++        data: { name: sys.name, type: sys.type, active: true },
++      });
++    }
+   }
+ }
+ 
++export async function seedRequesters(prisma: DbClient): Promise<void> {
++  for (const r of REQUESTERS) {
++    await prisma.developmentRequester.upsert({
++      where: { email: r.email },
++      update: { name: r.name, active: r.active },
++      create: { name: r.name, email: r.email, active: r.active },
++    });
++  }
++}
++
++export async function seedLab2(prisma: DbClient): Promise<void> {
++  await seedCategories(prisma);
++  await seedRelatedSystems(prisma);
++  await seedRequesters(prisma);
++}
++
+ async function main() {
+   const prisma = getPrisma();
+-  await seedCategories(prisma);
+-  console.log(`Seeded ${CATEGORIES.length} categories.`);
++  await seedLab2(prisma);
++  console.log(
++    `Seeded ${CATEGORIES.length} categories, ${RELATED_SYSTEMS.length} related systems, ${REQUESTERS.length} development requesters.`
++  );
+ }
+ 
+ const isDirectRun = process.argv[1] === fileURLToPath(import.meta.url);
+diff --git a/server/tests/lab-01/categories.test.ts b/server/tests/lab-01/categories.test.ts
+index b9631a0..55509d1 100644
+--- a/server/tests/lab-01/categories.test.ts
++++ b/server/tests/lab-01/categories.test.ts
+@@ -1,16 +1,15 @@
+ import { describe, it, expect } from "vitest";
+ import request from "supertest";
+ import { app } from "../../src/app.js";
++import { CATEGORIES } from "../../prisma/seed.js";
+ 
+ describe("GET /api/categories", () => {
+-  it("returns the four seeded categories in id order", async () => {
++  it("returns the seeded categories in id order", async () => {
+     const res = await request(app).get("/api/categories");
+     expect(res.status).toBe(200);
+-    expect(res.body).toEqual([
+-      { id: 1, name: "Account and Access" },
+-      { id: 2, name: "Hardware" },
+-      { id: 3, name: "Software" },
+-      { id: 4, name: "Network" },
+-    ]);
++    expect(Array.isArray(res.body)).toBe(true);
++    expect(res.body.map((c: { name: string }) => c.name).sort()).toEqual(
++      [...CATEGORIES].sort()
++    );
+   });
+ });
+diff --git a/server/tests/lab-01/seed.test.ts b/server/tests/lab-01/seed.test.ts
+index 2a49461..245c609 100644
+--- a/server/tests/lab-01/seed.test.ts
++++ b/server/tests/lab-01/seed.test.ts
+@@ -26,14 +26,14 @@ describe("category seed", () => {
+     const prisma = getPrisma();
+     let assertionError: unknown;
+     await prisma.$transaction(async (tx) => {
+-      await tx.category.deleteMany();
++      await tx.category.deleteMany({ where: { id: { gt: 4 } } });
+       await seedCategories(tx);
+       await seedCategories(tx);
+       const count = await tx.category.count();
+       const names = await tx.category.findMany({ select: { name: true } });
+       try {
+-        expect(count).toBe(4);
+-        expect(new Set(names.map((c) => c.name)).size).toBe(4);
++        expect(count).toBe(CATEGORIES.length);
++        expect(new Set(names.map((c) => c.name)).size).toBe(CATEGORIES.length);
+       } catch (err) {
+         assertionError = err;
+       }
+diff --git a/server/tests/lab-02/seed.test.ts b/server/tests/lab-02/seed.test.ts
+new file mode 100644
+index 0000000..d4f9e36
+--- /dev/null
++++ b/server/tests/lab-02/seed.test.ts
+@@ -0,0 +1,179 @@
++import { describe, it, expect } from "vitest";
++import { getPrisma } from "../../src/prisma.js";
++import {
++  CATEGORIES,
++  RELATED_SYSTEMS,
++  REQUESTERS,
++  seedCategories,
++  seedRelatedSystems,
++  seedRequesters,
++} from "../../prisma/seed.js";
++
++describe("Lab 2 category seed", () => {
++  it("seeds all Lab 2 categories", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.category.deleteMany({ where: { id: { gt: 4 } } });
++      await seedCategories(tx);
++      const names = await tx.category.findMany({ select: { name: true } });
++      try {
++        expect(names.map((c) => c.name).sort()).toEqual([...CATEGORIES].sort());
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++
++  it("is idempotent - running twice creates no duplicates", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.category.deleteMany({ where: { id: { gt: 4 } } });
++      await seedCategories(tx);
++      await seedCategories(tx);
++      const count = await tx.category.count();
++      const names = await tx.category.findMany({ select: { name: true } });
++      try {
++        expect(count).toBe(CATEGORIES.length);
++        expect(new Set(names.map((c) => c.name)).size).toBe(CATEGORIES.length);
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++
++  it("marks seeded categories active", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.category.deleteMany({ where: { id: { gt: 4 } } });
++      await seedCategories(tx);
++      const inactive = await tx.category.count({ where: { active: false } });
++      try {
++        expect(inactive).toBe(0);
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++});
++
++describe("Lab 2 related-system seed", () => {
++  it("seeds all related systems", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.relatedSystem.deleteMany();
++      await seedRelatedSystems(tx);
++      const rows = await tx.relatedSystem.findMany({ select: { name: true } });
++      try {
++        expect(rows.map((r) => r.name).sort()).toEqual(
++          [...RELATED_SYSTEMS.map((s) => s.name)].sort()
++        );
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++
++  it("is idempotent - running twice creates no duplicates", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.relatedSystem.deleteMany();
++      await seedRelatedSystems(tx);
++      await seedRelatedSystems(tx);
++      const count = await tx.relatedSystem.count();
++      try {
++        expect(count).toBe(RELATED_SYSTEMS.length);
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++});
++
++describe("Lab 2 development-requester seed", () => {
++  it("seeds all development requesters", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.developmentRequester.deleteMany();
++      await seedRequesters(tx);
++      const names = await tx.developmentRequester.findMany({ select: { name: true } });
++      try {
++        expect(names.map((r) => r.name).sort()).toEqual(
++          [...REQUESTERS.map((r) => r.name)].sort()
++        );
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++
++  it("seeds at least four active and at least one inactive requester", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.developmentRequester.deleteMany();
++      await seedRequesters(tx);
++      const active = await tx.developmentRequester.count({ where: { active: true } });
++      const inactive = await tx.developmentRequester.count({ where: { active: false } });
++      try {
++        expect(active).toBeGreaterThanOrEqual(4);
++        expect(inactive).toBeGreaterThanOrEqual(1);
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++
++  it("is idempotent - running twice creates no duplicates", async () => {
++    const prisma = getPrisma();
++    let assertionError: unknown;
++    await prisma.$transaction(async (tx) => {
++      await tx.developmentRequester.deleteMany();
++      await seedRequesters(tx);
++      await seedRequesters(tx);
++      const count = await tx.developmentRequester.count();
++      try {
++        expect(count).toBe(REQUESTERS.length);
++      } catch (err) {
++        assertionError = err;
++      }
++      throw new Error("ROLLBACK");
++    }).catch(() => {
++      // rollback intentionally - do not persist test data
++    });
++    if (assertionError) throw assertionError;
++  });
++});
+\ No newline at end of file
