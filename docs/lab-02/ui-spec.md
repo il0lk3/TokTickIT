@@ -40,10 +40,19 @@
 - **Mobile (< 768px):** Fields stack vertically 100% width. Buttons remain touch-friendly (min-height 44px). No horizontal scrolling allowed.
 
 ## 5. Required Screens
-- **Development Requester Selection:** Centered card, dropdown of active requesters, "Continue" button.
-- **Create Ticket:** Form with Category, System, Priority, Summary, Description, and Attachment dropzone.
-- **My Tickets:** Data table (desktop) or stacked cards (mobile). Search bar, filter dropdowns, and pagination controls at the bottom.
-- **Ticket Detail:** Read-only fields grouped logically. Attachment list with "Download" and "Remove" action icons.
+### 5.1. Development Requester Selection
+- Centered card, dropdown of active requesters, "Continue" button.
+- **State Diagram:** `Idle (Select User)` → `Loading (Fetching API)` → `Success (Set Context & Redirect)` or `Error (Show alert)`.
+
+### 5.2. Create Ticket
+- Form with Category, System, Priority, Summary, Description, and Attachment dropzone.
+- **State Diagram:** `Idle (Empty Form)` → `Validating (Check inputs)` → `Submitting (Busy state, button disabled)` → `Success (Show Ticket Number)` or `Error (Show field validation/API error)`.
+
+### 5.3. My Tickets
+- Data table (desktop) or stacked cards (mobile). Search bar, filter dropdowns, and pagination controls at the bottom.
+
+### 5.4. Ticket Detail
+- Read-only fields grouped logically. Attachment list with "Download" and "Remove" action icons.
 
 ## 6. Accessibility (A11y)
 - Focus indicators remain visible for keyboard navigation.

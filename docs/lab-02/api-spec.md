@@ -34,11 +34,17 @@
 {
   "id": 1,
   "ticketNumber": "TKT-2025-001234",
+  "categoryId": 1,
+  "relatedSystemId": 2,
+  "summary": "Laptop battery drains quickly",
+  "description": "My laptop battery is draining much faster than usual...",
   "currentStatus": "New",
   "createdAt": "..."
 }
 ```
-- **Errors:** `400 Bad Request` (Validation failed), `401 Unauthorized` (No Requester-Id).
+- **Errors:** 
+  - `400 Bad Request` (Validation failed).
+  - `401 Unauthorized` (`{ "error": "Requester not found or missing X-Requester-Id header" }`).
 
 ### 2.2. Get My Tickets (List)
 - **Endpoint:** `GET /api/tickets`
