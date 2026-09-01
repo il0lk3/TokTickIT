@@ -10,18 +10,19 @@ export function RequesterSelector() {
   const [state, setState] = useState<FetchState>("idle");
   const [selectedId, setSelectedId] = useState<string>("");
 
-  useEffect(() => {
-    async function fetchRequesters() {
-      setState("loading");
-      try {
-        const data = await getRequesters();
-        setRequesters(data);
-        if (data.length > 0) setSelectedId(String(data[0].id));
-        setState("success");
-      } catch (err) {
-        setState("error");
-      }
+  const fetchRequesters = async () => {
+    setState("loading");
+    try {
+      const data = await getRequesters();
+      setRequesters(data);
+      if (data.length > 0) setSelectedId(String(data[0].id));
+      setState("success");
+    } catch (err) {
+      setState("error");
     }
+  };
+
+  useEffect(() => {
     fetchRequesters();
   }, []);
 
@@ -47,7 +48,8 @@ export function RequesterSelector() {
 
           {state === "error" && (
             <div className="alert alert-danger mb-4">
-              Failed to load requesters. Is the API running?
+              <p className="mb-2">Failed to load requesters. Is the API running?</p>
+              <button className="btn btn-sm btn-outline-danger" onClick={fetchRequesters}>Retry</button>
             </div>
           )}
 

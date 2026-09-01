@@ -11,8 +11,12 @@ const RequesterContext = createContext<RequesterContextType | undefined>(undefin
 export function RequesterProvider({ children }: { children: React.ReactNode }) {
   const [activeRequester, setActiveRequester] = useState<Requester | null>(() => {
     // Try to load from localStorage on init
-    const stored = localStorage.getItem("toktickit_requester");
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem("toktickit_requester");
+      return stored ? JSON.parse(stored) : null;
+    } catch (err) {
+      return null;
+    }
   });
 
   // Keep localStorage in sync

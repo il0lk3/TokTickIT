@@ -12,7 +12,23 @@
 
 ### 1.3. Get Development Requesters
 - **Endpoint:** `GET /api/requesters`
-- **Response (200 OK):** `[{ "id": 1, "name": "Jennifer Anderson", "email": "jennifer@example.com", "isActive": true }, ...]`
+- **Success Response (200 OK):**
+Returns an array of requester objects, sorted by name alphabetically.
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Jennifer Anderson",
+    "email": "jennifer.anderson@example.com"
+  },
+  {
+    "id": 2,
+    "name": "Michael Brown",
+    "email": "michael.brown@example.com"
+  }
+]
+```
 
 ## 2. Ticket Endpoints
 

@@ -32,9 +32,6 @@ body {
   border-color: var(--zen-secondary) !important;
 }
 
-.text-success {
-  color: var(--zen-primary) !important;
-}
 
 .card {
   border: 1px solid #e0e0e0;
