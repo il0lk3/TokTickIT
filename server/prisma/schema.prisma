@@ -9,10 +9,92 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+// 1. Development Requester (Simulated User)
+model RequesterUser {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  
+  tickets   Ticket[] // One-to-many relationship with Ticket
+}
 
-
+// 2. Reference Data: Ticket Category
 model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
+  
+  tickets   Ticket[]
+}
+
+// 3. Reference Data: Related System
+model RelatedSystem {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  
+  tickets   Ticket[]
+}
+
+// Enums
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TicketStatus {
+  New
+  InProgress @map("In Progress")
+  Resolved
+}
+
+// 4. Core Ticket Model
+model Ticket {
+  id                Int            @id @default(autoincrement())
+  ticketNumber      String         @unique // Format: TKT-YYYY-NNNNNN
+  summary           String         @db.VarChar(150)
+  description       String         @db.VarChar(1000)
+  requestedPriority TicketPriority
+  currentStatus     TicketStatus   @default(New)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // Foreign Keys & Relationships
+  requesterId       Int
+  categoryId        Int
+  relatedSystemId   Int
+  
+  requester         RequesterUser  @relation(fields: [requesterId], references: [id])
+  category          Category       @relation(fields: [categoryId], references: [id])
+  relatedSystem     RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
+  
+  attachments       Attachment[]
+
+  @@index([requesterId])
+  @@index([categoryId])
+  @@index([relatedSystemId])
+  @@index([createdAt])
+}
+
+// 5. Attachment Model (Soft Removal enabled)
+model Attachment {
+  id            Int      @id @default(autoincrement())
+  originalName  String
+  filename      String   @unique // Safe generated name for storage
+  mimeType      String
+  size          Int      // Size in bytes (max 5MB)
+  
+  // Soft Removal Metadata
+  isRemoved     Boolean  @default(false)
+  removedReason String?
+  
+  createdAt     DateTime @default(now())
+  
+  ticketId      Int
+  ticket        Ticket   @relation(fields: [ticketId], references: [id])
+
+  @@index([ticketId])
 }
