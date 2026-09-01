@@ -1,0 +1,39 @@
+:root {
+  --zen-primary: #006B3C;
+  --zen-secondary: #0B7A46;
+  --zen-pale: #EAF6EF;
+  --zen-bg: #F5F7F6;
+  --zen-text: #1F2924;
+  --zen-error: #D32F2F;
+
+  /* Override Bootstrap Success to Zen Primary */
+  --bs-success-rgb: 0, 107, 60;
+  --bs-primary-rgb: 0, 107, 60;
+}
+
+body {
+  background-color: var(--zen-bg);
+  color: var(--zen-text);
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+/* Custom Zen Green Utilities */
+.text-zen-primary { color: var(--zen-primary); }
+.bg-zen-primary { background-color: var(--zen-primary); color: white; }
+.bg-zen-pale { background-color: var(--zen-pale); }
+
+/* Override standard bootstrap success colors */
+.btn-success {
+  background-color: var(--zen-primary);
+  border-color: var(--zen-primary);
+}
+.btn-success:hover, .btn-success:focus, .btn-success:active {
+  background-color: var(--zen-secondary) !important;
+  border-color: var(--zen-secondary) !important;
+}
+
+
+.card {
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
