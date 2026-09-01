@@ -29,3 +29,18 @@ export async function checkSystem(): Promise<SystemStatus> {
   
   return { online: true, categories };
 }
+
+// Issue 3: Requesters API
+export interface Requester {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export async function getRequesters(): Promise<Requester[]> {
+  const res = await fetch(`${API_URL}/api/requesters`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch requesters");
+  }
+  return res.json();
+}

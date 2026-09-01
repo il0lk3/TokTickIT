@@ -40,4 +40,21 @@ app.get("/api/categories", async (_req: Request, res: Response) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Issue 3 — Requesters list
+// ---------------------------------------------------------------------------
+app.get("/api/requesters", async (_req: Request, res: Response) => {
+  try {
+    const requesters = await getPrisma().requesterUser.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: 'asc' },
+    });
+    res.status(200).json(requesters);
+  } catch (error) {
+    console.error("Failed to fetch requesters:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default app;
