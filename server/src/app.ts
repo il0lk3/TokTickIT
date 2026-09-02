@@ -12,6 +12,9 @@ export const app = express();
 app.use(cors());          // already wired: lets the Vite dev server call this API
 app.use(express.json());
 
+import ticketsRouter from "./routes/tickets.js";
+app.use("/api/tickets", ticketsRouter);
+
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
 // Make the test in tests/lab-01/health.test.ts pass.
