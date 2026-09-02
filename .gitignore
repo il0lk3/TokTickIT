@@ -12,3 +12,17 @@ server/prisma/*.db
 # logs & OS
 *.log
 .DS_Store
+
+# ignore diffs and patches from extensions
+*.patch
+*_diff.txt
+
+# pro-level additions
+coverage/
+.vscode/
+.idea/
+.vite/
+*.tsbuildinfo
+Thumbs.db
+*-journal
+*.db-journal

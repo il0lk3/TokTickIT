@@ -60,4 +60,17 @@ app.get("/api/requesters", async (_req: Request, res: Response) => {
   }
 });
 
+app.get("/api/systems", async (_req: Request, res: Response) => {
+  try {
+    const systems = await getPrisma().relatedSystem.findMany({
+      select: { id: true, name: true },
+      orderBy: { id: 'asc' },
+    });
+    res.status(200).json(systems);
+  } catch (error) {
+    console.error("Failed to fetch systems:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default app;
