@@ -35,11 +35,16 @@ export function RequesterSelector() {
 
   return (
     <div className="container min-vh-100 d-flex align-items-center justify-content-center">
-      <div className="card shadow-sm" style={{ width: "100%", maxWidth: "450px" }}>
-        <div className="card-body p-4 text-center">
-          <h2 className="h4 mb-2">Welcome to TokTickIT</h2>
-          <p className="text-muted small mb-4">Please select a Development Requester to continue testing the application.</p>
-          
+      <div className="glass-panel animate-enter" style={{ width: "100%", maxWidth: "480px" }}>
+        <div className="p-4 p-md-5 text-center">
+          <div className="mb-4 d-inline-flex align-items-center justify-content-center bg-zen-pale rounded-circle" style={{ width: '64px', height: '64px' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--zen-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <h2 className="h3 mb-2 fw-bold text-zen-primary">Welcome to TokTickIT</h2>
+          <p className="text-muted mb-4">Please select a Development Requester to continue testing the application.</p>
           {state === "loading" && (
             <div className="spinner-border text-zen-primary my-4" role="status">
               <span className="visually-hidden">Loading...</span>
@@ -54,11 +59,11 @@ export function RequesterSelector() {
           )}
 
           {state === "success" && (
-            <div className="mb-4 text-start">
-              <label htmlFor="requesterSelect" className="form-label fw-semibold">Requester</label>
+            <div className="mb-5 text-start">
+              <label htmlFor="requesterSelect" className="form-label">Requester Account</label>
               <select 
                 id="requesterSelect"
-                className="form-select form-select-lg"
+                className="form-select form-select-lg shadow-sm"
                 value={selectedId}
                 onChange={(e) => setSelectedId(e.target.value)}
               >
@@ -72,11 +77,15 @@ export function RequesterSelector() {
           )}
 
           <button 
-            className="btn btn-success btn-lg w-100 fw-bold" 
+            className="btn btn-success btn-lg w-100 rounded-pill d-flex justify-content-center align-items-center gap-2" 
             onClick={handleContinue}
             disabled={state !== "success" || !selectedId}
           >
             Continue
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
           </button>
         </div>
       </div>

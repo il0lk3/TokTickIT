@@ -140,4 +140,84 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/tickets - List tickets with search, filter, pagination
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const requesterId = res.locals.requesterId as number;
+    const { 
+      search, 
+      categoryId, 
+      requestedPriority, 
+      status, 
+      page = "1", 
+      limit = "10", 
+      sortBy = "createdAt", 
+      sortOrder = "desc" 
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(String(limit), 10) || 10));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build the where clause
+    const where: any = { requesterId };
+
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      where.OR = [
+        { summary: { contains: search, mode: 'insensitive' } },
+        { ticketNumber: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+    
+    if (categoryId) {
+      where.categoryId = parseInt(String(categoryId), 10);
+    }
+    
+    if (requestedPriority) {
+      where.requestedPriority = String(requestedPriority);
+    }
+    
+    if (status) {
+      where.currentStatus = String(status);
+    }
+
+    // Ensure valid sort fields
+    const validSortFields = ['createdAt', 'ticketNumber', 'currentStatus', 'requestedPriority'];
+    const sortField = validSortFields.includes(String(sortBy)) ? String(sortBy) : 'createdAt';
+    const sortDir = String(sortOrder).toLowerCase() === 'asc' ? 'asc' : 'desc';
+
+    const prisma = getPrisma();
+    
+    // Execute count and query in parallel
+    const [total, data] = await Promise.all([
+      prisma.ticket.count({ where }),
+      prisma.ticket.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { [sortField]: sortDir },
+        include: {
+          category: true,
+          relatedSystem: true
+        }
+      })
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.status(200).json({
+      data,
+      meta: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

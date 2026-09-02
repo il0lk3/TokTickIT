@@ -95,3 +95,38 @@ export async function createTicket(payload: CreateTicketPayload, requesterId: nu
   
   return res.json();
 }
+
+export interface TicketListResponse {
+  data: TicketResponse[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }
+}
+
+export async function getTickets(
+  params: { search?: string, categoryId?: string, requestedPriority?: string, status?: string, page?: number, limit?: number },
+  requesterId: number
+): Promise<TicketListResponse> {
+  const query = new URLSearchParams();
+  if (params.search) query.append("search", params.search);
+  if (params.categoryId) query.append("categoryId", params.categoryId);
+  if (params.requestedPriority) query.append("requestedPriority", params.requestedPriority);
+  if (params.status) query.append("status", params.status);
+  if (params.page) query.append("page", params.page.toString());
+  if (params.limit) query.append("limit", params.limit.toString());
+
+  const res = await fetch(`${API_URL}/api/tickets?${query.toString()}`, {
+    headers: {
+      "X-Requester-Id": requesterId.toString()
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch tickets");
+  }
+
+  return res.json();
+}
