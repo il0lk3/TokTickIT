@@ -101,4 +101,45 @@ describe("MyTickets Component", () => {
       );
     }, { timeout: 1000 });
   });
+
+  it("handles sorting when header is clicked", async () => {
+    (api.getTickets as any).mockResolvedValue({
+      data: [{ id: 1, ticketNumber: "TKT-2025-001", summary: "Test", categoryId: 1, requestedPriority: "HIGH", currentStatus: "New", createdAt: new Date().toISOString() }],
+      meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+    });
+
+    render(
+      <TestWrapper requester={mockRequester}>
+        <MyTickets categories={mockCategories} />
+      </TestWrapper>
+    );
+
+    // Initial fetch
+    await waitFor(() => {
+      expect(api.getTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ sortBy: "createdAt", sortOrder: "desc" }),
+        mockRequester.id
+      );
+    });
+
+    // Click Ticket No. header
+    const ticketHeader = screen.getByText(/Ticket No./i);
+    fireEvent.click(ticketHeader);
+
+    await waitFor(() => {
+      expect(api.getTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ sortBy: "ticketNumber", sortOrder: "desc" }),
+        mockRequester.id
+      );
+    });
+    
+    // Click again to toggle order
+    fireEvent.click(ticketHeader);
+    await waitFor(() => {
+      expect(api.getTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ sortBy: "ticketNumber", sortOrder: "asc" }),
+        mockRequester.id
+      );
+    });
+  });
 });

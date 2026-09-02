@@ -107,7 +107,7 @@ export interface TicketListResponse {
 }
 
 export async function getTickets(
-  params: { search?: string, categoryId?: string, requestedPriority?: string, status?: string, page?: number, limit?: number },
+  params: { search?: string, categoryId?: string, requestedPriority?: string, status?: string, page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc' },
   requesterId: number
 ): Promise<TicketListResponse> {
   const query = new URLSearchParams();
@@ -117,6 +117,8 @@ export async function getTickets(
   if (params.status) query.append("status", params.status);
   if (params.page) query.append("page", params.page.toString());
   if (params.limit) query.append("limit", params.limit.toString());
+  if (params.sortBy) query.append("sortBy", params.sortBy);
+  if (params.sortOrder) query.append("sortOrder", params.sortOrder);
 
   const res = await fetch(`${API_URL}/api/tickets?${query.toString()}`, {
     headers: {

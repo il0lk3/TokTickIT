@@ -23,7 +23,9 @@ describe("GET /api/tickets (My Tickets API)", () => {
     testSystemId = sys!.id;
 
     // Clear tickets before test
-    await prisma.ticket.deleteMany({});
+    await prisma.ticket.deleteMany({
+      where: { ticketNumber: { startsWith: "TKT-2026-00000" } }
+    });
 
     // Seed some tickets for testRequester
     await prisma.ticket.createMany({
@@ -37,7 +39,9 @@ describe("GET /api/tickets (My Tickets API)", () => {
   });
 
   afterAll(async () => {
-    await prisma.ticket.deleteMany({});
+    await prisma.ticket.deleteMany({
+      where: { ticketNumber: { startsWith: "TKT-2026-00000" } }
+    });
   });
 
   it("should return 401 if X-Requester-Id is missing", async () => {
@@ -73,6 +77,36 @@ describe("GET /api/tickets (My Tickets API)", () => {
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
     expect(res.body.data[0].currentStatus).toBe("Resolved");
+  });
+
+  it("should filter tickets by categoryId", async () => {
+    const res = await request(app)
+      .get(`/api/tickets?categoryId=${testCategoryId}`)
+      .set("X-Requester-Id", testRequesterId.toString());
+    
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(3);
+  });
+
+  it("should filter tickets by requestedPriority", async () => {
+    const res = await request(app)
+      .get("/api/tickets?requestedPriority=HIGH")
+      .set("X-Requester-Id", testRequesterId.toString());
+    
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].requestedPriority).toBe("HIGH");
+  });
+
+  it("should sort tickets", async () => {
+    const res = await request(app)
+      .get("/api/tickets?sortBy=requestedPriority&sortOrder=asc")
+      .set("X-Requester-Id", testRequesterId.toString());
+    
+    expect(res.status).toBe(200);
+    expect(res.body.data[0].requestedPriority).toBe("LOW"); // Sorts by ENUM definition order or DB rule
+    expect(res.body.data[1].requestedPriority).toBe("MEDIUM");
+    expect(res.body.data[2].requestedPriority).toBe("HIGH");
   });
 
   it("should support pagination", async () => {

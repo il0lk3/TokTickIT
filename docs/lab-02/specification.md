@@ -89,3 +89,4 @@ Key endpoints include:
 ## 11. Assumptions and Decisions
 - Uploaded files will be stored locally in an `uploads` directory for simplicity during this lab. (Note: Ensure `uploads/` is added to `.gitignore`).
 - "Inactive" Development Requesters are used to test data integrity but will not appear in the Requester Selector dropdown.
+- **Requester Count:** The system is seeded with 8 active requesters (e.g., Cream Su, Bew Su) and 1 inactive requester to support realistic testing scenarios and customized grading requirements.
