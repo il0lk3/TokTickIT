@@ -4,9 +4,10 @@ import { useRequester } from "../contexts/RequesterContext.js";
 
 interface MyTicketsProps {
   categories: Category[];
+  onSelectTicket: (id: number) => void;
 }
 
-export function MyTickets({ categories }: MyTicketsProps) {
+export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   const { activeRequester } = useRequester();
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -184,7 +185,7 @@ export function MyTickets({ categories }: MyTicketsProps) {
               </thead>
               <tbody className="border-top-0">
                 {tickets.map((t) => (
-                  <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }}>
+                  <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
                     <td className="ps-4 py-3">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
                     </td>

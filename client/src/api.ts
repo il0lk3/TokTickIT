@@ -130,3 +130,85 @@ export async function getTickets(
 
   return res.json();
 }
+
+export interface Attachment {
+  id: number;
+  originalName: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  isRemoved: boolean;
+  removedReason: string | null;
+  createdAt: string;
+}
+
+export interface TicketDetailResponse extends TicketResponse {
+  description: string;
+  category: Category;
+  relatedSystem: RelatedSystem;
+  requester: Requester;
+  attachments: Attachment[];
+}
+
+export async function getTicketDetail(id: number, requesterId: number): Promise<TicketDetailResponse> {
+  const res = await fetch(`${API_URL}/api/tickets/${id}`, {
+    headers: {
+      "X-Requester-Id": requesterId.toString()
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch ticket detail");
+  }
+
+  return res.json();
+}
+
+export async function uploadAttachment(ticketId: number, file: File, requesterId: number): Promise<Attachment> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
+    method: "POST",
+    headers: {
+      "X-Requester-Id": requesterId.toString()
+    },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to upload attachment");
+  }
+
+  return res.json();
+}
+
+export async function removeAttachment(ticketId: number, attachmentId: number, reason: string, requesterId: number): Promise<void> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requester-Id": requesterId.toString()
+    },
+    body: JSON.stringify({ reason })
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to remove attachment");
+  }
+}
+
+export async function downloadAttachmentBlob(ticketId: number, attachmentId: number, requesterId: number): Promise<Blob> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}/download`, {
+    headers: {
+      "X-Requester-Id": requesterId.toString()
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to download attachment");
+  }
+
+  return res.blob();
+}

@@ -36,7 +36,7 @@ describe("MyTickets Component", () => {
 
     render(
       <TestWrapper requester={mockRequester}>
-        <MyTickets categories={mockCategories} />
+        <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
 
@@ -62,7 +62,7 @@ describe("MyTickets Component", () => {
 
     render(
       <TestWrapper requester={mockRequester}>
-        <MyTickets categories={mockCategories} />
+        <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
 
@@ -79,7 +79,7 @@ describe("MyTickets Component", () => {
 
     render(
       <TestWrapper requester={mockRequester}>
-        <MyTickets categories={mockCategories} />
+        <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
 
