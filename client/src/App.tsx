@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { checkSystem, Category } from "./api.js";
 import { RequesterProvider, useRequester } from "./contexts/RequesterContext.js";
 import { RequesterSelector } from "./components/RequesterSelector.js";
-import CreateTicket from "./components/CreateTicket";
+import CreateTicket from "./components/CreateTicket.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 type Tab = "create" | "list";

@@ -71,4 +71,52 @@ describe("UI-02: CreateTicket Validation", () => {
     // Assert the API was NOT called
     expect(api.createTicket).not.toHaveBeenCalled();
   });
+
+  it("Submit without Category shows field-level error message and API is not called", async () => {
+    (api.getSystems as any).mockResolvedValue([{ id: 1, name: "Windows Laptop" }]);
+    render(<RequesterProvider><CreateTicket categories={mockCategories} /></RequesterProvider>);
+    await waitFor(() => { expect(screen.getByLabelText(/Category/i)).toBeInTheDocument(); });
+
+    fireEvent.change(screen.getByLabelText(/Related System/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/Summary/i), { target: { value: "Test Summary" } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "Test Description" } });
+    
+    fireEvent.click(screen.getByRole("button", { name: /Submit Request/i }));
+    
+    await waitFor(() => { expect(screen.getByText("Category is required.")).toBeInTheDocument(); });
+    expect(api.createTicket).not.toHaveBeenCalled();
+  });
+
+  it("Submit without Related System shows field-level error message and API is not called", async () => {
+    (api.getSystems as any).mockResolvedValue([{ id: 1, name: "Windows Laptop" }]);
+    render(<RequesterProvider><CreateTicket categories={mockCategories} /></RequesterProvider>);
+    await waitFor(() => { expect(screen.getByLabelText(/Related System/i)).toBeInTheDocument(); });
+
+    fireEvent.change(screen.getByLabelText(/Category/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/Summary/i), { target: { value: "Test Summary" } });
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: "Test Description" } });
+    
+    fireEvent.click(screen.getByRole("button", { name: /Submit Request/i }));
+    
+    await waitFor(() => { expect(screen.getByText("Related System is required.")).toBeInTheDocument(); });
+    expect(api.createTicket).not.toHaveBeenCalled();
+  });
+
+  it("Submit with Description over 1000 chars shows field-level error message and API is not called", async () => {
+    (api.getSystems as any).mockResolvedValue([{ id: 1, name: "Windows Laptop" }]);
+    render(<RequesterProvider><CreateTicket categories={mockCategories} /></RequesterProvider>);
+    await waitFor(() => { expect(screen.getByLabelText(/Description/i)).toBeInTheDocument(); });
+
+    fireEvent.change(screen.getByLabelText(/Category/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/Related System/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/Summary/i), { target: { value: "Test Summary" } });
+    
+    const longDesc = "a".repeat(1001);
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: longDesc } });
+    
+    fireEvent.click(screen.getByRole("button", { name: /Submit Request/i }));
+    
+    await waitFor(() => { expect(screen.getByText("Description cannot exceed 1000 characters.")).toBeInTheDocument(); });
+    expect(api.createTicket).not.toHaveBeenCalled();
+  });
 });

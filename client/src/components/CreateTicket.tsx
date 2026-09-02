@@ -11,6 +11,7 @@ interface CreateTicketProps {
 export default function CreateTicket({ categories }: CreateTicketProps) {
   const { activeRequester } = useRequester();
   const [systems, setSystems] = useState<RelatedSystem[]>([]);
+  const [systemsError, setSystemsError] = useState(false);
   const [formState, setFormState] = useState<FormState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [ticketNumber, setTicketNumber] = useState("");
@@ -25,15 +26,18 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
   // Validation Errors
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
-  useEffect(() => {
-    async function fetchSystems() {
-      try {
-        const data = await getSystems();
-        setSystems(data);
-      } catch (err) {
-        console.error("Failed to fetch systems", err);
-      }
+  const fetchSystems = async () => {
+    setSystemsError(false);
+    try {
+      const data = await getSystems();
+      setSystems(data);
+    } catch (err) {
+      console.error("Failed to fetch systems", err);
+      setSystemsError(true);
     }
+  };
+
+  useEffect(() => {
     fetchSystems();
   }, []);
 
@@ -147,16 +151,25 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
 
             <div className="col-md-6">
               <label htmlFor="relatedSystemId" className="form-label fw-medium">Related System <span className="text-danger">*</span></label>
-              <select 
-                id="relatedSystemId" 
-                className={`form-select ${validationErrors.relatedSystemId ? 'is-invalid' : ''}`}
-                value={relatedSystemId} 
-                onChange={(e) => setRelatedSystemId(e.target.value)}
-              >
-                <option value="">Select a system...</option>
-                {systems.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              {validationErrors.relatedSystemId && <div className="invalid-feedback">{validationErrors.relatedSystemId}</div>}
+              {systemsError ? (
+                <div className="d-flex align-items-center mt-1">
+                  <span className="text-danger small me-2">Failed to load systems.</span>
+                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={fetchSystems}>Retry</button>
+                </div>
+              ) : (
+                <>
+                  <select 
+                    id="relatedSystemId" 
+                    className={`form-select ${validationErrors.relatedSystemId ? 'is-invalid' : ''}`}
+                    value={relatedSystemId} 
+                    onChange={(e) => setRelatedSystemId(e.target.value)}
+                  >
+                    <option value="">Select a system...</option>
+                    {systems.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  {validationErrors.relatedSystemId && <div className="invalid-feedback">{validationErrors.relatedSystemId}</div>}
+                </>
+              )}
             </div>
 
             <div className="col-12">
