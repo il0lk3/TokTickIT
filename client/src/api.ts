@@ -44,3 +44,54 @@ export async function getRequesters(): Promise<Requester[]> {
   }
   return res.json();
 }
+
+// Issue 5: Systems and Create Ticket API
+export interface RelatedSystem {
+  id: number;
+  name: string;
+}
+
+export async function getSystems(): Promise<RelatedSystem[]> {
+  const res = await fetch(`${API_URL}/api/systems`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch systems");
+  }
+  return res.json();
+}
+
+export interface CreateTicketPayload {
+  categoryId: number;
+  relatedSystemId: number;
+  requestedPriority: string;
+  summary: string;
+  description: string;
+}
+
+export interface TicketResponse {
+  id: number;
+  ticketNumber: string;
+  categoryId: number;
+  relatedSystemId: number;
+  summary: string;
+  description: string;
+  currentStatus: string;
+  createdAt: string;
+}
+
+export async function createTicket(payload: CreateTicketPayload, requesterId: number): Promise<TicketResponse> {
+  const res = await fetch(`${API_URL}/api/tickets`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requester-Id": requesterId.toString()
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create ticket");
+  }
+  
+  return res.json();
+}
