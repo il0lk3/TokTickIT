@@ -4,15 +4,15 @@
 - **Primary green:** `#006B3C` (App header, primary actions, strong emphasis)
 - **Secondary green:** `#0B7A46` (Active tabs, focus accents, links, hover states)
 - **Pale green:** `#EAF6EF` (Selected, success, subtle section emphasis)
-- **Page background:** `#F5F7F6`
-- **Surface / cards:** `#FFFFFF` (White with subtle border and restrained shadow)
+- **Page background:** `#F5F7F6` with subtle gradients or blurred background elements allowed.
+- **Surface / cards:** Glassmorphism (`.glass-panel`) with `backdrop-filter: blur(12px)`, subtle white semi-transparent backgrounds, and restrained shadow.
 - **Text:** Dark charcoal-green (`#1F2924` or similar, not pure black)
 - **Error:** Dark red text and border (`#D32F2F`)
 - **Warning:** Amber (`#FFA000`)
 - **Success:** Green confirmation text (`#2E7D32`)
 
 ## 2. Typography & Spacing
-- Use a clean, modern sans-serif font (e.g., Inter or Roboto).
+- Use Google Fonts: **Outfit** for headings and **Inter** for body text to create a modern, premium feel.
 - **Labels:** Appear above controls, consistent font weight (e.g., fw-medium).
 - **Spacing:** Use Tailwind/Bootstrap standard spacing (e.g., gap-3, mb-4).
 
@@ -54,7 +54,11 @@
 ### 5.4. Ticket Detail
 - Read-only fields grouped logically. Attachment list with "Download" and "Remove" action icons.
 
-## 6. Accessibility (A11y)
+## 6. Micro-Animations & Transitions
+- Forms, buttons, and cards should utilize micro-animations (e.g. hover lifts, fade-ins).
+- Keyframes such as `.animate-enter` and hover transforms should be applied to interactive components.
+
+## 7. Accessibility (A11y)
 - Focus indicators remain visible for keyboard navigation.
 - Icon-only controls must have `aria-label` or `title` tooltips.
 - Success/Error states must not rely on color alone (use icons or clear text).

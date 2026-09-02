@@ -12,6 +12,8 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
   // Filters
   const [search, setSearch] = useState("");
@@ -45,7 +47,9 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         requestedPriority,
         status,
         page,
-        limit: 10
+        limit: 10,
+        sortBy,
+        sortOrder
       }, activeRequester.id);
       setTickets(res.data);
       setTotalPages(res.meta.totalPages);
@@ -55,7 +59,22 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
     } finally {
       setLoading(false);
     }
-  }, [activeRequester, debouncedSearch, categoryId, requestedPriority, status, page]);
+  }, [activeRequester, debouncedSearch, categoryId, requestedPriority, status, page, sortBy, sortOrder]);
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortBy !== field) return <span className="ms-1 text-black-50">↕</span>;
+    return <span className="ms-1">{sortOrder === "asc" ? "↑" : "↓"}</span>;
+  };
 
   useEffect(() => {
     fetchTickets();
@@ -173,14 +192,14 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         <div className="glass-panel overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="table-light text-muted small text-uppercase">
+              <thead className="bg-light bg-opacity-50 text-muted small text-uppercase">
                 <tr>
-                  <th className="ps-4 fw-semibold py-3 border-0">Ticket No.</th>
-                  <th className="fw-semibold py-3 border-0">Summary</th>
-                  <th className="fw-semibold py-3 border-0">Category</th>
-                  <th className="fw-semibold py-3 border-0 text-center">Priority</th>
-                  <th className="fw-semibold py-3 border-0 text-center">Status</th>
-                  <th className="fw-semibold py-3 border-0 text-end pe-4">Date</th>
+                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
+                  <th className="border-0 fw-bold py-3">Summary</th>
+                  <th className="border-0 fw-bold py-3">Category</th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort("requestedPriority")}>Priority <SortIcon field="requestedPriority" /></th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort("currentStatus")}>Status <SortIcon field="currentStatus" /></th>
+                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer' }} onClick={() => handleSort("createdAt")}>Date <SortIcon field="createdAt" /></th>
                 </tr>
               </thead>
               <tbody className="border-top-0">

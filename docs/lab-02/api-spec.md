@@ -12,20 +12,19 @@
 
 ### 1.3. Get Development Requesters
 - **Endpoint:** `GET /api/requesters`
-- **Success Response (200 OK):**
-Returns an array of requester objects, sorted by name alphabetically.
+Returns an array of requester objects, sorted by name alphabetically. The system includes 8 active requesters for testing.
 
 ```json
 [
   {
     "id": 1,
-    "name": "Jennifer Anderson",
-    "email": "jennifer.anderson@example.com"
+    "name": "Cream Su",
+    "email": "cream.su@example.com"
   },
   {
     "id": 2,
-    "name": "Michael Brown",
-    "email": "michael.brown@example.com"
+    "name": "Bew Su",
+    "email": "bew.su@example.com"
   }
 ]
 ```
