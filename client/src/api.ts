@@ -160,7 +160,14 @@ export async function getTicketDetail(id: number, requesterId: number): Promise<
   });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch ticket detail");
+    let errMsg = "Failed to fetch ticket detail";
+    try {
+      const errBody = await res.json();
+      if (errBody.error) errMsg = errBody.error;
+    } catch (e) {
+      // Use fallback
+    }
+    throw new Error(errMsg);
   }
 
   return res.json();

@@ -19,8 +19,12 @@ describe("Ticket Detail & Attachments API", () => {
     const cat = await prisma.category.findFirst();
     const sys = await prisma.relatedSystem.findFirst();
 
-    await prisma.attachment.deleteMany({});
-    await prisma.ticket.deleteMany({});
+    await prisma.attachment.deleteMany({
+      where: { ticket: { ticketNumber: "TKT-2026-DETAIL" } }
+    });
+    await prisma.ticket.deleteMany({
+      where: { ticketNumber: "TKT-2026-DETAIL" }
+    });
 
     const ticket = await prisma.ticket.create({
       data: {
@@ -38,8 +42,23 @@ describe("Ticket Detail & Attachments API", () => {
   });
 
   afterAll(async () => {
-    await prisma.attachment.deleteMany({});
-    await prisma.ticket.deleteMany({});
+    await prisma.attachment.deleteMany({
+      where: { ticket: { ticketNumber: "TKT-2026-DETAIL" } }
+    });
+    await prisma.ticket.deleteMany({
+      where: { ticketNumber: "TKT-2026-DETAIL" }
+    });
+
+    // Clean up uploaded txt files
+    const uploadDir = path.join(process.cwd(), "uploads");
+    if (fs.existsSync(uploadDir)) {
+      const files = fs.readdirSync(uploadDir);
+      for (const file of files) {
+        if (file.endsWith(".txt")) {
+          fs.unlinkSync(path.join(uploadDir, file));
+        }
+      }
+    }
   });
 
   it("should get ticket details for owner", async () => {
