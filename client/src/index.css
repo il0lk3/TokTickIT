@@ -39,49 +39,70 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .bg-zen-primary { background-color: var(--zen-primary) !important; color: white !important; }
 .bg-zen-pale { background-color: var(--zen-pale) !important; }
 
-/* Glassmorphism Classes */
+/* -------------------------------------
+ * Premium Component Styling
+ * ------------------------------------- */
+
+/* Glassmorphism Panel */
 .glass-panel {
-  background: var(--zen-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--zen-border);
-  box-shadow: var(--zen-shadow);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(31, 41, 36, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.glass-navbar {
-  background: var(--zen-primary);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+.glass-panel:hover {
+  box-shadow: 0 12px 48px rgba(31, 41, 36, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
 }
 
-/* Premium Buttons */
-.btn {
-  font-family: 'Outfit', sans-serif;
+/* Glassmorphism Navbar */
+.glass-navbar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Primary Button Override */
+.btn-primary {
+  background-color: var(--zen-primary);
+  border-color: var(--zen-primary);
+  color: #fff;
   font-weight: 500;
   border-radius: 8px;
   padding: 0.6rem 1.5rem;
-  transition: all 0.3s ease;
-}
-
-.btn-success {
-  background-color: var(--zen-primary);
-  border-color: var(--zen-primary);
+  transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 107, 60, 0.2);
 }
 
-.btn-success:hover, .btn-success:focus, .btn-success:active {
-  background-color: var(--zen-accent) !important;
-  border-color: var(--zen-accent) !important;
-  box-shadow: 0 6px 16px rgba(17, 152, 89, 0.3) !important;
-  transform: translateY(-1px);
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--zen-secondary);
+  border-color: var(--zen-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 107, 60, 0.3);
 }
 
-.btn-outline-success {
-  color: var(--zen-primary);
-  border-color: var(--zen-primary);
+/* Secondary Outline Button Override */
+.btn-outline-secondary {
+  color: var(--zen-text);
+  border-color: #dee2e6;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.2s ease;
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background-color: var(--zen-pale);
+  color: var(--zen-secondary);
+  border-color: #c1c9c5;
+  transform: translateY(-2px);
 }
 .btn-outline-success:hover {
   background-color: var(--zen-primary);
@@ -130,18 +151,31 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   letter-spacing: 0.01em;
 }
 
-/* Micro Animations */
-.animate-enter {
-  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Table Enhancements */
+.custom-table th {
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  color: #6c757d;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
-@keyframes slideUpFade {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.custom-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.custom-table tbody tr:hover {
+  background-color: rgba(234, 246, 239, 0.5) !important;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-enter {
+  animation: fadeInUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }

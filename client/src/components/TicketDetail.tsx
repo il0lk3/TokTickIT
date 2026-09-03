@@ -245,7 +245,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                   accept=".jpg,.jpeg,.png,.webp,.pdf"
                 />
                 <button 
-                  className="btn btn-outline-primary w-100 btn-sm rounded-pill d-flex align-items-center justify-content-center gap-2"
+                  className="btn btn-primary px-4 py-2 fw-medium rounded-pill d-flex align-items-center gap-2 shadow-sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >

@@ -113,7 +113,7 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
             Your ticket number is: <br/>
             <strong className="fs-3 text-dark">{ticketNumber}</strong>
           </p>
-          <button className="btn btn-outline-success px-4" onClick={resetForm}>
+          <button className="btn btn-outline-secondary px-4" onClick={resetForm}>
             Create Another Ticket
           </button>
         </div>
@@ -251,7 +251,7 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
             <div className="col-12 mt-5 pt-4 border-top border-light border-opacity-50 d-flex justify-content-end">
               <button 
                 type="submit" 
-                className="btn btn-success px-5 py-2 fs-6 rounded-pill d-flex align-items-center gap-2" 
+                className="btn btn-primary px-5 py-2 fs-6 rounded-pill d-flex align-items-center gap-2" 
                 disabled={formState === "submitting"}
               >
                 {formState === "submitting" ? (

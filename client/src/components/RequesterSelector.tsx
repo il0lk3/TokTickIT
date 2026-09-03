@@ -77,7 +77,7 @@ export function RequesterSelector() {
           )}
 
           <button 
-            className="btn btn-success btn-lg w-100 rounded-pill d-flex justify-content-center align-items-center gap-2" 
+            className="btn btn-primary btn-lg w-100 rounded-pill d-flex justify-content-center align-items-center gap-2" 
             onClick={handleContinue}
             disabled={state !== "success" || !selectedId}
           >
