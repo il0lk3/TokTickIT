@@ -96,10 +96,10 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
-      case "HIGH": return "text-danger";
-      case "MEDIUM": return "text-warning";
-      case "LOW": return "text-success";
-      default: return "text-muted";
+      case "HIGH": return "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25";
+      case "MEDIUM": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
+      case "LOW": return "bg-success bg-opacity-10 text-success border border-success border-opacity-25";
+      default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
     }
   };
 
@@ -109,6 +109,15 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
       return acc;
     }, {} as Record<number, string>);
   }, [categories]);
+
+  const activeFilters = useMemo(() => {
+    const filters = [];
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => setSearch("") });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => setCategoryId("") });
+    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => setRequestedPriority("") });
+    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => setStatus("") });
+    return filters;
+  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap]);
 
   return (
     <div className="animate-enter">
@@ -165,6 +174,24 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             </select>
           </div>
         </div>
+
+        {activeFilters.length > 0 && (
+          <div className="d-flex align-items-center gap-2 mt-3 flex-wrap">
+            <span className="small text-muted me-1 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Filters:</span>
+            {activeFilters.map((f, i) => (
+              <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
+                {f.label}
+                <button type="button" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+              </span>
+            ))}
+            <button 
+              className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
+              onClick={() => { setSearch(""); setCategoryId(""); setRequestedPriority(""); setStatus(""); }}
+            >
+              Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -192,14 +219,14 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         <div className="glass-panel overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="bg-light text-dark small text-uppercase text-nowrap border-bottom border-2">
+              <thead className="text-muted small text-uppercase text-nowrap border-bottom border-light" style={{ backgroundColor: '#F8FAF9' }}>
                 <tr>
-                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
-                  <th className="border-0 fw-bold py-3">Summary</th>
-                  <th className="border-0 fw-bold py-3">Category</th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort("requestedPriority")}>Priority <SortIcon field="requestedPriority" /></th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort("currentStatus")}>Status <SortIcon field="currentStatus" /></th>
-                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer' }} onClick={() => handleSort("createdAt")}>Date <SortIcon field="createdAt" /></th>
+                  <th className="border-0 fw-bolder ps-4 py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
+                  <th className="border-0 fw-bolder py-3" style={{ letterSpacing: '0.5px' }}>Summary</th>
+                  <th className="border-0 fw-bolder py-3" style={{ letterSpacing: '0.5px' }}>Category</th>
+                  <th className="border-0 fw-bolder py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>Priority <SortIcon field="requestedPriority" /></th>
+                  <th className="border-0 fw-bolder py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("currentStatus")}>Status <SortIcon field="currentStatus" /></th>
+                  <th className="border-0 fw-bolder py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>Date <SortIcon field="createdAt" /></th>
                 </tr>
               </thead>
               <tbody className="border-top-0">
@@ -217,14 +244,9 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                       <span className="small text-muted">{categoryMap[t.categoryId] || 'Unknown'}</span>
                     </td>
                     <td className="py-3 text-center text-nowrap">
-                      <div className="d-flex align-items-center justify-content-center gap-2">
-                        <div className={`d-inline-flex align-items-center justify-content-center bg-light rounded-circle ${getPriorityBadgeClass(t.requestedPriority)}`} style={{ width: '28px', height: '28px' }} title={t.requestedPriority}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                          </svg>
-                        </div>
-                        <span className={`small fw-bold text-capitalize ${getPriorityBadgeClass(t.requestedPriority)}`}>{t.requestedPriority.toLowerCase()}</span>
-                      </div>
+                      <span className={`badge rounded-pill fw-medium px-3 py-2 ${getPriorityBadgeClass(t.requestedPriority)}`}>
+                        {t.requestedPriority}
+                      </span>
                     </td>
                     <td className="py-3 text-center text-nowrap">
                       <span className={`badge rounded-pill fw-medium px-3 py-2 ${getStatusBadgeClass(t.currentStatus)}`}>
@@ -241,24 +263,26 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
           </div>
           
           {totalPages > 1 && (
-            <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light bg-opacity-50">
-              <span className="small text-muted ms-2">
-                Showing page {page} of {totalPages}
+            <div className="d-flex justify-content-between align-items-center p-3 border-top bg-white">
+              <span className="small text-muted fw-medium ms-2">
+                Page {page} of {totalPages}
               </span>
-              <div className="btn-group me-2">
+              <div className="d-flex gap-2 me-2">
                 <button 
-                  className="btn btn-sm btn-outline-secondary px-3" 
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-3 rounded-pill fw-medium" 
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
-                  Previous
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  Prev
                 </button>
                 <button 
-                  className="btn btn-sm btn-outline-secondary px-3" 
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-3 rounded-pill fw-medium" 
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 >
                   Next
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
               </div>
             </div>
