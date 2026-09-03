@@ -192,7 +192,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         <div className="glass-panel overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="bg-light bg-opacity-50 text-muted small text-uppercase">
+              <thead className="bg-light bg-opacity-50 text-muted small text-uppercase text-nowrap">
                 <tr>
                   <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
                   <th className="border-0 fw-bold py-3">Summary</th>
@@ -205,7 +205,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
               <tbody className="border-top-0">
                 {tickets.map((t) => (
                   <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
-                    <td className="ps-4 py-3">
+                    <td className="ps-4 py-3 text-nowrap">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
                     </td>
                     <td className="py-3">
@@ -213,22 +213,22 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                         {t.summary}
                       </div>
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 text-nowrap">
                       <span className="small text-muted">{categoryMap[t.categoryId] || 'Unknown'}</span>
                     </td>
-                    <td className="py-3 text-center">
+                    <td className="py-3 text-center text-nowrap">
                       <div className={`d-inline-flex align-items-center justify-content-center bg-light rounded-circle ${getPriorityBadgeClass(t.requestedPriority)}`} style={{ width: '28px', height: '28px' }} title={t.requestedPriority}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                         </svg>
                       </div>
                     </td>
-                    <td className="py-3 text-center">
+                    <td className="py-3 text-center text-nowrap">
                       <span className={`badge rounded-pill fw-medium px-3 py-2 ${getStatusBadgeClass(t.currentStatus)}`}>
                         {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus}
                       </span>
                     </td>
-                    <td className="py-3 text-end pe-4">
+                    <td className="py-3 text-end pe-4 text-nowrap">
                       <span className="small text-muted">{new Date(t.createdAt).toLocaleDateString()}</span>
                     </td>
                   </tr>

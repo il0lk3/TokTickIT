@@ -103,7 +103,7 @@ function AppContent() {
       </nav>
 
       <main className="flex-grow-1 py-5">
-        <div className="container" style={{ maxWidth: '900px' }}>
+        <div className="container-xl">
           {!activeRequester ? (
             <RequesterSelector />
           ) : appState === "loading" ? (
