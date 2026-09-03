@@ -13,6 +13,10 @@ server/prisma/*.db
 *.log
 .DS_Store
 
+# uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
 # ignore diffs and patches from extensions
 *.patch
 *_diff.txt

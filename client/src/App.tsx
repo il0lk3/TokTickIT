@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { checkSystem, Category } from "./api.js";
 import { RequesterProvider, useRequester } from "./contexts/RequesterContext.js";
-import { RequesterSelector } from "./components/RequesterSelector.js";
 import CreateTicket from "./components/CreateTicket.js";
 import { MyTickets } from "./components/MyTickets.js";
+import { TicketDetail } from "./components/TicketDetail.js";
+import { RequesterSelector } from "./components/RequesterSelector.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 type Tab = "create" | "list";
@@ -13,6 +14,7 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<Tab>("create");
   const [categories, setCategories] = useState<Category[]>([]);
   const [appState, setAppState] = useState<UiState>("loading");
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
   useEffect(() => {
     if (activeRequester) {
@@ -54,7 +56,7 @@ function AppContent() {
               <li className="nav-item">
                 <button 
                   className={`nav-link btn btn-link text-decoration-none px-3 rounded-pill transition-all ${activeTab === 'create' ? 'bg-white text-zen-primary fw-bold' : 'text-white-50'}`}
-                  onClick={() => setActiveTab('create')}
+                  onClick={() => { setActiveTab('create'); setSelectedTicketId(null); }}
                 >
                   Create Ticket
                 </button>
@@ -114,10 +116,12 @@ function AppContent() {
 
           {appState === "success" && (
             <div className="animate-enter mt-4">
-              {activeTab === "create" ? (
+              {selectedTicketId ? (
+                <TicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />
+              ) : activeTab === "create" ? (
                 <CreateTicket categories={categories} />
               ) : (
-                <MyTickets categories={categories} />
+                <MyTickets categories={categories} onSelectTicket={setSelectedTicketId} />
               )}
             </div>
           )}

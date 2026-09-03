@@ -1,7 +1,35 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { getPrisma } from "../prisma.js";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 
 const router = Router();
+const prisma = getPrisma();
+
+// Setup Multer for file uploads
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type'));
+  }
+});
 
 // Middleware: Authenticate via X-Requester-Id header
 router.use(async (req: Request, res: Response, next: NextFunction) => {
@@ -137,6 +165,143 @@ router.post("/", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error creating ticket:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/tickets/:id - Get ticket details
+router.get("/:id", async (req: Request, res: Response) => {
+  const requesterId = res.locals.requesterId as number;
+  const ticketId = parseInt(req.params.id, 10);
+
+  try {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        category: true,
+        relatedSystem: true,
+        requester: true,
+        attachments: true
+      }
+    });
+
+    if (!ticket || ticket.requesterId !== requesterId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    res.json(ticket);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch ticket" });
+  }
+});
+
+// POST /api/tickets/:id/attachments - Upload attachment
+router.post("/:id/attachments", (req, res, next) => {
+  upload.single("file")(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, async (req: Request, res: Response) => {
+  const requesterId = res.locals.requesterId as number;
+  const ticketId = parseInt(req.params.id, 10);
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  try {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: { attachments: { where: { isRemoved: false } } }
+    });
+
+    if (!ticket || ticket.requesterId !== requesterId) {
+      fs.unlinkSync(file.path);
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    if (ticket.attachments.length >= 5) {
+      fs.unlinkSync(file.path);
+      return res.status(400).json({ error: "Maximum 5 attachments allowed" });
+    }
+
+    const attachment = await prisma.attachment.create({
+      data: {
+        ticketId,
+        originalName: file.originalname,
+        filename: file.filename,
+        mimeType: file.mimetype,
+        size: file.size
+      }
+    });
+
+    res.status(201).json(attachment);
+  } catch (error) {
+    fs.unlinkSync(file.path);
+    res.status(500).json({ error: "Failed to upload attachment" });
+  }
+});
+
+// GET /api/tickets/:id/attachments/:attachmentId/download
+router.get("/:id/attachments/:attachmentId/download", async (req: Request, res: Response) => {
+  const requesterId = res.locals.requesterId as number;
+  const ticketId = parseInt(req.params.id, 10);
+  const attachmentId = parseInt(req.params.attachmentId, 10);
+
+  try {
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket || ticket.requesterId !== requesterId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const attachment = await prisma.attachment.findUnique({ where: { id: attachmentId, ticketId } });
+    if (!attachment) {
+      return res.status(404).json({ error: "Attachment not found" });
+    }
+
+    if (attachment.isRemoved) {
+      return res.status(410).json({ error: "Attachment has been removed" });
+    }
+
+    const filePath = path.join(uploadDir, attachment.filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "File not found on server" });
+    }
+
+    res.download(filePath, attachment.originalName);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to download attachment" });
+  }
+});
+
+// DELETE /api/tickets/:id/attachments/:attachmentId
+router.delete("/:id/attachments/:attachmentId", async (req: Request, res: Response) => {
+  const requesterId = res.locals.requesterId as number;
+  const ticketId = parseInt(req.params.id, 10);
+  const attachmentId = parseInt(req.params.attachmentId, 10);
+  const { reason } = req.body;
+
+  try {
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket || ticket.requesterId !== requesterId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const attachment = await prisma.attachment.findUnique({ where: { id: attachmentId, ticketId } });
+    if (!attachment || attachment.isRemoved) {
+      return res.status(404).json({ error: "Attachment not found" });
+    }
+
+    await prisma.attachment.update({
+      where: { id: attachmentId },
+      data: { isRemoved: true, removedReason: reason || "User requested removal" }
+    });
+
+    res.json({ message: "Attachment removed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to remove attachment" });
   }
 });
 
