@@ -19,8 +19,8 @@ test.describe('Requester Ticket Flow (Lab 2)', () => {
     const timestamp = Date.now();
     const testSummary = `E2E Test Ticket ${timestamp}`;
     
-    await page.fill('input[placeholder="Brief summary of the issue"]', testSummary);
-    await page.fill('textarea[placeholder="Detailed description..."]', 'This is an automated E2E test to verify the complete ticket creation flow.');
+    await page.getByLabel('Summary *').fill(testSummary);
+    await page.getByLabel('Description *').fill('This is an automated E2E test to verify the complete ticket creation flow.');
     
     // Select dropdowns
     await page.selectOption('select:has(option[value="1"])', { index: 1 }); // Select first category
