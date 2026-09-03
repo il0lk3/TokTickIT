@@ -87,9 +87,9 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "New": return "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25";
-      case "InProgress": return "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25";
-      case "Resolved": return "bg-success bg-opacity-10 text-success border border-success border-opacity-25";
+      case "New": return "bg-info bg-opacity-10 text-dark border border-info border-opacity-50"; 
+      case "InProgress": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
+      case "Resolved": return "bg-success bg-opacity-10 text-success border border-success border-opacity-50";
       default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
     }
   };
@@ -192,7 +192,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         <div className="glass-panel overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="bg-light bg-opacity-50 text-muted small text-uppercase text-nowrap">
+              <thead className="bg-light text-dark small text-uppercase text-nowrap border-bottom border-2">
                 <tr>
                   <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
                   <th className="border-0 fw-bold py-3">Summary</th>
@@ -209,7 +209,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
                     </td>
                     <td className="py-3">
-                      <div className="fw-medium text-dark text-truncate" style={{ maxWidth: '250px' }} title={t.summary}>
+                      <div className="fw-medium text-dark text-truncate" style={{ maxWidth: '400px' }} title={t.summary}>
                         {t.summary}
                       </div>
                     </td>
@@ -217,10 +217,13 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                       <span className="small text-muted">{categoryMap[t.categoryId] || 'Unknown'}</span>
                     </td>
                     <td className="py-3 text-center text-nowrap">
-                      <div className={`d-inline-flex align-items-center justify-content-center bg-light rounded-circle ${getPriorityBadgeClass(t.requestedPriority)}`} style={{ width: '28px', height: '28px' }} title={t.requestedPriority}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
+                      <div className="d-flex align-items-center justify-content-center gap-2">
+                        <div className={`d-inline-flex align-items-center justify-content-center bg-light rounded-circle ${getPriorityBadgeClass(t.requestedPriority)}`} style={{ width: '28px', height: '28px' }} title={t.requestedPriority}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                          </svg>
+                        </div>
+                        <span className={`small fw-bold text-capitalize ${getPriorityBadgeClass(t.requestedPriority)}`}>{t.requestedPriority.toLowerCase()}</span>
                       </div>
                     </td>
                     <td className="py-3 text-center text-nowrap">
