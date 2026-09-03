@@ -6,9 +6,9 @@ test.describe('Requester Ticket Flow (Lab 2)', () => {
     // 1. Navigate to the app (Requester Selection)
     await page.goto('/');
     
-    // Select "Cream Su" or "Bew Su" (Active Requester)
-    await expect(page.locator('text=Welcome to TokTickIT')).toBeVisible();
-    await page.selectOption('select', { label: 'Cream Su (cream.su@example.com)' }); // Select Cream Su
+    // 1. Initial State: Requester Selection
+    await expect(page.getByRole('heading', { name: 'Select Development Requester' })).toBeVisible();
+    await page.selectOption('select', { label: 'Cream Su' }); // Select Cream Su
     await page.getByRole('button', { name: 'Continue' }).click();
 
     // 2. We should be on My Tickets, go to Create Ticket

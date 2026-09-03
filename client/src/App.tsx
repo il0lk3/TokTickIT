@@ -31,9 +31,7 @@ function AppContent() {
     }
   }, [activeRequester]);
 
-  if (!activeRequester) {
-    return <RequesterSelector />;
-  }
+  // Render everything inside main layout
 
   return (
     <div className="min-vh-100 d-flex flex-column animate-enter">
@@ -72,18 +70,33 @@ function AppContent() {
             </ul>
             
             <div className="d-flex align-items-center mt-3 mt-lg-0 pt-3 pt-lg-0 border-top border-lg-0 border-light border-opacity-25">
-              <div className="d-flex align-items-center bg-zen-pale px-3 py-1 rounded-pill me-3 border" style={{ borderColor: 'var(--zen-border)' }}>
-                <div className="rounded-circle bg-zen-primary text-white d-flex align-items-center justify-content-center fw-bold me-2" style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}>
-                  {activeRequester.name.charAt(0)}
+              {activeRequester ? (
+                <>
+                  <div className="d-flex align-items-center bg-zen-pale px-3 py-1 rounded-pill me-3 border" style={{ borderColor: 'var(--zen-border)' }}>
+                    <div className="rounded-circle bg-zen-primary text-white d-flex align-items-center justify-content-center fw-bold me-2" style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}>
+                      {activeRequester.name.charAt(0)}
+                    </div>
+                    <span className="text-zen-text small fw-medium">{activeRequester.name}</span>
+                  </div>
+                  <button 
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-medium d-flex align-items-center gap-2"
+                    onClick={() => setRequester(null)}
+                  >
+                    Switch User
+                  </button>
+                </>
+              ) : (
+                <div className="d-flex align-items-center text-secondary fw-medium px-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  Profile
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ms-1">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
                 </div>
-                <span className="text-zen-text small fw-medium">{activeRequester.name}</span>
-              </div>
-              <button 
-                className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-medium"
-                onClick={() => setRequester(null)}
-              >
-                Switch User
-              </button>
+              )}
             </div>
           </div>
         </div>
@@ -91,16 +104,16 @@ function AppContent() {
 
       <main className="flex-grow-1 py-5">
         <div className="container" style={{ maxWidth: '900px' }}>
-          {appState === "loading" && (
+          {!activeRequester ? (
+            <RequesterSelector />
+          ) : appState === "loading" ? (
             <div className="d-flex flex-column align-items-center justify-content-center py-5 my-5 glass-panel">
               <div className="spinner-border text-zen-primary mb-3" style={{ width: '3rem', height: '3rem' }} role="status">
                 <span className="visually-hidden">Loading...</span>
               </div>
               <h5 className="text-muted fw-medium">Loading system data...</h5>
             </div>
-          )}
-
-          {appState === "error" && (
+          ) : appState === "error" ? (
             <div className="alert alert-danger glass-panel border-danger border-opacity-50 mt-4 p-4 d-flex align-items-start gap-3">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-danger flex-shrink-0 mt-1">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -112,9 +125,7 @@ function AppContent() {
                 <p className="mb-0">Unable to connect to TokTickIT API. Please ensure the backend is running.</p>
               </div>
             </div>
-          )}
-
-          {appState === "success" && (
+          ) : (
             <div className="animate-enter mt-4">
               {selectedTicketId ? (
                 <TicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />
