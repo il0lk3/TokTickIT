@@ -23,31 +23,31 @@ test.describe('Requester Ticket Flow (Lab 2)', () => {
     await page.getByLabel('Description *').fill('This is an automated E2E test to verify the complete ticket creation flow.');
     
     // Select dropdowns
-    await page.selectOption('select:has(option[value="1"])', { index: 1 }); // Select first category
-    await page.selectOption('select:has(option[value="2"])', { index: 1 }); // Select first system
-    await page.selectOption('select:has(option[value="MEDIUM"])', 'HIGH'); // Priority
+    await page.getByLabel('Category *').selectOption({ index: 1 });
+    await page.getByLabel('Related System *').selectOption({ index: 1 });
+    await page.getByLabel('Priority *').selectOption('HIGH');
 
     // Wait for the form to be ready
     await page.waitForTimeout(500);
 
     // 4. Submit the ticket
-    await page.getByRole('button', { name: 'Submit Ticket' }).click();
+    await page.getByRole('button', { name: 'Submit Request' }).click();
 
     // 5. Success screen verification
     await expect(page.locator('text=Ticket Created Successfully!')).toBeVisible();
     
     // Extract ticket number
-    const successText = await page.locator('.alert-success').innerText();
-    const ticketNumberMatch = successText.match(/(TKT-\d{4}-\d+)/);
-    expect(ticketNumberMatch).toBeTruthy();
-    const ticketNumber = ticketNumberMatch![1];
+    const successText = await page.locator('strong.fs-3.text-dark').innerText();
+    const ticketNumber = successText.trim();
+    expect(ticketNumber).toMatch(/^TKT-/);
 
     // Go back to My Tickets
-    await page.getByRole('button', { name: 'Back to My Tickets' }).click();
+    await page.getByRole('button', { name: 'Create Another Ticket' }).click();
+    await page.getByRole('button', { name: 'My Tickets' }).click();
 
     // 6. Search for the created ticket
     await expect(page.locator('h2', { hasText: 'My Tickets' })).toBeVisible();
-    await page.fill('input[placeholder="Search by ticket number or summary..."]', ticketNumber);
+    await page.getByPlaceholder('Search tickets...').fill(ticketNumber);
 
     // Wait for debounce and fetch
     await page.waitForTimeout(1000);
