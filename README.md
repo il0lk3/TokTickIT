@@ -1,11 +1,11 @@
-# TokTickIT 🎫
+# TokTickIT
 
 An IT service desk application designed to streamline support requests for Account and Access, Hardware, Software, and Network issues.
 
 This repository demonstrates a full-stack architecture built progressively. **Lab 1** established the vertical slice (database to frontend), and **Lab 2** introduces the core **Requester Ticketing MVP**, featuring ticket creation, attachment management, and a Zen Green Premium UI.
 
 ```text
-React + Vite + Bootstrap ✨  →  Express REST API ⚙️  →  Prisma ORM 🗄️  →  PostgreSQL 🐘
+React + Vite + Bootstrap  →  Express REST API  →  Prisma ORM  →  PostgreSQL
         (Client)                       (Server)
 ```
 
@@ -13,7 +13,7 @@ See [docs/lab-02/specification.md](./docs/lab-02/specification.md) for the detai
 
 ---
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 | Tool | Version Used | Purpose |
 |------|--------------|---------|
@@ -23,7 +23,7 @@ See [docs/lab-02/specification.md](./docs/lab-02/specification.md) for the detai
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 Run the following commands from the root of the repository to get the system running locally.
 
@@ -50,7 +50,7 @@ cd ..
 
 ---
 
-## 💻 Running the Application
+## Running the Application
 
 Open two separate terminals to start the development servers.
 
@@ -73,7 +73,7 @@ npm run dev
 
 ---
 
-## 🧪 Running the Tests
+## Running the Tests
 
 The project is built using Test-Driven Development (TDD). Tests are split between the two workspaces.
 
@@ -94,7 +94,7 @@ The full test plan can be found in [docs/lab-02/tests.md](./docs/lab-02/tests.md
 
 ---
 
-## 📂 Repository Layout
+## Repository Layout
 
 ```text
 toktickit/
@@ -113,7 +113,7 @@ toktickit/
 
 ---
 
-## 🌿 Git Workflow (Lab 2)
+## Git Workflow (Lab 2)
 
 Development follows a strict feature-branch workflow. Work is never committed directly to `main` or `lab2-staging`.
 
@@ -126,7 +126,7 @@ Development follows a strict feature-branch workflow. Work is never committed di
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 - **`npm run dev` fails to connect to database:** Ensure Docker is running and `docker compose up -d` was executed. Check that port `5433` is not being used by another local PostgreSQL instance.
 - **Server tests fail with connection error:** The database is likely empty. Run `cd server && npx prisma db push && npx prisma db seed` to initialize the testing data.
