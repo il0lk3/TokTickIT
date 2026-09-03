@@ -37,9 +37,9 @@ function AppContent() {
 
   return (
     <div className="min-vh-100 d-flex flex-column animate-enter">
-      <nav className="navbar navbar-expand-lg navbar-dark glass-navbar sticky-top py-3">
+      <nav className="navbar navbar-expand-lg navbar-light glass-navbar sticky-top py-3">
         <div className="container">
-          <a className="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+          <a className="navbar-brand fw-bold d-flex align-items-center gap-2 text-zen-primary" href="#">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
               <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
@@ -55,7 +55,7 @@ function AppContent() {
             <ul className="navbar-nav me-auto gap-1">
               <li className="nav-item">
                 <button 
-                  className={`nav-link btn btn-link text-decoration-none px-3 rounded-pill transition-all ${activeTab === 'create' ? 'bg-white text-zen-primary fw-bold' : 'text-white-50'}`}
+                  className={`nav-link btn btn-link text-decoration-none px-3 rounded-pill transition-all ${activeTab === 'create' ? 'bg-zen-primary text-white fw-bold' : 'text-secondary'}`}
                   onClick={() => { setActiveTab('create'); setSelectedTicketId(null); }}
                 >
                   Create Ticket
@@ -63,7 +63,7 @@ function AppContent() {
               </li>
               <li className="nav-item">
                 <button 
-                  className={`nav-link btn btn-link text-decoration-none px-3 rounded-pill transition-all ${activeTab === 'list' ? 'bg-white text-zen-primary fw-bold' : 'text-white-50'}`}
+                  className={`nav-link btn btn-link text-decoration-none px-3 rounded-pill transition-all ${activeTab === 'list' ? 'bg-zen-primary text-white fw-bold' : 'text-secondary'}`}
                   onClick={() => setActiveTab('list')}
                 >
                   My Tickets
@@ -72,14 +72,14 @@ function AppContent() {
             </ul>
             
             <div className="d-flex align-items-center mt-3 mt-lg-0 pt-3 pt-lg-0 border-top border-lg-0 border-light border-opacity-25">
-              <div className="d-flex align-items-center bg-white bg-opacity-10 px-3 py-1 rounded-pill me-3">
-                <div className="rounded-circle bg-white text-zen-primary d-flex align-items-center justify-content-center fw-bold me-2" style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}>
+              <div className="d-flex align-items-center bg-zen-pale px-3 py-1 rounded-pill me-3 border" style={{ borderColor: 'var(--zen-border)' }}>
+                <div className="rounded-circle bg-zen-primary text-white d-flex align-items-center justify-content-center fw-bold me-2" style={{ width: '28px', height: '28px', fontSize: '0.8rem' }}>
                   {activeRequester.name.charAt(0)}
                 </div>
-                <span className="text-white small fw-medium">{activeRequester.name}</span>
+                <span className="text-zen-text small fw-medium">{activeRequester.name}</span>
               </div>
               <button 
-                className="btn btn-sm btn-light rounded-pill px-3 fw-medium"
+                className="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-medium"
                 onClick={() => setRequester(null)}
               >
                 Switch User
