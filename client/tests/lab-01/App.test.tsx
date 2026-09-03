@@ -54,6 +54,6 @@ describe("App", () => {
     const continueBtn = await screen.findByRole("button", { name: "Continue" });
     fireEvent.click(continueBtn);
 
-    expect(await screen.findByText(/Offline:/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Connection Error/i)).toBeInTheDocument();
   });
 });

@@ -22,6 +22,8 @@ async function main() {
     "Grade Submission App",
     "Printer",
     "Corporate Laptop",
+    "Student Registration",
+    "Library Portal"
   ];
   for (const name of systems) {
     await prisma.relatedSystem.upsert({
@@ -33,10 +35,14 @@ async function main() {
 
   // 3. Seed Development Requesters
   const requesters = [
-    { email: "jennifer.anderson@example.com", name: "Jennifer Anderson", isActive: true },
-    { email: "michael.brown@example.com", name: "Michael Brown", isActive: true },
-    { email: "sarah.johnson@example.com", name: "Sarah Johnson", isActive: true },
-    { email: "david.lee@example.com", name: "David Lee", isActive: true },
+    { email: "cream.su@example.com", name: "Cream Su", isActive: true },
+    { email: "bew.su@example.com", name: "Bew Su", isActive: true },
+    { email: "kanta.su@example.com", name: "Kanta Su", isActive: true },
+    { email: "je.su@example.com", name: "Je Su", isActive: true },
+    { email: "bewnoi.su@example.com", name: "Bewnoi Su", isActive: true },
+    { email: "grace.su@example.com", name: "Grace Su", isActive: true },
+    { email: "phrao.su@example.com", name: "Phrao Su", isActive: true },
+    { email: "pueng.su@example.com", name: "Pueng Su", isActive: true },
     { email: "inactive.user@example.com", name: "Inactive TestUser", isActive: false },
   ];
 

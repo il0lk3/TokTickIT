@@ -1,10 +1,19 @@
 :root {
   --zen-primary: #006B3C;
   --zen-secondary: #0B7A46;
+  --zen-accent: #119859;
   --zen-pale: #EAF6EF;
-  --zen-bg: #F5F7F6;
+  --zen-bg-gradient: linear-gradient(135deg, #F4F9F6 0%, #E8F4EC 100%);
   --zen-text: #1F2924;
+  --zen-text-muted: #5C7064;
   --zen-error: #D32F2F;
+  --zen-error-bg: #FDEDED;
+  
+  --zen-surface: rgba(255, 255, 255, 0.95);
+  --zen-glass: rgba(255, 255, 255, 0.7);
+  --zen-border: rgba(0, 107, 60, 0.1);
+  --zen-shadow: 0 10px 40px rgba(0, 30, 15, 0.05);
+  --zen-shadow-hover: 0 16px 50px rgba(0, 30, 15, 0.08);
 
   /* Override Bootstrap Success to Zen Primary */
   --bs-success-rgb: 0, 107, 60;
@@ -12,28 +21,127 @@
 }
 
 body {
-  background-color: var(--zen-bg);
+  background: var(--zen-bg-gradient);
+  background-attachment: fixed;
   color: var(--zen-text);
-  font-family: 'Inter', 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* Custom Zen Green Utilities */
-.text-zen-primary { color: var(--zen-primary); }
-.bg-zen-primary { background-color: var(--zen-primary); color: white; }
-.bg-zen-pale { background-color: var(--zen-pale); }
+.text-zen-primary { color: var(--zen-primary) !important; }
+.bg-zen-primary { background-color: var(--zen-primary) !important; color: white !important; }
+.bg-zen-pale { background-color: var(--zen-pale) !important; }
 
-/* Override standard bootstrap success colors */
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--zen-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--zen-border);
+  box-shadow: var(--zen-shadow);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.glass-navbar {
+  background: var(--zen-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Premium Buttons */
+.btn {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
 .btn-success {
   background-color: var(--zen-primary);
   border-color: var(--zen-primary);
+  box-shadow: 0 4px 12px rgba(0, 107, 60, 0.2);
 }
+
 .btn-success:hover, .btn-success:focus, .btn-success:active {
-  background-color: var(--zen-secondary) !important;
-  border-color: var(--zen-secondary) !important;
+  background-color: var(--zen-accent) !important;
+  border-color: var(--zen-accent) !important;
+  box-shadow: 0 6px 16px rgba(17, 152, 89, 0.3) !important;
+  transform: translateY(-1px);
 }
 
+.btn-outline-success {
+  color: var(--zen-primary);
+  border-color: var(--zen-primary);
+}
+.btn-outline-success:hover {
+  background-color: var(--zen-primary);
+  color: white;
+}
 
-.card {
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+/* Premium Form Controls */
+.form-control, .form-select {
+  border: 1px solid #DFE6E1;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  background-color: #FCFDFD;
+  transition: all 0.25s ease;
+  color: var(--zen-text);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: #FFFFFF;
+  border-color: var(--zen-secondary);
+  box-shadow: 0 0 0 4px rgba(11, 122, 70, 0.1);
+  outline: none;
+}
+
+/* Validation Styling */
+.is-invalid {
+  border-color: var(--zen-error) !important;
+  background-color: var(--zen-error-bg) !important;
+}
+.is-invalid:focus {
+  box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1) !important;
+}
+.invalid-feedback {
+  color: var(--zen-error);
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+}
+
+/* Form Labels */
+.form-label {
+  font-weight: 600;
+  color: var(--zen-text);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+/* Micro Animations */
+.animate-enter {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

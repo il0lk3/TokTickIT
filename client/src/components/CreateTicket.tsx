@@ -122,19 +122,37 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
   }
 
   return (
-    <div className="card shadow-sm mt-4 border-0">
-      <div className="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-        <h2 className="h4 mb-0 text-zen-primary">Submit a New Request</h2>
-      </div>
-      <div className="card-body p-4">
+    <div className="animate-enter">
+      <div className="glass-panel p-4 p-md-5 mb-4">
+        <div className="mb-4 pb-3 border-bottom border-light border-opacity-50">
+          <h2 className="h3 mb-2 text-zen-primary fw-bold d-flex align-items-center gap-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            Submit a New Request
+          </h2>
+          <p className="text-muted mb-0">Please fill out the form below to report an IT issue or request a service.</p>
+        </div>
+
         {formState === "error" && (
-          <div className="alert alert-danger mb-4">
-            <strong>Error:</strong> {errorMessage}
+          <div className="alert alert-danger glass-panel border-danger border-opacity-50 mb-4 p-4 d-flex align-items-start gap-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-danger flex-shrink-0 mt-1">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div>
+              <h5 className="alert-heading fw-bold mb-1">Submission Failed</h5>
+              <p className="mb-0">{errorMessage}</p>
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="row g-3">
+          <div className="row g-4">
             <div className="col-md-6">
               <label htmlFor="categoryId" className="form-label fw-medium">Category <span className="text-danger">*</span></label>
               <select 
@@ -215,26 +233,37 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
             </div>
             
             <div className="col-12 mt-4">
-              <label className="form-label fw-medium">Attachments (Optional)</label>
-              <div className="border border-2 border-dashed rounded p-4 text-center bg-light text-muted">
+              <label className="form-label fw-medium d-flex align-items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zen-secondary">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                </svg>
+                Attachments (Optional)
+              </label>
+              <div className="border border-2 border-dashed rounded-3 p-5 text-center bg-white bg-opacity-50 transition-all hover-shadow" style={{ borderColor: '#DFE6E1' }}>
                 <input type="file" className="d-none" id="attachmentInput" multiple />
-                <label htmlFor="attachmentInput" className="btn btn-outline-secondary btn-sm mb-2" style={{ cursor: 'pointer' }}>
-                  Choose Files
+                <label htmlFor="attachmentInput" className="btn btn-outline-secondary px-4 py-2 mb-3 rounded-pill fw-medium" style={{ cursor: 'pointer' }}>
+                  Browse Files
                 </label>
-                <p className="small mb-0">Drag and drop files here. (Upload functionality arriving in Issue 7)</p>
+                <p className="small text-muted mb-0">Drag and drop files here. (Upload functionality arriving in Issue 7)</p>
               </div>
             </div>
 
-            <div className="col-12 mt-4 pt-3 border-top d-flex justify-content-end">
+            <div className="col-12 mt-5 pt-4 border-top border-light border-opacity-50 d-flex justify-content-end">
               <button 
                 type="submit" 
-                className="btn btn-success px-5" 
+                className="btn btn-success px-5 py-2 fs-6 rounded-pill d-flex align-items-center gap-2" 
                 disabled={formState === "submitting"}
               >
                 {formState === "submitting" ? (
-                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Submitting...</>
+                  <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...</>
                 ) : (
-                  "Submit Request"
+                  <>
+                    Submit Request
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </>
                 )}
               </button>
             </div>
