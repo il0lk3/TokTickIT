@@ -137,99 +137,99 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
       <div className="row g-4">
         <div className="col-lg-8">
-          <div className="glass-panel p-4 h-100">
-            <h5 className="fw-bold mb-4 border-bottom pb-2">Information</h5>
+          <div className="glass-panel p-4 p-md-5 h-100">
+            <h5 className="fw-bold mb-4 border-bottom border-light border-opacity-50 pb-3 text-zen-primary">Information</h5>
             
-            <div className="mb-4">
-              <label className="form-label text-muted small fw-bold text-uppercase mb-1">Summary</label>
-              <div className="fs-5 fw-medium">{ticket.summary}</div>
+            <div className="bg-white rounded-3 p-4 mb-4 border border-light shadow-sm">
+              <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Summary</label>
+              <div className="fs-5 fw-bold text-dark">{ticket.summary}</div>
             </div>
 
-            <div className="mb-4">
-              <label className="form-label text-muted small fw-bold text-uppercase mb-1">Description</label>
-              <div className="p-3 bg-light rounded bg-opacity-50" style={{ whiteSpace: 'pre-wrap' }}>
+            <div className="bg-white rounded-3 p-4 mb-4 border border-light shadow-sm">
+              <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Description</label>
+              <div className="text-dark" style={{ whiteSpace: 'pre-wrap', fontSize: '1rem', lineHeight: '1.7' }}>
                 {ticket.description}
               </div>
             </div>
 
-            <div className="row g-3">
+            <div className="row g-4">
               <div className="col-md-6">
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Category</label>
-                <div className="fw-medium">{ticket.category.name}</div>
+                <div className="bg-white rounded-3 p-4 h-100 border border-light shadow-sm">
+                  <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Category</label>
+                  <div className="fw-medium fs-6 text-dark">{ticket.category.name}</div>
+                </div>
               </div>
               <div className="col-md-6">
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Related System</label>
-                <div className="fw-medium">{ticket.relatedSystem.name}</div>
+                <div className="bg-white rounded-3 p-4 h-100 border border-light shadow-sm">
+                  <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Related System</label>
+                  <div className="fw-medium fs-6 text-dark">{ticket.relatedSystem.name}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="col-lg-4">
-          <div className="glass-panel p-4 mb-4">
-            <h5 className="fw-bold mb-4 border-bottom pb-2">Status</h5>
+          <div className="glass-panel p-4 p-md-5 mb-4">
+            <h5 className="fw-bold mb-4 border-bottom border-light border-opacity-50 pb-3 text-zen-primary">Status</h5>
             
             <div className="d-flex flex-column gap-3">
-              <div>
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Current Status</label>
-                <div>
-                  <span className={`badge rounded-pill px-3 py-2 ${ticket.currentStatus === 'Resolved' ? 'bg-success bg-opacity-10 text-success' : ticket.currentStatus === 'InProgress' ? 'bg-warning bg-opacity-10 text-warning' : 'bg-primary bg-opacity-10 text-primary'}`}>
-                    {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}
-                  </span>
-                </div>
+              <div className="bg-white rounded-3 p-3 border border-light shadow-sm d-flex justify-content-between align-items-center">
+                <label className="form-label text-muted small fw-bold text-uppercase mb-0" style={{ letterSpacing: '0.5px' }}>Current Status</label>
+                <span className={`badge rounded-pill px-3 py-2 fw-medium ${ticket.currentStatus === 'Resolved' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-50' : ticket.currentStatus === 'InProgress' ? 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50' : 'bg-info bg-opacity-10 text-dark border border-info border-opacity-50'}`}>
+                  {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}
+                </span>
               </div>
-              <div>
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Priority</label>
-                <div>
-                  <span className={`fw-bold ${ticket.requestedPriority === 'HIGH' ? 'text-danger' : ticket.requestedPriority === 'MEDIUM' ? 'text-warning' : 'text-success'}`}>
-                    {ticket.requestedPriority}
-                  </span>
-                </div>
+              <div className="bg-white rounded-3 p-3 border border-light shadow-sm d-flex justify-content-between align-items-center">
+                <label className="form-label text-muted small fw-bold text-uppercase mb-0" style={{ letterSpacing: '0.5px' }}>Priority</label>
+                <span className={`badge rounded-pill px-3 py-2 fw-medium ${ticket.requestedPriority === 'HIGH' ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' : ticket.requestedPriority === 'MEDIUM' ? 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-25'}`}>
+                  {ticket.requestedPriority}
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="glass-panel p-4">
-            <h5 className="fw-bold mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
+          <div className="glass-panel p-4 p-md-5">
+            <h5 className="fw-bold mb-4 border-bottom border-light border-opacity-50 pb-3 text-zen-primary d-flex justify-content-between align-items-center">
               Attachments
-              <span className="badge bg-secondary">{activeAttachments}/5</span>
+              <span className="badge bg-secondary rounded-pill">{activeAttachments}/5</span>
             </h5>
             
             {ticket.attachments.length === 0 ? (
-              <p className="text-muted small text-center my-4">No attachments uploaded yet.</p>
+              <div className="text-center py-4 bg-white bg-opacity-50 rounded-3 border border-dashed border-light">
+                <p className="text-muted small mb-0">No attachments uploaded yet.</p>
+              </div>
             ) : (
-              <ul className="list-group list-group-flush mb-3">
+              <ul className="list-group mb-3 shadow-sm border-0">
                 {ticket.attachments.map(a => (
-                  <li key={a.id} className="list-group-item px-0 bg-transparent">
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div className="me-2 text-truncate">
-                        {a.isRemoved ? (
-                          <div className="text-decoration-line-through text-muted small text-truncate" title={a.originalName}>{a.originalName}</div>
-                        ) : (
-                          <a 
-                            href="#" 
-                            onClick={(e) => { e.preventDefault(); handleDownload(a.id, a.originalName); }}
-                            className="text-decoration-none fw-medium text-zen-primary small text-truncate d-block"
-                            title={a.originalName}
-                          >
-                            {a.originalName}
-                          </a>
-                        )}
-                        <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-                          {(a.size / 1024).toFixed(1)} KB
-                          {a.isRemoved && a.removedReason && ` • Removed: ${a.removedReason}`}
-                        </div>
-                      </div>
-                      {!a.isRemoved && (
-                        <button 
-                          className="btn btn-sm btn-link text-danger p-0" 
-                          onClick={() => handleRemove(a.id)}
-                          title="Remove attachment"
+                  <li key={a.id} className="list-group-item bg-white border-light px-3 py-3 d-flex justify-content-between align-items-center">
+                    <div className="me-2 text-truncate">
+                      {a.isRemoved ? (
+                        <div className="text-decoration-line-through text-muted small text-truncate fw-medium" title={a.originalName}>{a.originalName}</div>
+                      ) : (
+                        <a 
+                          href="#" 
+                          onClick={(e) => { e.preventDefault(); handleDownload(a.id, a.originalName); }}
+                          className="text-decoration-none fw-bold text-zen-primary small text-truncate d-block"
+                          title={a.originalName}
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+                          {a.originalName}
+                        </a>
                       )}
+                      <div className="text-muted mt-1" style={{ fontSize: '0.75rem' }}>
+                        {(a.size / 1024).toFixed(1)} KB
+                        {a.isRemoved && a.removedReason && ` • Removed: ${a.removedReason}`}
+                      </div>
                     </div>
+                    {!a.isRemoved && (
+                      <button 
+                        className="btn btn-sm btn-link text-danger p-2 rounded-circle" 
+                        onClick={() => handleRemove(a.id)}
+                        title="Remove attachment"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

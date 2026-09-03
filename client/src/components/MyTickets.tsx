@@ -72,8 +72,20 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   };
 
   const SortIcon = ({ field }: { field: string }) => {
-    if (sortBy !== field) return <span className="ms-1 text-black-50">↕</span>;
-    return <span className="ms-1">{sortOrder === "asc" ? "↑" : "↓"}</span>;
+    if (sortBy !== field) return (
+      <span className="ms-2 text-black-50 opacity-25">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 15 12 20 17 15"></polyline><polyline points="7 9 12 4 17 9"></polyline></svg>
+      </span>
+    );
+    return (
+      <span className="ms-2 text-zen-primary">
+        {sortOrder === "asc" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        )}
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -219,14 +231,22 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         <div className="glass-panel overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="text-muted small text-uppercase text-nowrap border-bottom border-light" style={{ backgroundColor: '#F8FAF9' }}>
+              <thead className="text-zen-primary small text-uppercase text-nowrap" style={{ borderBottom: '2px solid var(--zen-primary)' }}>
                 <tr>
-                  <th className="border-0 fw-bolder ps-4 py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
-                  <th className="border-0 fw-bolder py-3" style={{ letterSpacing: '0.5px' }}>Summary</th>
-                  <th className="border-0 fw-bolder py-3" style={{ letterSpacing: '0.5px' }}>Category</th>
-                  <th className="border-0 fw-bolder py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>Priority <SortIcon field="requestedPriority" /></th>
-                  <th className="border-0 fw-bolder py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("currentStatus")}>Status <SortIcon field="currentStatus" /></th>
-                  <th className="border-0 fw-bolder py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>Date <SortIcon field="createdAt" /></th>
+                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>
+                    <div className="d-flex align-items-center">Ticket No. <SortIcon field="ticketNumber" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Summary</th>
+                  <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Category</th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>
+                    <div className="d-flex align-items-center justify-content-center">Priority <SortIcon field="requestedPriority" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("currentStatus")}>
+                    <div className="d-flex align-items-center justify-content-center">Status <SortIcon field="currentStatus" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
+                    <div className="d-flex align-items-center justify-content-end">Date <SortIcon field="createdAt" /></div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="border-top-0">
