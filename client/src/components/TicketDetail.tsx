@@ -140,12 +140,12 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
           <div className="glass-panel p-4 p-md-5 h-100">
             <h5 className="fw-bold mb-4 border-bottom border-light border-opacity-50 pb-3 text-zen-primary">Information</h5>
             
-            <div className="bg-white rounded-3 p-4 mb-4 border border-light shadow-sm">
+            <div className="rounded-3 p-4 mb-4 border border-light shadow-sm" style={{ backgroundColor: '#F4F7F6' }}>
               <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Summary</label>
               <div className="fs-5 fw-bold text-dark">{ticket.summary}</div>
             </div>
 
-            <div className="bg-white rounded-3 p-4 mb-4 border border-light shadow-sm">
+            <div className="rounded-3 p-4 mb-4 border border-light shadow-sm" style={{ backgroundColor: '#F4F7F6' }}>
               <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Description</label>
               <div className="text-dark" style={{ whiteSpace: 'pre-wrap', fontSize: '1rem', lineHeight: '1.7' }}>
                 {ticket.description}
@@ -154,13 +154,13 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
             <div className="row g-4">
               <div className="col-md-6">
-                <div className="bg-white rounded-3 p-4 h-100 border border-light shadow-sm">
+                <div className="rounded-3 p-4 h-100 border border-light shadow-sm" style={{ backgroundColor: '#F4F7F6' }}>
                   <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Category</label>
                   <div className="fw-medium fs-6 text-dark">{ticket.category.name}</div>
                 </div>
               </div>
               <div className="col-md-6">
-                <div className="bg-white rounded-3 p-4 h-100 border border-light shadow-sm">
+                <div className="rounded-3 p-4 h-100 border border-light shadow-sm" style={{ backgroundColor: '#F4F7F6' }}>
                   <label className="form-label text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: '0.5px' }}>Related System</label>
                   <div className="fw-medium fs-6 text-dark">{ticket.relatedSystem.name}</div>
                 </div>
@@ -174,13 +174,13 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
             <h5 className="fw-bold mb-4 border-bottom border-light border-opacity-50 pb-3 text-zen-primary">Status</h5>
             
             <div className="d-flex flex-column gap-3">
-              <div className="bg-white rounded-3 p-3 border border-light shadow-sm d-flex justify-content-between align-items-center">
+              <div className="rounded-3 p-3 border border-light shadow-sm d-flex justify-content-between align-items-center" style={{ backgroundColor: '#F4F7F6' }}>
                 <label className="form-label text-muted small fw-bold text-uppercase mb-0" style={{ letterSpacing: '0.5px' }}>Current Status</label>
                 <span className={`badge rounded-pill px-3 py-2 fw-medium ${ticket.currentStatus === 'Resolved' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-50' : ticket.currentStatus === 'InProgress' ? 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50' : 'bg-info bg-opacity-10 text-dark border border-info border-opacity-50'}`}>
                   {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}
                 </span>
               </div>
-              <div className="bg-white rounded-3 p-3 border border-light shadow-sm d-flex justify-content-between align-items-center">
+              <div className="rounded-3 p-3 border border-light shadow-sm d-flex justify-content-between align-items-center" style={{ backgroundColor: '#F4F7F6' }}>
                 <label className="form-label text-muted small fw-bold text-uppercase mb-0" style={{ letterSpacing: '0.5px' }}>Priority</label>
                 <span className={`badge rounded-pill px-3 py-2 fw-medium ${ticket.requestedPriority === 'HIGH' ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' : ticket.requestedPriority === 'MEDIUM' ? 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-25'}`}>
                   {ticket.requestedPriority}
