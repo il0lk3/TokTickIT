@@ -16,9 +16,9 @@ Test timeout of 30000ms exceeded.
 ```
 
 ```
-Error: locator.click: Test timeout of 30000ms exceeded.
+Error: page.fill: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for getByRole('link', { name: 'Create Ticket' })
+  - waiting for locator('input[placeholder="Brief summary of the issue"]')
 
 ```
 
@@ -33,7 +33,7 @@ Call log:
       - generic [ref=e10]:
         - list [ref=e11]:
           - listitem [ref=e12]:
-            - button "Create Ticket" [ref=e13] [cursor=pointer]
+            - button "Create Ticket" [active] [ref=e13] [cursor=pointer]
           - listitem [ref=e14]:
             - button "My Tickets" [ref=e15] [cursor=pointer]
         - generic [ref=e16]:
@@ -108,14 +108,14 @@ Call log:
   13 | 
   14 |     // 2. We should be on My Tickets, go to Create Ticket
   15 |     await expect(page.locator('text=My Tickets')).toBeVisible();
-> 16 |     await page.getByRole('link', { name: 'Create Ticket' }).click();
-     |                                                             ^ Error: locator.click: Test timeout of 30000ms exceeded.
+  16 |     await page.getByRole('button', { name: 'Create Ticket', exact: true }).click();
   17 | 
   18 |     // 3. Fill out the Create Ticket form
   19 |     const timestamp = Date.now();
   20 |     const testSummary = `E2E Test Ticket ${timestamp}`;
   21 |     
-  22 |     await page.fill('input[placeholder="Brief summary of the issue"]', testSummary);
+> 22 |     await page.fill('input[placeholder="Brief summary of the issue"]', testSummary);
+     |                ^ Error: page.fill: Test timeout of 30000ms exceeded.
   23 |     await page.fill('textarea[placeholder="Detailed description..."]', 'This is an automated E2E test to verify the complete ticket creation flow.');
   24 |     
   25 |     // Select dropdowns

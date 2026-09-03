@@ -13,7 +13,7 @@ test.describe('Requester Ticket Flow (Lab 2)', () => {
 
     // 2. We should be on My Tickets, go to Create Ticket
     await expect(page.locator('text=My Tickets')).toBeVisible();
-    await page.getByRole('link', { name: 'Create Ticket' }).click();
+    await page.getByRole('button', { name: 'Create Ticket', exact: true }).click();
 
     // 3. Fill out the Create Ticket form
     const timestamp = Date.now();
