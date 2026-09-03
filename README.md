@@ -14,9 +14,14 @@ Start the database using Docker:
 docker compose up -d
 ```
 
-To create the database tables and insert initial seed data (Categories), navigate to the `server/` directory and run:
+Copy the example environment file in the `server` directory:
 ```bash
 cd server
+cp .env.example .env
+```
+
+To create the database tables and insert initial seed data (Categories), ensure you are in the `server/` directory and run:
+```bash
 npx prisma migrate dev
 npx prisma db seed
 cd ..
@@ -51,3 +56,19 @@ cd client
 npm run dev
 ```
 *(Client will start on Vite's default port)*
+
+### 5. Running Tests
+
+This project includes automated tests for both the backend (API/Unit tests) and the frontend (UI/Component tests).
+
+**Run Backend Tests:**
+```bash
+cd server
+npm run test
+```
+
+**Run Frontend Tests:**
+```bash
+cd client
+npm run test
+```
