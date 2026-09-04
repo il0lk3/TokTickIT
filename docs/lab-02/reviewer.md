@@ -7,7 +7,7 @@ A living document tracking the code review process. Reviews run in both directio
 | Field | Detail |
 |-------|--------|
 | **Name** | Thanakorn Pahunrat |
-| **Student ID** | 6707050521 |
+| **Student ID** | 67070505217 |
 | **GitHub** | [@il0lk3](https://github.com/il0lk3) |
 
 ---
@@ -119,6 +119,131 @@ A living document tracking the code review process. Reviews run in both directio
 | **Review Comment** | *(Pending review)* |
 | **My Response** | *(Pending)* |
 | **Outcome** | OPEN |
+
+---
+
+
+## Pull Requests I Reviewed
+
+> I reviewed the following PRs submitted by my partner.
+
+### Partner PR #25 — docs: Lab 2 engineering contract (Issue 5)
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/25](https://github.com/Achikan/TokTickIT/pull/25) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | The engineering contract looks great overall and matches the requirements well!<br><br>There's just one change needed: please update specification.md to explicitly include AC-14 and AC-15 in the Given-When-Then format. I've left a line comment showing where it's missing. Once that's fixed, let me know and I will approve! |
+| **Partner's Response** | @il0lk3 Thanks for the review! I've updated `specification.md` to write out **AC-14** and **AC-15** explicitly in the exact Given-When-Then format, matching AC-01 through AC-13:<br><br>- **AC-14** — Given a requester opens My Tickets, when their Ticket list is empty, then an "empty" state is shown; and when search or filters are applied with no matches, then a distinct "no-results" state is shown.<br>- **AC-15** — Given a requester opens an owned Ticket's attachments, when an Attachment is uploa... |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #26 — feat: Lab 2 data model, migration, and seed data (Issue 6)
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/26](https://github.com/Achikan/TokTickIT/pull/26) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | Everything looks extremely solid! The database schema exactly matches the Lab 2 requirements.<br><br>- All models, enums, relationships, and indexes are properly defined.<br>- The Ticket and Attachment fields (especially the soft-remove setup) are correct.<br>- The seed data is comprehensive and correctly uses idempotent logic (`upsert` / find-then-update), which is a great practice.<br>- The seed tests are very thorough.<br><br>Great work on the data layer! Approving this PR. 🚀 |
+| **Partner's Response** | *(No response yet)* |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #27 — feat: Development Requester selection context (Issue 7)
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/27](https://github.com/Achikan/TokTickIT/pull/27) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | Great job on implementing the Development Requester selection context!<br><br>- **Backend:** The `GET /api/development-requesters` endpoint correctly filters out inactive requesters and maps the response to the expected `{ items: [...] }` shape.<br>- **Frontend:** The selection screen handles all UI states (loading, empty, error) gracefully. The testing explanation and 'Change Requester' logic are perfectly implemented.<br>- **Tests:** The tests on both client and server sides are comprehensive ... |
+| **Partner's Response** | *(No response yet)* |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #28 — feat: Ticket creation (API + Create Ticket screen) (Issue 8)
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/28](https://github.com/Achikan/TokTickIT/pull/28) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | The Create Ticket screen and the API validation logic look great and align well with the UI specifications.<br><br>However, there is a missing implementation regarding the API contract. `api-spec.md` strictly requires the `X-Requester-Id` header for requester-scoped endpoints. Currently, the client does not send this header in `createTicket`, and the server does not validate it in the `POST /api/tickets` route.<br><br>Please update the following files:<br><br>**1. `client/src/api.ts`**<br>Update... |
+| **Partner's Response** | Thanks for the careful review! I've pushed the fix:<br><br>**`client/src/api.ts`** — `createTicket()` now sends the `X-Requester-Id` header.<br><br>**`server/src/app.ts`** — `POST /api/tickets` now enforces the header:<br>- Missing `X-Requester-Id` → `403 FORBIDDEN`.<br>- Per api-spec §3 ("All requester-scoped endpoints verify ownership"), the header must also match the `requesterId` in the body → `403 FORBIDDEN` on mismatch.<br><br>**Tests** — added two cases (missing header → 403, spoofed/mism... |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #29 — feat: My Tickets list with search, filters, sorting, pagination (Issue 9)
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/29](https://github.com/Achikan/TokTickIT/pull/29) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | The My Tickets implementation looks excellent. The API properly isolates tickets by requester ownership, and the pagination and filtering logic handles invalid parameters correctly. The frontend effectively manages all required UI states, including the distinct empty and no-results scenarios, and the responsive design is well implemented. The test coverage is comprehensive. Approving this pull request. |
+| **Partner's Response** | Thanks for the detailed re-review — I've addressed all four points:<br><br>**1. Search by Ticket Number (\`server/src/app.ts\`)** — Added \`ticketNumber\` to the search OR conditions (case-insensitive), so \`search=\` now matches summary, description, and the official Ticket Number. Covered by an API test.<br><br>**2. Deterministic secondary sort** — The API now always appends a secondary sort: after the requested primary column, results are ordered by \`createdAt desc\` and then \`id asc\` (ski... |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #30 — feat(Issue 10): Ticket Detail screen with ownership-scoped detail view
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/30](https://github.com/Achikan/TokTickIT/pull/30) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | The implementation for the Ticket Detail screen is very clean and meets almost all requirements, especially the secure API ownership checks and the safe failure states.<br><br>However, there is one visual layout issue that violates the responsive design requirements in the Lab 2 guidelines:<br><br>**Responsive Breakpoints (`client/src/TicketDetail.tsx`)**<br>According to the guidelines (Section 8.7), on Mobile viewports (`< 768 px`), fields must stack vertically.<br>Currently, the code uses Boot... |
+| **Partner's Response** | Good catch — fixed! Changed all `col-sm-3`/`col-sm-9` → `col-md-3`/`col-md-9` so fields now stack vertically on viewports < 768px per §8.7. All 34 client tests still pass. Ready for re-review. |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #31 — feat(Issue 11): Attachment Lifecycle — upload, download, soft-remove
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/31](https://github.com/Achikan/TokTickIT/pull/31) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | The implementation of the attachment lifecycle is excellent. However, there is one requirement that needs to be fixed regarding the API response for removed attachments.<br><br>According to **AC-06 (Soft Removal)**: "...the download API returns 410 Gone."<br>Currently, the download API returns a `404 Not Found` for soft-removed attachments.<br><br>Please update the following files to fix this:<br><br>**1. `server/src/app.ts`**<br>Update the `GET /api/attachments/:id/download` endpoint to return ... |
+| **Partner's Response** | Good catch — fixed. `GET /api/attachments/:id/download` now returns **410 Gone** for a soft-removed attachment (AC-06 / labsheet §4.5 "Removed files must not be downloadable"), while a missing or foreign attachment still returns a non-disclosing 404.<br><br>Changes:<br>- `server/src/app.ts` — the download endpoint now returns `410 { code: "REMOVED" }` when `attachment.removedAt` is set.<br>- `server/tests/lab-02/attachments.api.test.ts` — the removed-download test now expects `410` (was `404`).<... |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #32 — feat(Issue 12): Zen Green UI & Responsive — tokens, button hierarchy, focus, STYLE-01 tests
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/32](https://github.com/Achikan/TokTickIT/pull/32) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | Good catch on the UI implementation! The CSS changes in `styles.css` look great and comply with the Zen Green Theme Specification (Section 7).<br><br>However, there are two significant issues in `client/tests/lab-02/style.test.tsx` that need to be addressed to properly satisfy the STYLE-01 assertions (Section 8.8):<br><br>**1. Fake assertion in the CSS Token test:**<br>The test `"keeps Zen Green color tokens in :root"` defines a hardcoded string `cssText` inside the test and asserts against it, ... |
+| **Partner's Response** | Thanks for the detailed review! I've addressed all three points. Summary:<br><br>**1. Fake assertion on CSS tokens - FIXED**<br>The test now reads the actual `client/src/styles.css` file with Node `fs` and asserts the tokens against its real content, so it can no longer pass if the CSS is removed. I referenced the file via `resolve(__dirname, "../../src/styles.css")` (vitest injects `__dirname`; a raw `new URL(..., import.meta.url)` did not resolve to a `file:` scheme under vitest, so I used the... |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #33 — feat(Issue 13): Automated Tests — E2E, responsive, screenshots, final results
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/33](https://github.com/Achikan/TokTickIT/pull/33) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | I deeply reviewed the E2E test implementation, and it is impossible for these tests to have passed. The claim in `tests.md` that the E2E tests are passing seems to be incorrect, as the test script is completely disconnected from our actual UI and backend implementation.<br><br>Here are the 4 critical failures in `e2e/lab-02/helpers.ts` and `requester-ticket-flow.spec.ts` that will cause the tests to instantly crash:<br><br>1. **Ticket Number Format Mismatch:** The test checks for `/TK-\d{6}/`, b... |
+| **Partner's Response** | Thanks for the deep review. I appreciate the thoroughness, but I need to push back on three of the four points: they do not match the actual code in this repo, and the E2E suite genuinely passes locally. I did run `npm run test:e2e` against the running server (:3000) + Vite client (:5173) — the output is `11 passed`, and each of the four assertions you flagged resolves against the real UI/backend as written.<br><br>Here is the evidence, point by point:<br><br>**1. Ticket Number format `TK-\d{6}`... |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #34 — docs(Issue 14): Visual Inspection & Evidence — ui-spec checklist + screenshots
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/34](https://github.com/Achikan/TokTickIT/pull/34) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | I just pulled the branch and verified the codebase against this document. The visual inspection is extremely thorough, well-organized, and accurately reflects the current state of the code.<br><br>I really appreciate the clarity and honesty in the Deviations / Notes section regarding the SUBMITTED vs New status divergence. Documenting it clearly as a known issue (rather than sweeping it under the rug) is a great engineering practice.<br><br>The coverage for viewports and screen states is compreh... |
+| **Partner's Response** | *(No response yet)* |
+| **Outcome** | Approved and merged |
 
 ---
 
