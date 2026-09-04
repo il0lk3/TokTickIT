@@ -347,7 +347,7 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     // Ensure valid sort fields
-    const validSortFields = ['createdAt', 'ticketNumber', 'currentStatus', 'requestedPriority'];
+    const validSortFields = ['createdAt', 'updatedAt', 'ticketNumber', 'currentStatus', 'requestedPriority'];
     const sortField = validSortFields.includes(String(sortBy)) ? String(sortBy) : 'createdAt';
     const sortDir = String(sortOrder).toLowerCase() === 'asc' ? 'asc' : 'desc';
 

@@ -229,7 +229,8 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         </div>
       ) : (
         <div className="glass-panel overflow-hidden">
-          <div className="table-responsive">
+          {/* Desktop Table View */}
+          <div className="table-responsive d-none d-md-block">
             <table className="table table-hover align-middle mb-0 custom-table">
               <thead className="text-zen-primary small text-uppercase text-nowrap" style={{ borderBottom: '2px solid var(--zen-primary)' }}>
                 <tr>
@@ -247,10 +248,13 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                   <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
                     <div className="d-flex align-items-center justify-content-end">Date <SortIcon field="createdAt" /></div>
                   </th>
+                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("updatedAt")}>
+                    <div className="d-flex align-items-center justify-content-end">Last Updated <SortIcon field="updatedAt" /></div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="border-top-0">
-                {tickets.map((t) => (
+                {tickets.map((t: any) => (
                   <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
                     <td className="ps-4 py-3 text-nowrap">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
@@ -276,10 +280,83 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                     <td className="py-3 text-end pe-4 text-nowrap">
                       <span className="small text-muted">{new Date(t.createdAt).toLocaleDateString()}</span>
                     </td>
+                    <td className="py-3 text-end pe-4 text-nowrap">
+                      <span className="small text-muted">{new Date(t.updatedAt || t.createdAt).toLocaleDateString()}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          
+          {/* Mobile Card View */}
+          <div className="d-md-none bg-white">
+            <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+              <span className="small fw-bold text-muted">Sort by</span>
+              <div className="d-flex gap-2">
+                <select 
+                  className="form-select form-select-sm border-0 shadow-sm fw-medium" 
+                  value={sortBy} 
+                  onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+                  style={{ backgroundColor: '#F8F9FA' }}
+                >
+                  <option value="createdAt">Created Date</option>
+                  <option value="updatedAt">Last Updated</option>
+                  <option value="ticketNumber">Ticket No.</option>
+                </select>
+                <button 
+                  className="btn btn-sm btn-light border-0 shadow-sm fw-medium d-flex align-items-center gap-1"
+                  onClick={() => handleSort(sortBy)}
+                >
+                  {sortOrder === "desc" ? (
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> Descending</>
+                  ) : (
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg> Ascending</>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-light d-flex flex-column gap-3">
+              {tickets.map((t: any) => (
+                <div key={t.id} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
+                  <div className="card-body p-4">
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                      <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
+                      <span className={`badge rounded-pill fw-medium px-3 py-1 ${getStatusBadgeClass(t.currentStatus)}`}>
+                        {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus}
+                      </span>
+                    </div>
+                    
+                    <div className="text-dark mb-4 lh-sm" style={{ fontSize: '0.95rem' }}>{t.summary}</div>
+                    
+                    <div className="row g-2 small mb-3" style={{ fontSize: '0.85rem' }}>
+                      <div className="col-5 text-muted">Category</div>
+                      <div className="col-7 text-dark fw-medium text-end">{categoryMap[t.categoryId] || 'Unknown'}</div>
+                      
+                      <div className="col-5 text-muted">Priority</div>
+                      <div className="col-7 text-end">
+                        <span className={`badge rounded-pill px-2 py-1 ${getPriorityBadgeClass(t.requestedPriority)}`}>{t.requestedPriority}</span>
+                      </div>
+                      
+                      <div className="col-5 text-muted">Status</div>
+                      <div className="col-7 fw-medium text-end">
+                         {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus}
+                      </div>
+                    </div>
+                    
+                    <div className="d-flex justify-content-between text-muted pt-3 border-top border-light" style={{ fontSize: '0.75rem' }}>
+                      <div>
+                        <span className="fw-bold text-dark">Created:</span> {new Date(t.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-end">
+                        <span className="fw-bold text-dark">Last Updated:</span> {new Date(t.updatedAt || t.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           
           {totalPages > 1 && (

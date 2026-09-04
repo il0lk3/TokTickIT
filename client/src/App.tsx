@@ -79,7 +79,8 @@ function AppContent() {
                 </button>
               </li>
             </ul>
-            <div className="d-flex align-items-center mt-3 mt-lg-0 pt-3 pt-lg-0">
+            <hr className="d-lg-none text-white opacity-25 my-3" />
+            <div className="d-flex align-items-center mt-2 mt-lg-0">
               {activeRequester ? (
                 <>
                   <div className="d-flex align-items-center text-white me-3 px-3 py-1 rounded bg-white bg-opacity-10">
