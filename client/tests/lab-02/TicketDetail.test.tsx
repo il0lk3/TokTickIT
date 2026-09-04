@@ -51,11 +51,11 @@ describe("TicketDetail Component", () => {
     expect(screen.getByText(/Loading ticket details/i)).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText("TKT-2026-001")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("TKT-2026-001")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("My broken laptop")).toBeInTheDocument();
-    expect(screen.getByText("It just won't turn on.")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("My broken laptop")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("It just won't turn on.")).toBeInTheDocument();
     expect(screen.getByText("error.png")).toBeInTheDocument();
     expect(api.getTicketDetail).toHaveBeenCalledWith(1, mockRequester.id);
   });

@@ -132,7 +132,7 @@ router.post("/", async (req: Request, res: Response) => {
       const count = await prisma.ticket.count({
         where: { ticketNumber: { startsWith: `TKT-${year}-` } }
       });
-      const sequentialNumber = String(count + 1).padStart(6, '0');
+      const sequentialNumber = String(count + attempts).padStart(6, '0');
       const ticketNumber = `TKT-${year}-${sequentialNumber}`;
 
       try {
