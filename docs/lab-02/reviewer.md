@@ -118,7 +118,7 @@ A living document tracking the code review process. Reviews run in both directio
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Comment** | ## Review: Issue #8 — E2E Testing<br><br>The tests look good, but there are a few blockers. 1. You need to add a responsive spec and wire up automated screenshots across 3 viewports. 2. Your test coverage claims in `tests.md` do not match reality. 3. *(Re-review)* The client `npm run build` fails with 12 TS errors because `TicketDetail.tsx` references fields like `requesterName` and `requestedPriority` that are missing from the API response interfaces. 4. *(Final re-review)* The code is in good shape and builds cleanly, but `docs/lab-02/tests.md` still overstates `E2E-02` by claiming it captures screenshots and asserts color. Please update `tests.md` to reflect that it only tests horizontal overflow, and move the visual checklist to the manual section. |
 | **My Response** | Thanks for the thorough review! I've addressed all the blockers over a few commits:<br><br>1. **Responsive Specs**: Added `responsive.spec.ts` to assert no horizontal overflow on Mobile, Tablet, and Desktop viewports.<br>2. **Build Errors**: Updated `TicketResponse` and `TicketDetailResponse` in `api.ts` to include the missing fields, and fixed `TicketDetail.tsx` to correctly use `ticket.requester?.name`. The client now builds perfectly without TS errors.<br>3. **Documentation Sync**: Fixed `tests.md` to remove the automated screenshot and color assertion claims from `E2E-02`, and accurately moved them to the manual visual checklist section as requested. Everything should be 100% accurate now! |
-| **Outcome** | OPEN |
+| **Outcome** | Approved and merged |
 
 ---
 
