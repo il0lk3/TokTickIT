@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
-import path from 'path';
 
 test.describe('Responsive & UI Style Checks', () => {
-  test('Verify layout, overflow, and capture viewport screenshots', async ({ page, isMobile }, testInfo) => {
+  test('Verify layout and overflow', async ({ page, isMobile }) => {
     // 1. Boot up and select context
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Select Development Requester' })).toBeVisible();
@@ -15,12 +14,6 @@ test.describe('Responsive & UI Style Checks', () => {
     // UI Style Check: Ensure Zen Green primary button exists
     const submitBtn = page.getByRole('button', { name: 'Submit Request' });
     await expect(submitBtn).toBeVisible();
-    
-    // Take screenshot
-    await page.screenshot({ 
-      path: `../artifacts/lab-02/screenshots/create-ticket-${testInfo.project.name}.png`, 
-      fullPage: true 
-    });
 
     // 3. Navigate to My Tickets
     if (isMobile) {
@@ -35,12 +28,5 @@ test.describe('Responsive & UI Style Checks', () => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;
     });
     expect(hasOverflow, 'Page should not have horizontal overflow').toBeFalsy();
-
-    // Take screenshot
-    await page.screenshot({ 
-      path: `../artifacts/lab-02/screenshots/my-tickets-${testInfo.project.name}.png`, 
-      fullPage: true 
-    });
-
   });
 });
