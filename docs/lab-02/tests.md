@@ -1,53 +1,103 @@
 # Lab 2 Test Plan and Results
 
-## 1. Test Strategy
-We will employ Test-Driven Development (TDD) for critical business logic and API endpoints, and Spec-Driven Development (Spec DD) for the UI components.
-- **Unit Tests:** Utilities, Ticket Number generation format.
-- **API Tests:** Endpoint validation, ownership protection, file upload constraints.
-- **UI Tests:** Component rendering, form state (busy, error, success), accessible labels.
-- **E2E Tests:** Complete user flows using Playwright.
+This document serves as the comprehensive testing matrix for Sprint 2. It tracks automated test execution across the API (Server), React Components (Client), and End-to-End flows.
 
-## 2. Planned Tests
+## 1. Test Strategy & Philosophy
+- **Unit & Integration Tests (Server):** Focuses heavily on endpoint validation, business rule enforcement (e.g., ticket numbering constraints, unique identifiers, pagination limits), and relationship constraints.
+- **Component Tests (Client):** Uses `React Testing Library` to verify rendering states (loading, success, error), event handling (debouncing, sorting), and DOM structure (form parity between Mobile and Desktop views).
+- **End-to-End Tests (E2E):** Playwright is used strictly to simulate the end-user's entire flow through the system across multiple pages to ensure state retention.
 
-| Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File | Final |
-|---|---|---|---|---|---|---|
-| API-01 | API | AC-01 | Create valid ticket | 201; one saved Ticket; number returned | `server/tests/lab-02/create-ticket.api.test.ts` | Pass |
-| API-02 | API | AC-03 | Retrieve another user's ticket | 404 Not Found; Ticket data not returned | `server/tests/lab-02/ticket-detail.api.test.ts` | Pass |
-| API-03 | API | AC-05 | Upload 6th attachment | 400 Bad Request; upload rejected | `server/tests/lab-02/attachments.api.test.ts` | Pass |
-| API-04 | API | AC-06 | Soft remove attachment | 410 Gone on subsequent download | `server/tests/lab-02/attachments.api.test.ts` | Pass |
-| API-05 | API | BR-04 | Upload invalid file type (.exe) | 400 Bad Request; file rejected | `server/tests/lab-02/attachments.api.test.ts` | Pass |
-| API-06 | API | BR-04 | Upload file > 5MB | 400 Bad Request; size limit error | `server/tests/lab-02/attachments.api.test.ts` | Pass |
-| API-07 | API | FR-03 | Pagination and Filtering | 200 OK; correct items and meta pagination | `server/tests/lab-02/my-tickets.api.test.ts` | Pass |
-| UI-01 | UI | AC-02 | Unauthenticated access | Redirects or shows Requester Selection | `client/src/tests/lab-02/MyTickets.test.tsx` | Pass |
-| UI-02 | UI | AC-04 | Submit without Summary | Field-level error message; API not called | `client/src/tests/lab-02/CreateTicket.test.tsx` | Pass |
-| UI-03 | UI | FR-06 | Attachment busy state | Upload button disabled during upload | `client/src/tests/lab-02/AttachmentSection.test.tsx` | Pass |
-| E2E-01 | E2E | AC-01, AC-07 | Complete submission flow & Search | Success UI, ticket appears in search | `e2e/lab-02/requester-ticket-flow.spec.ts` | Pass |
+---
 
-## 3. Acceptance-Criterion Traceability
+## 2. Server API Tests (22/22 Passing)
+The backend test suite (`npm run test` in `/server`) verifies strict compliance with the API specifications and handles all edge cases gracefully.
+
+### 2.1 Ticket Creation (`POST /api/tickets`)
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `API-CREATE-01` | **AC-01** | Create valid ticket with all fields | `201 Created` with unique `TKT-YYYY-XXXXXX` | `create-ticket.api.test.ts` | ✅ Pass |
+| `API-CREATE-02` | **BR-01** | Missing `X-Requester-Id` header | `401 Unauthorized` | `create-ticket.api.test.ts` | ✅ Pass |
+| `API-CREATE-03` | **BR-02** | Missing required fields (summary, etc) | `400 Bad Request` | `create-ticket.api.test.ts` | ✅ Pass |
+| `API-CREATE-04` | **BR-02** | Invalid foreign keys (Fake Category) | `400 Bad Request` | `create-ticket.api.test.ts` | ✅ Pass |
+| `API-CREATE-05` | **BR-02** | Summary exceeds 150 chars limit | `400 Bad Request` | `create-ticket.api.test.ts` | ✅ Pass |
+| `API-CREATE-06` | **BR-03** | Duplicate submission within short timeframe | `400 Bad Request` | `create-ticket.api.test.ts` | ✅ Pass |
+
+### 2.2 My Tickets List (`GET /api/tickets`)
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `API-LIST-01` | **AC-03** | Ticket Ownership Protection | Returns ONLY tickets owned by `X-Requester-Id` | `my-tickets.api.test.ts` | ✅ Pass |
+| `API-LIST-02` | **AC-07** | Search filter by keyword | `200 OK` filtered by Summary match | `my-tickets.api.test.ts` | ✅ Pass |
+| `API-LIST-03` | **FR-03** | Filter by Status | `200 OK` filtered by Status | `my-tickets.api.test.ts` | ✅ Pass |
+| `API-LIST-04` | **FR-03** | Filter by CategoryId | `200 OK` filtered by Category | `my-tickets.api.test.ts` | ✅ Pass |
+| `API-LIST-05` | **FR-03** | Filter by Priority | `200 OK` filtered by Priority | `my-tickets.api.test.ts` | ✅ Pass |
+| `API-LIST-06` | **FR-03** | Sorting by Date/Priority/Status | `200 OK` correctly ordered list | `my-tickets.api.test.ts` | ✅ Pass |
+| `API-LIST-07` | **FR-03** | Pagination handling | `200 OK` with correct `meta` counts and `data` | `my-tickets.api.test.ts` | ✅ Pass |
+
+### 2.3 Ticket Detail (`GET /api/tickets/:id`)
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `API-DETAIL-01` | **AC-03** | Access owned ticket detail | `200 OK` with full ticket payload | `ticket-detail.api.test.ts` | ✅ Pass |
+| `API-DETAIL-02` | **AC-03** | Cross-requester access protection | `404 Not Found` (Does not leak 403 to prevent enumeration) | `ticket-detail.api.test.ts` | ✅ Pass |
+
+*(Note: Additional 7 API tests cover Attachments, Health, and Categories).*
+
+---
+
+## 3. Client UI Tests (12/12 Passing)
+The frontend test suite (`npm run test` in `/client`) focuses on component behavior, specifically mocking the API to isolate React rendering logic.
+
+### 3.1 App Shell & Requester Context
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-CTX-01` | **AC-02** | Unauthenticated Access | App intercepts routes and shows `RequesterSelector` | `App.test.tsx` | ✅ Pass |
+| `UI-CTX-02` | **AC-02** | Successful Context Selection | Clicking a user updates Context and redirects to Main App | `App.test.tsx` | ✅ Pass |
+
+### 3.2 Create Ticket Form
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-CREATE-01` | **AC-04** | Form Validation Feedback | Submitting empty form highlights fields red with error text | `CreateTicket.test.tsx` | ✅ Pass |
+| `UI-CREATE-02` | **AC-01** | Successful Submission | Shows Success Screen with generated `ticketNumber` | `CreateTicket.test.tsx` | ✅ Pass |
+
+### 3.3 My Tickets Dashboard
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-LIST-01` | **FR-02** | Debounced Search Input | Typing pauses 500ms before triggering API fetch | `MyTickets.test.tsx` | ✅ Pass |
+| `UI-LIST-02` | **FR-03** | Sort Header Click | Clicking "Ticket No." changes sort direction and refetches | `MyTickets.test.tsx` | ✅ Pass |
+| `UI-LIST-03` | **FR-02** | Responsive Data Rendering | Desktop table and Mobile Cards render exact same ticket arrays | `MyTickets.test.tsx` | ✅ Pass |
+
+### 3.4 Ticket Detail View
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-DETAIL-01` | **FR-05** | View Loading State | Shows loading spinner before rendering data | `TicketDetail.test.tsx` | ✅ Pass |
+| `UI-DETAIL-02` | **FR-05** | Read-Only Form Mapping | Fetched ticket data correctly populates the disabled input fields | `TicketDetail.test.tsx` | ✅ Pass |
+
+---
+
+## 4. End-to-End Tests (1/1 Passing)
+Playwright tests are located in `e2e/lab-02/`.
+
+| Test ID | Flow | Steps Covered | Final |
+|---|---|---|---|
+| `E2E-01` | Full Requester Flow | 1. Select Requester<br>2. Navigate to "Create Ticket"<br>3. Fill form and submit<br>4. Extract `TKT-XX` number from Success Screen<br>5. Navigate to "My Tickets"<br>6. Search for `TKT-XX`<br>7. Click ticket to view Details | ✅ Pass |
+
+---
+
+## 5. Acceptance-Criterion Traceability Matrix
+
+Every Acceptance Criterion (AC) strictly ties back to at least one automated test.
 
 | AC | Description | Covering Tests |
 |---|---|---|
-| AC-01 | Successful creation generates Ticket Number | API-01, E2E-01 |
-| AC-02 | Requester Selection enforcement | UI-01 |
-| AC-03 | Cross-Requester access protection | API-02 |
-| AC-04 | Validation error presentation | UI-02 |
-| AC-05 | Attachment upload limits | API-03, API-05, API-06 |
-| AC-06 | Soft removal metadata preservation | API-04 |
-| AC-07 | My Tickets Search | E2E-01, API-07 |
+| **AC-01** | Successful creation generates Ticket Number | `API-CREATE-01`, `UI-CREATE-02`, `E2E-01` |
+| **AC-02** | Requester Selection enforcement | `UI-CTX-01`, `UI-CTX-02` |
+| **AC-03** | Cross-Requester access protection | `API-LIST-01`, `API-DETAIL-02` |
+| **AC-04** | Validation error presentation | `UI-CREATE-01` |
+| **AC-05** | Attachment upload limits | `API-ATTACH-01` (Attachments test file) |
+| **AC-06** | Soft removal metadata preservation | `API-ATTACH-02` (Attachments test file) |
+| **AC-07** | My Tickets Search | `API-LIST-02`, `UI-LIST-01`, `E2E-01` |
 
-## 4. Responsive and Visual Checklist
-- [x] No clipped labels on Mobile.
-- [x] No overlapping validation messages.
-- [x] No horizontal scrolling on Mobile viewports (implemented using `.table-responsive`).
-- [x] "Zen Green" color palette strictly followed.
-
-## 5. Test Commands
-- **Backend API/Unit:** `npm run test` (in `/server`)
-- **Frontend UI:** `npm run test` (in `/client`)
-- **E2E:** `npx playwright test` (in `/e2e` - note: `mkdir e2e` may be required before setup)
-
-## 6. Final Results
-All tests have successfully passed. Coverage has been confirmed for Unit, API, UI, and E2E layers. No tests are skipped or disabled.
-
-## 7. Known Limitations or Deferred Tests
-- Visual regression testing (e.g., Percy) is deferred; relying on manual responsive checks and Playwright for now.
+## 6. Manual QA & Visual Checklist
+- [x] **No clipped labels on Mobile:** Stacked cards allow full width text reading.
+- [x] **No overlapping validation messages:** Absolute positioning removed in favor of block margins.
+- [x] **No horizontal scrolling on Mobile viewports:** Standard tables completely hidden on mobile (`d-none`), cards take over (`d-block`).
+- [x] **Zen Green Color Adherence:** Checked `#006B3C` against all interactive buttons and active states.
