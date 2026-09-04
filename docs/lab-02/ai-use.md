@@ -1,20 +1,25 @@
-# Lab 2 AI Use and Reflection
+# Lab 2 AI Use
 
-**LLM/AI Assistant Used:** Google Antigravity (Gemini 2.5)
+A living document recording the key prompts used during the sprint to shape the design, solve bugs, and refine implementation.
 
-## 1. Selected Key Prompts
+## 1. Which AI I used
 
-| Prompt ID | Phase | Prompt Text | How the AI Helped |
-|---|---|---|---|
-| 1 | Specification | "Help me extract the business rules and acceptance criteria from this PDF handout and structure them into the Appendix A template." | The AI correctly identified missing rules (e.g., character limits, attachment boundaries) and formatted them properly. |
-| 2 | Testing | "I need a test plan that covers these acceptance criteria using TDD. Help me map the UI, API, and E2E tests into a table." | The AI generated the traceability matrix and suggested testing paths I hadn't considered. |
-| 3 | Implementation | "Create the API endpoints for Ticket creation and Attachment uploads, enforcing the 5MB and 5-file limits." | It scaffolded the Express backend with Multer for file uploads and Zod for validation. |
-| 4 | UI Development | "Help me build the MyTickets page with search, filters, pagination, and sorting using the Zen Green theme from index.css." | The AI generated the responsive data table and successfully integrated debounced search. |
-| 5 | E2E Testing | "Write a Playwright test that logs in, creates a ticket with attachments, and then searches for it in My Tickets." | It wrote a complete end-to-end test script that confirmed all features were working correctly. |
-| 6 | Refactoring | "Can you check if there are any missing styles compared to the PDF requirement for read-only fields in TicketDetail?" | The AI identified that read-only fields needed a specific soft gray-green background and applied `#F4F7F6`. |
+**Google Antigravity IDE (Gemini)** running in the editor, with full access to the repository, terminal, tests, and file system. 
+It was used iteratively as both a design consultant and a coding agent.
 
-## 2. My Reflection
+## 2. Selected key prompts
 
-*(Student: Please write a brief paragraph here reflecting on your experience using the AI coding agent. For example, did it speed up your work? Did you have to correct its mistakes? Did it help you understand the requirements better?)*
+The following prompts highlight moments where I challenged the AI, corrected its assumptions, or pushed it to dig deeper into bugs, rather than just asking for basic code generation.
 
-Overall, working with the AI agent was...
+| # | Prompt | What it changed | PR |
+| --- | --- | --- | --- |
+| 1 | *"คือหน้า ticket detail มันต้องเป็นแนวประมาณนี้ไหม... แถบด้านบนมันควรจะเป้นสีเขียวรึเปล่า"* | Overruled the AI's generic frontend design and forced a complete UI overhaul to match the 'Zen Green Enterprise' mockup. The AI had to rewrite the Navbar, App shell, and Ticket Detail screens to comply with the required aesthetic. | PR #29 |
+| 2 | *"คือเป็นโมบายแล้วไม่มีข้อมูล status หรอออ ทำให้เหมือนกัน ข้อมูลโชว์เหมือนกันหมด"* | Enforced strict data parity. The AI had initially hidden 'Status' and 'Priority' on mobile to save space. This prompt forced it to redesign the mobile card to be denser but functionally identical to the desktop table. | PR #29 |
+| 3 | *"last updated ทำไม filter ไม่ได้"* | Sparked a full-stack fix. Instead of just adding a UI button, the AI investigated and found the backend `tickets.ts` API strictly rejected sorting by `updatedAt`. It fixed the backend array and wired up the frontend. | PR #29 |
+| 4 | *"ช่วยด้วยยยยย failed เยอะมาก"* | Triggered deep backend debugging. The AI realized the dev DB seeds were causing test collisions (9 tickets returned instead of 3). More importantly, it discovered and fixed a backend infinite loop bug where ticket number collisions (`TKT-YYYY-XXXXXX`) caused a 500 error instead of auto-incrementing. | PR #29 |
+| 5 | *"เออใช่ไอที่โชวข้อมูลควรมีทั้ง Created date กับ lasted date ด้วยไหมอะ"* | Changed the schema display requirement. The AI added a dedicated "Last Updated" column to both the desktop table and the mobile cards, parsing the `updatedAt` database field which was previously ignored in the UI. | PR #29 |
+| 6 | *"แกคือ route/URL path ของแต่ละหน้า web เราเหมือนกันหมดเลยหรอ"* | Sparked an architectural review of the routing mechanism. The AI explained that the app was a strict SPA using state (`activeTab`) instead of `react-router-dom`, clarifying why browser navigation (Back/Forward) wasn't working. | PR #29 |
+
+## 3. Workflow Observation
+
+Rather than generating large blocks of code blindly, the AI was most effective when given screenshots of its own UI outputs and error logs. When tests failed, feeding it the terminal output allowed it to trace the bug across the full stack (from the frontend React component all the way to the Prisma backend and test runner constraints).
