@@ -85,12 +85,12 @@ The frontend test suite focuses on component behavior, specifically mocking the 
 ---
 
 ## 4. End-to-End Tests (2/2 Passing)
-Playwright tests verify the critical flows, UI adherence, and capture responsive screenshots.
+Playwright tests verify the critical flows and UI adherence.
 
 | Test ID | Flow | Steps Covered | Final |
 |---|---|---|---|
 | `E2E-01` | Full Requester Flow | 1. Select Requester<br>2. Navigate to "Create Ticket"<br>3. Fill form and submit<br>4. Extract Ticket Number<br>5. Search for Ticket in list<br>6. Verify presence<br>7. Click ticket to view Details | Pass |
-| `E2E-02` | Responsive & UI Checks | 1. Load context<br>2. Evaluate horizontal overflow on Mobile, Tablet, Desktop<br>3. Capture automated screenshots of My Tickets and Create form across viewports | Pass |
+| `E2E-02` | Responsive Checks | 1. Load context<br>2. Evaluate horizontal overflow on Mobile, Tablet, Desktop | Pass |
 
 ---
 
@@ -108,8 +108,8 @@ Every Acceptance Criterion (AC) strictly ties back to at least one automated tes
 | **AC-06** | Soft removal metadata preservation | `API-ATTACH-02` |
 | **AC-07** | My Tickets Search | `API-LIST-02`, `UI-LIST-03`, `E2E-01` |
 
-## 6. Manual QA & Automated Visual Checklist
+## 6. Manual QA & Visual Checklist
 - [x] **No clipped labels on Mobile:** Stacked cards allow full width text reading.
 - [x] **No overlapping validation messages:** Absolute positioning removed in favor of block margins.
 - [x] **No horizontal scrolling on Mobile viewports:** Asserted dynamically in `E2E-02`.
-- [x] **Zen Green Color Adherence:** Asserted dynamically in `E2E-02` and captured in screenshots.
+- [x] **Zen Green Color Adherence:** Verified manually via visual inspection and manual screenshots.

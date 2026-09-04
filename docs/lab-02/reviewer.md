@@ -116,8 +116,8 @@ A living document tracking the code review process. Reviews run in both directio
 |-------|--------|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/29](https://github.com/il0lk3/TokTickIT/pull/29) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
-| **Review Comment** | *(Pending review)* |
-| **My Response** | *(Pending)* |
+| **Review Comment** | ## Review: Issue #8 — E2E Testing<br><br>The tests look good, but there are a few blockers. 1. You need to add a responsive spec and wire up automated screenshots across 3 viewports. 2. Your test coverage claims in `tests.md` do not match reality. 3. *(Re-review)* The client `npm run build` fails with 12 TS errors because `TicketDetail.tsx` references fields like `requesterName` and `requestedPriority` that are missing from the API response interfaces. 4. *(Final re-review)* The code is in good shape and builds cleanly, but `docs/lab-02/tests.md` still overstates `E2E-02` by claiming it captures screenshots and asserts color. Please update `tests.md` to reflect that it only tests horizontal overflow, and move the visual checklist to the manual section. |
+| **My Response** | Thanks for the thorough review! I've addressed all the blockers over a few commits:<br><br>1. **Responsive Specs**: Added `responsive.spec.ts` to assert no horizontal overflow on Mobile, Tablet, and Desktop viewports.<br>2. **Build Errors**: Updated `TicketResponse` and `TicketDetailResponse` in `api.ts` to include the missing fields, and fixed `TicketDetail.tsx` to correctly use `ticket.requester?.name`. The client now builds perfectly without TS errors.<br>3. **Documentation Sync**: Fixed `tests.md` to remove the automated screenshot and color assertion claims from `E2E-02`, and accurately moved them to the manual visual checklist section as requested. Everything should be 100% accurate now! |
 | **Outcome** | OPEN |
 
 ---
@@ -247,3 +247,12 @@ A living document tracking the code review process. Reviews run in both directio
 
 ---
 
+### Partner PR #35 — docs(Issue 15): finalize Lab 2 docs — reviewer, ai-use, README, final status
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/35](https://github.com/Achikan/TokTickIT/pull/35) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | LGTM<br><br>The final documentation updates are extremely thorough and perfectly wrap up Lab 2.<br><br>I really liked how you documented our exact exchange regarding PR #33 in reviewer.md and ai-use.md. It perfectly demonstrates the value of verifying against the actual codebase (git ls-tree / git show) during a peer review instead of relying on assumptions.<br><br>The README updates are clear, the API spec clarification is spot on, and the final test counts are nicely summarized. Great job wrapping up Lab 2 on this branch! |
+| **Partner's Response** | *(No response yet)* |
+| **Outcome** | Approved and merged |
