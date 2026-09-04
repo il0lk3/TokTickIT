@@ -22,9 +22,22 @@ A living document tracking the code review process. Reviews run in both directio
 
 ---
 
-## Pull Requests Reviewed
+# Pull Requests I Authored
 
 > My partner reviewed the following PRs that I submitted.
+
+| PR | Issue | Branch | Reviewer Verdict |
+|---|---|---|---|
+| [#22](https://github.com/il0lk3/TokTickIT/pull/22) | 1 — Lab 2 Sprint Specification and Test Plan | `feature/lab2-specs` | Approved |
+| [#23](https://github.com/il0lk3/TokTickIT/pull/23) | 2 — Database Models & Reference Data | `feature/lab2-context-db` | Approved (after 1 revision) |
+| [#24](https://github.com/il0lk3/TokTickIT/pull/24) | 3 — Development Requester Selector | `feature/lab2-selector` | Approved |
+| [#25](https://github.com/il0lk3/TokTickIT/pull/25) | 4 — Create Ticket API | `feature/lab2-create-ticket-api` | Approved (after 1 revision) |
+| [#26](https://github.com/il0lk3/TokTickIT/pull/26) | 5 — Create Ticket UI Component | `feature/lab2-create-ticket-ui` | Approved (after 1 revision) |
+| [#27](https://github.com/il0lk3/TokTickIT/pull/27) | 6 — Implement My Tickets API and Upgrade UI | `feature/lab2-my-tickets` | Approved (after 1 revision) |
+| [#28](https://github.com/il0lk3/TokTickIT/pull/28) | 7 — Implement Ticket Detail and Soft Remove Attachments | `feature/lab2-ticket-detail` | Approved (after 1 revision) |
+| [#29](https://github.com/il0lk3/TokTickIT/pull/29) | 8 — End-to-End Testing & Final Release Polish | `feature/lab2-e2e-real` | Approved (after 3 revisions) |
+
+<br>
 
 ### PR #22 — Issue 1: Lab 2 Sprint Specification and Test Plan
 
@@ -118,14 +131,37 @@ A living document tracking the code review process. Reviews run in both directio
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Comment** | ## Review: Issue #8 — E2E Testing<br><br>The tests look good, but there are a few blockers. 1. You need to add a responsive spec and wire up automated screenshots across 3 viewports. 2. Your test coverage claims in `tests.md` do not match reality. 3. *(Re-review)* The client `npm run build` fails with 12 TS errors because `TicketDetail.tsx` references fields like `requesterName` and `requestedPriority` that are missing from the API response interfaces. 4. *(Final re-review)* The code is in good shape and builds cleanly, but `docs/lab-02/tests.md` still overstates `E2E-02` by claiming it captures screenshots and asserts color. Please update `tests.md` to reflect that it only tests horizontal overflow, and move the visual checklist to the manual section. |
 | **My Response** | Thanks for the thorough review! I've addressed all the blockers over a few commits:<br><br>1. **Responsive Specs**: Added `responsive.spec.ts` to assert no horizontal overflow on Mobile, Tablet, and Desktop viewports.<br>2. **Build Errors**: Updated `TicketResponse` and `TicketDetailResponse` in `api.ts` to include the missing fields, and fixed `TicketDetail.tsx` to correctly use `ticket.requester?.name`. The client now builds perfectly without TS errors.<br>3. **Documentation Sync**: Fixed `tests.md` to remove the automated screenshot and color assertion claims from `E2E-02`, and accurately moved them to the manual visual checklist section as requested. Everything should be 100% accurate now! |
-| **Outcome** | OPEN |
+| **Outcome** | Approved and merged |
 
 ---
 
 
-## Pull Requests I Reviewed
+<br><br>
 
-> I reviewed the following PRs submitted by my partner.
+---
+---
+
+<br><br>
+
+# Pull Requests I Reviewed
+
+> I reviewed the following PRs authored and submitted by my partner.
+
+| PR | Issue | Branch | My Verdict |
+|---|---|---|---|
+| [#25](https://github.com/Achikan/TokTickIT/pull/25) | 5 — docs: Lab 2 engineering contract | `feature/5-spec-test-plan` | Approved |
+| [#26](https://github.com/Achikan/TokTickIT/pull/26) | 6 — feat: Lab 2 data model, migration, and seed data | `feature/6-db-models-seed` | Approved |
+| [#27](https://github.com/Achikan/TokTickIT/pull/27) | 7 — feat: Development Requester selection context | `feature/7-requester-selection` | Approved |
+| [#28](https://github.com/Achikan/TokTickIT/pull/28) | 8 — feat: Ticket creation (API + Create Ticket screen) | `feature/8-ticket-creation` | Approved (after 1 revision) |
+| [#29](https://github.com/Achikan/TokTickIT/pull/29) | 9 — feat: My Tickets list with search, filters, sorting, pagination | `feature/9-my-tickets` | Approved (after 1 revision) |
+| [#30](https://github.com/Achikan/TokTickIT/pull/30) | 10 — feat: Ticket Detail screen with ownership-scoped detail view | `feature/10-ticket-detail` | Approved (after 1 revision) |
+| [#31](https://github.com/Achikan/TokTickIT/pull/31) | 11 — feat: Attachment Lifecycle — upload, download, soft-remove | `feature/11-attachments` | Approved (after 1 revision) |
+| [#32](https://github.com/Achikan/TokTickIT/pull/32) | 12 — feat: Zen Green UI & Responsive — tokens, button hierarchy, focus | `feature/12-zen-green-ui` | Approved (after 2 revisions) |
+| [#33](https://github.com/Achikan/TokTickIT/pull/33) | 13 — feat: Automated Tests — E2E, responsive, screenshots, final results | `feature/13-automated-tests` | Approved (after 1 revision) |
+| [#34](https://github.com/Achikan/TokTickIT/pull/34) | 14 — docs: Visual Inspection & Evidence — ui-spec checklist + screenshots | `feature/14-visual-inspection` | Approved |
+| [#35](https://github.com/Achikan/TokTickIT/pull/35) | 15 — docs: finalize Lab 2 docs — reviewer, ai-use, README, final status | `feature/15-finalize-docs` | Approved |
+
+<br>
 
 ### Partner PR #25 — docs: Lab 2 engineering contract (Issue 5)
 
@@ -145,7 +181,7 @@ A living document tracking the code review process. Reviews run in both directio
 |-------|--------|
 | **PR Link** | [https://github.com/Achikan/TokTickIT/pull/26](https://github.com/Achikan/TokTickIT/pull/26) |
 | **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
-| **My Review Comment** | Everything looks extremely solid! The database schema exactly matches the Lab 2 requirements.<br><br>- All models, enums, relationships, and indexes are properly defined.<br>- The Ticket and Attachment fields (especially the soft-remove setup) are correct.<br>- The seed data is comprehensive and correctly uses idempotent logic (`upsert` / find-then-update), which is a great practice.<br>- The seed tests are very thorough.<br><br>Great work on the data layer! Approving this PR. 🚀 |
+| **My Review Comment** | Everything looks extremely solid! The database schema exactly matches the Lab 2 requirements.<br><br>- All models, enums, relationships, and indexes are properly defined.<br>- The Ticket and Attachment fields (especially the soft-remove setup) are correct.<br>- The seed data is comprehensive and correctly uses idempotent logic (`upsert` / find-then-update), which is a great practice.<br>- The seed tests are very thorough.<br><br>Great work on the data layer! Approving this PR. |
 | **Partner's Response** | *(No response yet)* |
 | **Outcome** | Approved and merged |
 
