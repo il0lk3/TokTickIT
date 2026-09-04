@@ -85,10 +85,15 @@ npm run test
 # Run frontend tests (UI Components & Logic)
 cd client
 npm run test
+
+# Run end-to-end (E2E) tests
+cd e2e
+npm run test
 ```
 
 - **Server tests:** Uses `Supertest` and `Vitest`. Tests like `my-tickets.api.test.ts` query the real test database. Ensure `npx prisma db seed` has run first.
 - **Client tests:** Uses `Vitest` and `React Testing Library` in `jsdom`. These mock the `fetch` API and render components in a simulated browser.
+- **E2E tests:** Uses `Playwright` to drive a real Chromium browser. Automatically boots the server and Vite client, testing responsive layouts and critical user flows.
 
 The full test plan can be found in [docs/lab-02/tests.md](./docs/lab-02/tests.md).
 
@@ -119,10 +124,14 @@ Development follows a strict feature-branch workflow. Work is never committed di
 
 | Issue | Feature Branch | Pull Request Target |
 |-------|----------------|---------------------|
-| 5. Development Requester | `feature/lab2-requester-context` | `lab2-staging` |
-| 6. My Tickets | `feature/lab2-my-tickets` | `lab2-staging` |
-| 7. Ticket Detail & Attachments | `feature/lab2-ticket-detail` | `lab2-staging` |
-| 8. E2E Tests | `feature/lab2-e2e` | `lab2-staging` |
+| 1. Lab 2 Sprint Specification and Test Plan | `feature/lab2-specs` | `lab2-staging` |
+| 2. Database Models & Reference Data | `feature/lab2-context-db` | `lab2-staging` |
+| 3. Development Requester Selector | `feature/lab2-selector` | `lab2-staging` |
+| 4. Create Ticket API | `feature/lab2-create-ticket-api` | `lab2-staging` |
+| 5. Create Ticket UI Component | `feature/lab2-create-ticket-ui` | `lab2-staging` |
+| 6. Implement My Tickets API and Upgrade UI | `feature/lab2-my-tickets` | `lab2-staging` |
+| 7. Implement Ticket Detail and Soft Remove Attachments | `feature/lab2-ticket-detail` | `lab2-staging` |
+| 8. End-to-End Testing & Final Release Polish | `feature/lab2-e2e-real` | `lab2-staging` |
 
 ---
 
