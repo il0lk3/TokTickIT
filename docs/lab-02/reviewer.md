@@ -181,7 +181,7 @@ A living document tracking the code review process. Reviews run in both directio
 |-------|--------|
 | **PR Link** | [https://github.com/Achikan/TokTickIT/pull/26](https://github.com/Achikan/TokTickIT/pull/26) |
 | **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
-| **My Review Comment** | Everything looks extremely solid! The database schema exactly matches the Lab 2 requirements.<br><br>- All models, enums, relationships, and indexes are properly defined.<br>- The Ticket and Attachment fields (especially the soft-remove setup) are correct.<br>- The seed data is comprehensive and correctly uses idempotent logic (`upsert` / find-then-update), which is a great practice.<br>- The seed tests are very thorough.<br><br>Great work on the data layer! Approving this PR. 🚀 |
+| **My Review Comment** | Everything looks extremely solid! The database schema exactly matches the Lab 2 requirements.<br><br>- All models, enums, relationships, and indexes are properly defined.<br>- The Ticket and Attachment fields (especially the soft-remove setup) are correct.<br>- The seed data is comprehensive and correctly uses idempotent logic (`upsert` / find-then-update), which is a great practice.<br>- The seed tests are very thorough.<br><br>Great work on the data layer! Approving this PR. |
 | **Partner's Response** | *(No response yet)* |
 | **Outcome** | Approved and merged |
 
