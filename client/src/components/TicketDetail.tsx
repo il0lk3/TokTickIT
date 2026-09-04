@@ -157,7 +157,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
             {/* Row 2 */}
             <div className="col-md-3">
               <label className="form-label text-muted small fw-bold mb-1">Requester</label>
-              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.requesterName} />
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.requester?.name || '-'} />
             </div>
             <div className="col-md-3">
               <label className="form-label text-muted small fw-bold mb-1">Requested Priority</label>
