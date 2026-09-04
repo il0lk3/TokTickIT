@@ -22,20 +22,20 @@ A living document tracking the code review process. Reviews run in both directio
 
 ---
 
-# 📝 Pull Requests I Authored
+# Pull Requests I Authored
 
 > My partner reviewed the following PRs that I submitted.
 
 | PR | Issue | Branch | Reviewer Verdict |
 |---|---|---|---|
-| [#22](https://github.com/il0lk3/TokTickIT/pull/22) | 1 — Lab 2 Sprint Specification and Test Plan | `feature/lab2-specs` | Approved and merged |
-| [#23](https://github.com/il0lk3/TokTickIT/pull/23) | 2 — Database Models & Reference Data | `feature/lab2-context-db` | Approved and merged |
-| [#24](https://github.com/il0lk3/TokTickIT/pull/24) | 3 — Development Requester Selector | `feature/lab2-selector` | Approved and merged |
-| [#25](https://github.com/il0lk3/TokTickIT/pull/25) | 4 — Create Ticket API | `feature/lab2-create-ticket-api` | Approved and merged |
-| [#26](https://github.com/il0lk3/TokTickIT/pull/26) | 5 — Create Ticket UI Component | `feature/lab2-create-ticket-ui` | Approved and merged |
-| [#27](https://github.com/il0lk3/TokTickIT/pull/27) | 6 — Implement My Tickets API and Upgrade UI | `feature/lab2-my-tickets` | Approved and merged |
-| [#28](https://github.com/il0lk3/TokTickIT/pull/28) | 7 — Implement Ticket Detail and Soft Remove Attachments | `feature/lab2-ticket-detail` | Approved and merged |
-| [#29](https://github.com/il0lk3/TokTickIT/pull/29) | 8 — End-to-End Testing & Final Release Polish | `feature/lab2-e2e-real` | Approved and merged |
+| [#22](https://github.com/il0lk3/TokTickIT/pull/22) | 1 — Lab 2 Sprint Specification and Test Plan | `feature/lab2-specs` | Approved |
+| [#23](https://github.com/il0lk3/TokTickIT/pull/23) | 2 — Database Models & Reference Data | `feature/lab2-context-db` | Approved (after 1 revision) |
+| [#24](https://github.com/il0lk3/TokTickIT/pull/24) | 3 — Development Requester Selector | `feature/lab2-selector` | Approved |
+| [#25](https://github.com/il0lk3/TokTickIT/pull/25) | 4 — Create Ticket API | `feature/lab2-create-ticket-api` | Approved (after 1 revision) |
+| [#26](https://github.com/il0lk3/TokTickIT/pull/26) | 5 — Create Ticket UI Component | `feature/lab2-create-ticket-ui` | Approved (after 1 revision) |
+| [#27](https://github.com/il0lk3/TokTickIT/pull/27) | 6 — Implement My Tickets API and Upgrade UI | `feature/lab2-my-tickets` | Approved (after 1 revision) |
+| [#28](https://github.com/il0lk3/TokTickIT/pull/28) | 7 — Implement Ticket Detail and Soft Remove Attachments | `feature/lab2-ticket-detail` | Approved (after 1 revision) |
+| [#29](https://github.com/il0lk3/TokTickIT/pull/29) | 8 — End-to-End Testing & Final Release Polish | `feature/lab2-e2e-real` | Approved (after 3 revisions) |
 
 <br>
 
@@ -143,23 +143,23 @@ A living document tracking the code review process. Reviews run in both directio
 
 <br><br>
 
-# 🤝 Pull Requests I Reviewed
+# Pull Requests I Reviewed
 
 > I reviewed the following PRs authored and submitted by my partner.
 
 | PR | Issue | Branch | My Verdict |
 |---|---|---|---|
-| [#25](https://github.com/Achikan/TokTickIT/pull/25) | 5 — docs: Lab 2 engineering contract | `feature/5-spec-test-plan` | Approved and merged |
-| [#26](https://github.com/Achikan/TokTickIT/pull/26) | 6 — feat: Lab 2 data model, migration, and seed data | `feature/6-db-models-seed` | Approved and merged |
-| [#27](https://github.com/Achikan/TokTickIT/pull/27) | 7 — feat: Development Requester selection context | `feature/7-requester-selection` | Approved and merged |
-| [#28](https://github.com/Achikan/TokTickIT/pull/28) | 8 — feat: Ticket creation (API + Create Ticket screen) | `feature/8-ticket-creation` | Approved and merged |
-| [#29](https://github.com/Achikan/TokTickIT/pull/29) | 9 — feat: My Tickets list with search, filters, sorting, pagination | `feature/9-my-tickets` | Approved and merged |
-| [#30](https://github.com/Achikan/TokTickIT/pull/30) | 10 — feat: Ticket Detail screen with ownership-scoped detail view | `feature/10-ticket-detail` | Approved and merged |
-| [#31](https://github.com/Achikan/TokTickIT/pull/31) | 11 — feat: Attachment Lifecycle — upload, download, soft-remove | `feature/11-attachments` | Approved and merged |
-| [#32](https://github.com/Achikan/TokTickIT/pull/32) | 12 — feat: Zen Green UI & Responsive — tokens, button hierarchy, focus | `feature/12-zen-green-ui` | Approved and merged |
-| [#33](https://github.com/Achikan/TokTickIT/pull/33) | 13 — feat: Automated Tests — E2E, responsive, screenshots, final results | `feature/13-automated-tests` | Approved and merged |
-| [#34](https://github.com/Achikan/TokTickIT/pull/34) | 14 — docs: Visual Inspection & Evidence — ui-spec checklist + screenshots | `feature/14-visual-inspection` | Approved and merged |
-| [#35](https://github.com/Achikan/TokTickIT/pull/35) | 15 — docs: finalize Lab 2 docs — reviewer, ai-use, README, final status | `feature/15-finalize-docs` | Approved and merged |
+| [#25](https://github.com/Achikan/TokTickIT/pull/25) | 5 — docs: Lab 2 engineering contract | `feature/5-spec-test-plan` | Approved |
+| [#26](https://github.com/Achikan/TokTickIT/pull/26) | 6 — feat: Lab 2 data model, migration, and seed data | `feature/6-db-models-seed` | Approved |
+| [#27](https://github.com/Achikan/TokTickIT/pull/27) | 7 — feat: Development Requester selection context | `feature/7-requester-selection` | Approved |
+| [#28](https://github.com/Achikan/TokTickIT/pull/28) | 8 — feat: Ticket creation (API + Create Ticket screen) | `feature/8-ticket-creation` | Approved (after 1 revision) |
+| [#29](https://github.com/Achikan/TokTickIT/pull/29) | 9 — feat: My Tickets list with search, filters, sorting, pagination | `feature/9-my-tickets` | Approved (after 1 revision) |
+| [#30](https://github.com/Achikan/TokTickIT/pull/30) | 10 — feat: Ticket Detail screen with ownership-scoped detail view | `feature/10-ticket-detail` | Approved (after 1 revision) |
+| [#31](https://github.com/Achikan/TokTickIT/pull/31) | 11 — feat: Attachment Lifecycle — upload, download, soft-remove | `feature/11-attachments` | Approved (after 1 revision) |
+| [#32](https://github.com/Achikan/TokTickIT/pull/32) | 12 — feat: Zen Green UI & Responsive — tokens, button hierarchy, focus | `feature/12-zen-green-ui` | Approved (after 2 revisions) |
+| [#33](https://github.com/Achikan/TokTickIT/pull/33) | 13 — feat: Automated Tests — E2E, responsive, screenshots, final results | `feature/13-automated-tests` | Approved (after 1 revision) |
+| [#34](https://github.com/Achikan/TokTickIT/pull/34) | 14 — docs: Visual Inspection & Evidence — ui-spec checklist + screenshots | `feature/14-visual-inspection` | Approved |
+| [#35](https://github.com/Achikan/TokTickIT/pull/35) | 15 — docs: finalize Lab 2 docs — reviewer, ai-use, README, final status | `feature/15-finalize-docs` | Approved |
 
 <br>
 
