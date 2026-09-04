@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getSystems, createTicket, Category, RelatedSystem } from "../api.js";
+import { getSystems, createTicket, uploadAttachment, Category, RelatedSystem } from "../api.js";
 import { useRequester } from "../contexts/RequesterContext.js";
 
 type FormState = "idle" | "submitting" | "success" | "error";
@@ -22,6 +22,8 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
   const [requestedPriority, setRequestedPriority] = useState("MEDIUM");
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploadError, setUploadError] = useState("");
 
   // Validation Errors
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
@@ -78,12 +80,72 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
         description
       }, activeRequester.id);
 
+      // Upload attachments if any
+      if (attachments.length > 0) {
+        setFormState("submitting");
+        let failedUploads = 0;
+        for (const file of attachments) {
+          try {
+            await uploadAttachment(response.id, file, activeRequester.id);
+          } catch (uploadErr) {
+            console.error("Failed to upload:", file.name);
+            failedUploads++;
+          }
+        }
+        if (failedUploads > 0) {
+          setUploadError(`Ticket created, but ${failedUploads} attachment(s) failed to upload.`);
+        }
+      }
+
       setTicketNumber(response.ticketNumber);
       setFormState("success");
     } catch (err: any) {
       setFormState("error");
       setErrorMessage(err.message || "An unexpected error occurred.");
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    
+    const newFiles = Array.from(e.target.files);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    const validFiles: File[] = [];
+    let errorMsg = "";
+
+    for (const file of newFiles) {
+      if (!allowedTypes.includes(file.type)) {
+        errorMsg = "Only JPG, PNG, WEBP, and PDF files are allowed.";
+        break;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        errorMsg = "Each file must be under 5MB.";
+        break;
+      }
+      validFiles.push(file);
+    }
+
+    if (errorMsg) {
+      alert(errorMsg);
+      // We still process valid files below if we want, but breaking means we just stop or take valid ones.
+      // Let's just use the valid ones.
+    }
+
+    setAttachments(prev => {
+      const combined = [...prev, ...validFiles];
+      if (combined.length > 5) {
+        alert("Maximum of 5 attachments allowed.");
+        return combined.slice(0, 5);
+      }
+      return combined;
+    });
+
+    // Reset input
+    e.target.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const resetForm = () => {
@@ -96,6 +158,8 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
     setTicketNumber("");
     setValidationErrors({});
     setErrorMessage("");
+    setAttachments([]);
+    setUploadError("");
   };
 
   if (formState === "success") {
@@ -113,7 +177,10 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
             Your ticket number is: <br/>
             <strong className="fs-3 text-dark">{ticketNumber}</strong>
           </p>
-          <button className="btn btn-outline-success px-4" onClick={resetForm}>
+          {uploadError && (
+            <div className="alert alert-warning py-2 small mb-4">{uploadError}</div>
+          )}
+          <button className="btn btn-outline-secondary px-4" onClick={resetForm}>
             Create Another Ticket
           </button>
         </div>
@@ -239,19 +306,62 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
                 </svg>
                 Attachments (Optional)
               </label>
-              <div className="border border-2 border-dashed rounded-3 p-5 text-center bg-white bg-opacity-50 transition-all hover-shadow" style={{ borderColor: '#DFE6E1' }}>
-                <input type="file" className="d-none" id="attachmentInput" multiple />
-                <label htmlFor="attachmentInput" className="btn btn-outline-secondary px-4 py-2 mb-3 rounded-pill fw-medium" style={{ cursor: 'pointer' }}>
-                  Browse Files
-                </label>
-                <p className="small text-muted mb-0">Drag and drop files here. (Upload functionality arriving in Issue 7)</p>
+              <div className={`border border-2 border-dashed rounded-3 p-4 bg-white bg-opacity-50 transition-all ${attachments.length > 0 ? 'text-start' : 'text-center hover-shadow'}`} style={{ borderColor: '#DFE6E1' }}>
+                <input 
+                  type="file" 
+                  className="d-none" 
+                  id="attachmentInput" 
+                  multiple 
+                  accept=".jpg,.jpeg,.png,.webp,.pdf"
+                  onChange={handleFileChange}
+                  disabled={attachments.length >= 5}
+                />
+                
+                {attachments.length === 0 ? (
+                  <div className="py-3">
+                    <label htmlFor="attachmentInput" className="btn btn-outline-secondary px-4 py-2 mb-3 rounded-pill fw-medium" style={{ cursor: 'pointer' }}>
+                      Browse Files
+                    </label>
+                    <p className="small text-muted mb-0">Drag and drop files here or click to browse.</p>
+                    <p className="small text-muted mb-0 mt-1" style={{ fontSize: '0.75rem' }}>Max 5 files. JPG, PNG, WEBP, PDF up to 5MB each.</p>
+                  </div>
+                ) : (
+                  <div>
+                    <ul className="list-group list-group-flush mb-3">
+                      {attachments.map((file, index) => (
+                        <li key={index} className="list-group-item bg-transparent px-2 d-flex justify-content-between align-items-center">
+                          <div className="d-flex align-items-center text-truncate me-3">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted me-2 flex-shrink-0"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                            <span className="small text-dark fw-medium text-truncate">{file.name}</span>
+                            <span className="small text-muted ms-2">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                          </div>
+                          <button 
+                            type="button" 
+                            className="btn btn-sm btn-link text-danger p-0 m-0 border-0" 
+                            onClick={() => removeAttachment(index)}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="small text-muted">{attachments.length}/5 files attached</span>
+                      {attachments.length < 5 && (
+                        <label htmlFor="attachmentInput" className="btn btn-sm btn-outline-secondary rounded-pill px-3 m-0" style={{ cursor: 'pointer' }}>
+                          + Add More
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="col-12 mt-5 pt-4 border-top border-light border-opacity-50 d-flex justify-content-end">
               <button 
                 type="submit" 
-                className="btn btn-success px-5 py-2 fs-6 rounded-pill d-flex align-items-center gap-2" 
+                className="btn btn-primary px-5 py-2 fs-6 rounded-pill d-flex align-items-center gap-2" 
                 disabled={formState === "submitting"}
               >
                 {formState === "submitting" ? (

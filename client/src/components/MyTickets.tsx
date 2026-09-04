@@ -72,8 +72,20 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   };
 
   const SortIcon = ({ field }: { field: string }) => {
-    if (sortBy !== field) return <span className="ms-1 text-black-50">↕</span>;
-    return <span className="ms-1">{sortOrder === "asc" ? "↑" : "↓"}</span>;
+    if (sortBy !== field) return (
+      <span className="ms-2 text-black-50 opacity-25">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="7 15 12 20 17 15"></polyline><polyline points="7 9 12 4 17 9"></polyline></svg>
+      </span>
+    );
+    return (
+      <span className="ms-2 text-zen-primary">
+        {sortOrder === "asc" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        )}
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -87,19 +99,19 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "New": return "bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25";
-      case "InProgress": return "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25";
-      case "Resolved": return "bg-success bg-opacity-10 text-success border border-success border-opacity-25";
+      case "New": return "bg-info bg-opacity-10 text-dark border border-info border-opacity-50"; 
+      case "InProgress": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
+      case "Resolved": return "bg-success bg-opacity-10 text-success border border-success border-opacity-50";
       default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
     }
   };
 
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
-      case "HIGH": return "text-danger";
-      case "MEDIUM": return "text-warning";
-      case "LOW": return "text-success";
-      default: return "text-muted";
+      case "HIGH": return "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25";
+      case "MEDIUM": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
+      case "LOW": return "bg-success bg-opacity-10 text-success border border-success border-opacity-25";
+      default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
     }
   };
 
@@ -109,6 +121,15 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
       return acc;
     }, {} as Record<number, string>);
   }, [categories]);
+
+  const activeFilters = useMemo(() => {
+    const filters = [];
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => setSearch("") });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => setCategoryId("") });
+    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => setRequestedPriority("") });
+    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => setStatus("") });
+    return filters;
+  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap]);
 
   return (
     <div className="animate-enter">
@@ -165,6 +186,24 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             </select>
           </div>
         </div>
+
+        {activeFilters.length > 0 && (
+          <div className="d-flex align-items-center gap-2 mt-3 flex-wrap">
+            <span className="small text-muted me-1 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Filters:</span>
+            {activeFilters.map((f, i) => (
+              <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
+                {f.label}
+                <button type="button" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+              </span>
+            ))}
+            <button 
+              className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
+              onClick={() => { setSearch(""); setCategoryId(""); setRequestedPriority(""); setStatus(""); }}
+            >
+              Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -190,46 +229,59 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         </div>
       ) : (
         <div className="glass-panel overflow-hidden">
-          <div className="table-responsive">
+          {/* Desktop Table View */}
+          <div className="table-responsive d-none d-md-block">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="bg-light bg-opacity-50 text-muted small text-uppercase">
+              <thead className="text-zen-primary small text-uppercase text-nowrap" style={{ borderBottom: '2px solid var(--zen-primary)' }}>
                 <tr>
-                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer' }} onClick={() => handleSort("ticketNumber")}>Ticket No. <SortIcon field="ticketNumber" /></th>
-                  <th className="border-0 fw-bold py-3">Summary</th>
-                  <th className="border-0 fw-bold py-3">Category</th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort("requestedPriority")}>Priority <SortIcon field="requestedPriority" /></th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort("currentStatus")}>Status <SortIcon field="currentStatus" /></th>
-                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer' }} onClick={() => handleSort("createdAt")}>Date <SortIcon field="createdAt" /></th>
+                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>
+                    <div className="d-flex align-items-center">Ticket No. <SortIcon field="ticketNumber" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Summary</th>
+                  <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Category</th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>
+                    <div className="d-flex align-items-center justify-content-center">Priority <SortIcon field="requestedPriority" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("currentStatus")}>
+                    <div className="d-flex align-items-center justify-content-center">Status <SortIcon field="currentStatus" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
+                    <div className="d-flex align-items-center justify-content-end">Date <SortIcon field="createdAt" /></div>
+                  </th>
+                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("updatedAt")}>
+                    <div className="d-flex align-items-center justify-content-end">Last Updated <SortIcon field="updatedAt" /></div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="border-top-0">
-                {tickets.map((t) => (
+                {tickets.map((t: any) => (
                   <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
-                    <td className="ps-4 py-3">
+                    <td className="ps-4 py-3 text-nowrap">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
                     </td>
                     <td className="py-3">
-                      <div className="fw-medium text-dark text-truncate" style={{ maxWidth: '250px' }} title={t.summary}>
+                      <div className="fw-medium text-dark text-truncate" style={{ maxWidth: '400px' }} title={t.summary}>
                         {t.summary}
                       </div>
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 text-nowrap">
                       <span className="small text-muted">{categoryMap[t.categoryId] || 'Unknown'}</span>
                     </td>
-                    <td className="py-3 text-center">
-                      <div className={`d-inline-flex align-items-center justify-content-center bg-light rounded-circle ${getPriorityBadgeClass(t.requestedPriority)}`} style={{ width: '28px', height: '28px' }} title={t.requestedPriority}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                      </div>
+                    <td className="py-3 text-center text-nowrap">
+                      <span className={`badge rounded-pill fw-medium px-3 py-2 ${getPriorityBadgeClass(t.requestedPriority)}`}>
+                        {t.requestedPriority}
+                      </span>
                     </td>
-                    <td className="py-3 text-center">
+                    <td className="py-3 text-center text-nowrap">
                       <span className={`badge rounded-pill fw-medium px-3 py-2 ${getStatusBadgeClass(t.currentStatus)}`}>
                         {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus}
                       </span>
                     </td>
-                    <td className="py-3 text-end pe-4">
+                    <td className="py-3 text-end pe-4 text-nowrap">
                       <span className="small text-muted">{new Date(t.createdAt).toLocaleDateString()}</span>
+                    </td>
+                    <td className="py-3 text-end pe-4 text-nowrap">
+                      <span className="small text-muted">{new Date(t.updatedAt || t.createdAt).toLocaleDateString()}</span>
                     </td>
                   </tr>
                 ))}
@@ -237,25 +289,97 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             </table>
           </div>
           
-          {totalPages > 1 && (
-            <div className="d-flex justify-content-between align-items-center p-3 border-top bg-light bg-opacity-50">
-              <span className="small text-muted ms-2">
-                Showing page {page} of {totalPages}
-              </span>
-              <div className="btn-group me-2">
+          {/* Mobile Card View */}
+          <div className="d-md-none bg-white">
+            <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+              <span className="small fw-bold text-muted">Sort by</span>
+              <div className="d-flex gap-2">
+                <select 
+                  className="form-select form-select-sm border-0 shadow-sm fw-medium" 
+                  value={sortBy} 
+                  onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+                  style={{ backgroundColor: '#F8F9FA' }}
+                >
+                  <option value="createdAt">Created Date</option>
+                  <option value="updatedAt">Last Updated</option>
+                  <option value="ticketNumber">Ticket No.</option>
+                </select>
                 <button 
-                  className="btn btn-sm btn-outline-secondary px-3" 
+                  className="btn btn-sm btn-light border-0 shadow-sm fw-medium d-flex align-items-center gap-1"
+                  onClick={() => handleSort(sortBy)}
+                >
+                  {sortOrder === "desc" ? (
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> Descending</>
+                  ) : (
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg> Ascending</>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-light d-flex flex-column gap-3">
+              {tickets.map((t: any) => (
+                <div key={t.id} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
+                  <div className="card-body p-4">
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                      <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
+                      <span className={`badge rounded-pill fw-medium px-3 py-1 ${getStatusBadgeClass(t.currentStatus)}`}>
+                        {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus}
+                      </span>
+                    </div>
+                    
+                    <div className="text-dark mb-4 lh-sm" style={{ fontSize: '0.95rem' }}>{t.summary}</div>
+                    
+                    <div className="row g-2 small mb-3" style={{ fontSize: '0.85rem' }}>
+                      <div className="col-5 text-muted">Category</div>
+                      <div className="col-7 text-dark fw-medium text-end">{categoryMap[t.categoryId] || 'Unknown'}</div>
+                      
+                      <div className="col-5 text-muted">Priority</div>
+                      <div className="col-7 text-end">
+                        <span className={`badge rounded-pill px-2 py-1 ${getPriorityBadgeClass(t.requestedPriority)}`}>{t.requestedPriority}</span>
+                      </div>
+                      
+                      <div className="col-5 text-muted">Status</div>
+                      <div className="col-7 fw-medium text-end">
+                         {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus}
+                      </div>
+                    </div>
+                    
+                    <div className="d-flex justify-content-between text-muted pt-3 border-top border-light" style={{ fontSize: '0.75rem' }}>
+                      <div>
+                        <span className="fw-bold text-dark">Created:</span> {new Date(t.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-end">
+                        <span className="fw-bold text-dark">Last Updated:</span> {new Date(t.updatedAt || t.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-between align-items-center p-3 border-top bg-white">
+              <span className="small text-muted fw-medium ms-2">
+                Page {page} of {totalPages}
+              </span>
+              <div className="d-flex gap-2 me-2">
+                <button 
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-3 rounded-pill fw-medium" 
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
-                  Previous
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  Prev
                 </button>
                 <button 
-                  className="btn btn-sm btn-outline-secondary px-3" 
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-3 rounded-pill fw-medium" 
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 >
                   Next
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
               </div>
             </div>

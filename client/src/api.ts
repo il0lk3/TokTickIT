@@ -75,6 +75,7 @@ export interface TicketResponse {
   summary: string;
   description: string;
   currentStatus: string;
+  requestedPriority: string;
   createdAt: string;
 }
 
@@ -150,6 +151,8 @@ export interface TicketDetailResponse extends TicketResponse {
   relatedSystem: RelatedSystem;
   requester: Requester;
   attachments: Attachment[];
+  ownerName?: string;
+  resolutionSummary?: string;
 }
 
 export async function getTicketDetail(id: number, requesterId: number): Promise<TicketDetailResponse> {

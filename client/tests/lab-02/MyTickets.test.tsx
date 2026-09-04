@@ -66,8 +66,12 @@ describe("MyTickets Component", () => {
       </TestWrapper>
     );
 
-    expect(await screen.findByText("TKT-2025-001")).toBeInTheDocument();
-    expect(await screen.findByText("Test Ticket")).toBeInTheDocument();
+    const tickets = await screen.findAllByText("TKT-2025-001");
+    expect(tickets[0]).toBeInTheDocument();
+    
+    const summaries = await screen.findAllByText("Test Ticket");
+    expect(summaries[0]).toBeInTheDocument();
+    
     expect(await screen.findAllByText("Hardware")).not.toHaveLength(0);
   });
 
@@ -110,7 +114,7 @@ describe("MyTickets Component", () => {
 
     render(
       <TestWrapper requester={mockRequester}>
-        <MyTickets categories={mockCategories} />
+        <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
 
@@ -123,7 +127,8 @@ describe("MyTickets Component", () => {
     });
 
     // Click Ticket No. header
-    const ticketHeader = screen.getByText(/Ticket No./i);
+    const ticketHeaders = screen.getAllByText(/Ticket No\./i);
+    const ticketHeader = ticketHeaders[0];
     fireEvent.click(ticketHeader);
 
     await waitFor(() => {

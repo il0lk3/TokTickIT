@@ -122,143 +122,157 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
   return (
     <div className="animate-enter">
-      <div className="d-flex align-items-center mb-4 gap-3">
-        <button onClick={onBack} className="btn btn-light rounded-circle p-2 shadow-sm d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }} title="Back">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        </button>
-        <div>
-          <h2 className="h4 fw-bold mb-1 d-flex align-items-center gap-2">
-            Ticket Details
-            <span className="badge bg-secondary bg-opacity-10 text-secondary fs-6" style={{ fontFamily: 'monospace' }}>{ticket.ticketNumber}</span>
-          </h2>
-          <p className="text-muted mb-0 small">Created on {new Date(ticket.createdAt).toLocaleString()}</p>
+      {/* Breadcrumb and Back Button */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="text-success fw-medium">
+          <span className="text-success" style={{cursor: 'pointer'}} onClick={onBack}>My Tickets</span> &gt; <span className="text-secondary">Ticket Details</span>
         </div>
+        <button onClick={onBack} className="btn btn-outline-success btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 bg-white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to My Tickets
+        </button>
       </div>
 
-      <div className="row g-4">
-        <div className="col-lg-8">
-          <div className="glass-panel p-4 h-100">
-            <h5 className="fw-bold mb-4 border-bottom pb-2">Information</h5>
-            
-            <div className="mb-4">
-              <label className="form-label text-muted small fw-bold text-uppercase mb-1">Summary</label>
-              <div className="fs-5 fw-medium">{ticket.summary}</div>
+      <div className="card shadow-sm border-0">
+        <div className="card-body p-4 p-md-5">
+          <div className="row g-4">
+            {/* Row 1 */}
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Ticket No.</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.ticketNumber} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Ticket Date</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={new Date(ticket.createdAt).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Category</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.category.name} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Related System</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.relatedSystem.name} />
             </div>
 
-            <div className="mb-4">
-              <label className="form-label text-muted small fw-bold text-uppercase mb-1">Description</label>
-              <div className="p-3 bg-light rounded bg-opacity-50" style={{ whiteSpace: 'pre-wrap' }}>
-                {ticket.description}
+            {/* Row 2 */}
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Requester</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.requester?.name || '-'} />
+            </div>
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Requested Priority</label>
+              <div className="form-control bg-light d-flex align-items-center">
+                <span className={`badge rounded-pill px-3 py-1 ${ticket.requestedPriority === 'HIGH' ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' : ticket.requestedPriority === 'MEDIUM' ? 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-25'}`}>
+                  {ticket.requestedPriority.charAt(0) + ticket.requestedPriority.slice(1).toLowerCase()}
+                </span>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">IT Priority</label>
+              <div className="form-control bg-light d-flex align-items-center">
+                <span className={`badge rounded-pill px-3 py-1 ${ticket.requestedPriority === 'HIGH' ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25' : ticket.requestedPriority === 'MEDIUM' ? 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-25'}`}>
+                  {ticket.requestedPriority.charAt(0) + ticket.requestedPriority.slice(1).toLowerCase()}
+                </span>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Current Status</label>
+              <div className="form-control bg-light d-flex align-items-center">
+                <span className={`badge rounded-pill px-3 py-1 ${ticket.currentStatus === 'Resolved' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-50' : ticket.currentStatus === 'InProgress' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-50' : 'bg-info bg-opacity-10 text-dark border border-info border-opacity-50'}`}>
+                  {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}
+                </span>
               </div>
             </div>
 
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Category</label>
-                <div className="fw-medium">{ticket.category.name}</div>
-              </div>
-              <div className="col-md-6">
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Related System</label>
-                <div className="fw-medium">{ticket.relatedSystem.name}</div>
-              </div>
+            {/* Row 3 */}
+            <div className="col-md-3">
+              <label className="form-label text-muted small fw-bold mb-1">Ticket Owner</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.ownerName || '-'} />
             </div>
-          </div>
-        </div>
+            <div className="col-md-9">
+              <label className="form-label text-muted small fw-bold mb-1">Summary</label>
+              <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.summary} />
+            </div>
 
-        <div className="col-lg-4">
-          <div className="glass-panel p-4 mb-4">
-            <h5 className="fw-bold mb-4 border-bottom pb-2">Status</h5>
-            
-            <div className="d-flex flex-column gap-3">
-              <div>
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Current Status</label>
-                <div>
-                  <span className={`badge rounded-pill px-3 py-2 ${ticket.currentStatus === 'Resolved' ? 'bg-success bg-opacity-10 text-success' : ticket.currentStatus === 'InProgress' ? 'bg-warning bg-opacity-10 text-warning' : 'bg-primary bg-opacity-10 text-primary'}`}>
-                    {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}
-                  </span>
+            {/* Row 4 */}
+            <div className="col-12">
+              <label className="form-label text-muted small fw-bold mb-1">Description</label>
+              <textarea className="form-control bg-light text-muted" readOnly rows={3} style={{ resize: 'none' }} value={ticket.description} />
+            </div>
+
+            {/* Row 5 */}
+            <div className="col-12">
+              <label className="form-label text-muted small fw-bold mb-1">Resolution Summary</label>
+              <textarea className="form-control bg-light text-muted fst-italic" readOnly rows={2} style={{ resize: 'none' }} value={ticket.resolutionSummary || 'No resolution summary available yet.'} />
+            </div>
+
+            {/* Row 6: Attachments */}
+            <div className="col-12 mt-4 pt-3 border-top">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <label className="form-label text-muted small fw-bold mb-0">Attachments</label>
+                <span className="badge bg-secondary rounded-pill">{activeAttachments}/5</span>
+              </div>
+              
+              {ticket.attachments.length === 0 ? (
+                <div className="text-center py-3 bg-light rounded border">
+                  <p className="text-muted small mb-0">No attachments uploaded yet.</p>
                 </div>
-              </div>
-              <div>
-                <label className="form-label text-muted small fw-bold text-uppercase mb-1">Priority</label>
-                <div>
-                  <span className={`fw-bold ${ticket.requestedPriority === 'HIGH' ? 'text-danger' : ticket.requestedPriority === 'MEDIUM' ? 'text-warning' : 'text-success'}`}>
-                    {ticket.requestedPriority}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-panel p-4">
-            <h5 className="fw-bold mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
-              Attachments
-              <span className="badge bg-secondary">{activeAttachments}/5</span>
-            </h5>
-            
-            {ticket.attachments.length === 0 ? (
-              <p className="text-muted small text-center my-4">No attachments uploaded yet.</p>
-            ) : (
-              <ul className="list-group list-group-flush mb-3">
-                {ticket.attachments.map(a => (
-                  <li key={a.id} className="list-group-item px-0 bg-transparent">
-                    <div className="d-flex justify-content-between align-items-start">
+              ) : (
+                <ul className="list-group mb-3 shadow-sm border-0">
+                  {ticket.attachments.map(a => (
+                    <li key={a.id} className="list-group-item bg-white border-light px-3 py-2 d-flex justify-content-between align-items-center">
                       <div className="me-2 text-truncate">
                         {a.isRemoved ? (
-                          <div className="text-decoration-line-through text-muted small text-truncate" title={a.originalName}>{a.originalName}</div>
+                          <div className="text-decoration-line-through text-muted small text-truncate fw-medium" title={a.originalName}>{a.originalName}</div>
                         ) : (
                           <a 
                             href="#" 
                             onClick={(e) => { e.preventDefault(); handleDownload(a.id, a.originalName); }}
-                            className="text-decoration-none fw-medium text-zen-primary small text-truncate d-block"
+                            className="text-decoration-none fw-bold text-zen-primary small text-truncate d-block"
                             title={a.originalName}
                           >
                             {a.originalName}
                           </a>
                         )}
-                        <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-                          {(a.size / 1024).toFixed(1)} KB
-                          {a.isRemoved && a.removedReason && ` • Removed: ${a.removedReason}`}
-                        </div>
                       </div>
                       {!a.isRemoved && (
                         <button 
-                          className="btn btn-sm btn-link text-danger p-0" 
+                          className="btn btn-sm btn-link text-danger p-1" 
                           onClick={() => handleRemove(a.id)}
                           title="Remove attachment"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                       )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            {activeAttachments < 5 && (
-              <div className="mt-3">
-                <input 
-                  type="file" 
-                  className="d-none" 
-                  ref={fileInputRef} 
-                  onChange={handleFileUpload}
-                  accept=".jpg,.jpeg,.png,.webp,.pdf"
-                />
-                <button 
-                  className="btn btn-outline-primary w-100 btn-sm rounded-pill d-flex align-items-center justify-content-center gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                  )}
-                  {uploading ? "Uploading..." : "Upload File"}
-                </button>
-                <div className="text-center mt-2 text-muted" style={{ fontSize: '0.65rem' }}>JPG, PNG, WEBP, PDF up to 5MB</div>
-              </div>
-            )}
+              {activeAttachments < 5 && (
+                <div className="mt-2">
+                  <input 
+                    type="file" 
+                    className="d-none" 
+                    ref={fileInputRef} 
+                    onChange={handleFileUpload}
+                    accept=".jpg,.jpeg,.png,.webp,.pdf"
+                  />
+                  <button 
+                    className="btn btn-sm btn-outline-secondary px-3 py-1 fw-medium rounded d-flex align-items-center gap-2 bg-white"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    )}
+                    {uploading ? "Uploading..." : "Upload File"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

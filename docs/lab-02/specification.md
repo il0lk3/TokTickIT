@@ -1,92 +1,87 @@
 # Lab 2 Sprint Engineering Specification
 
 ## 1. Sprint Goal
-The goal of this sprint is to build a professional and responsive Requester (end user) ticketing experience. This includes creating tickets, uploading attachments, viewing ticket lists with search/filter/pagination, and managing ticket details and attachments, utilizing a temporary Development Requester selection mechanism for testing.
+The objective of this sprint is to deliver a functional Minimum Viable Product (MVP) for the Requester ticketing experience. This includes implementing a simulated context identity mechanism, a comprehensive workflow for submitting IT support tickets with file attachments, and a dashboard for requesters to track and inspect their submissions. This architecture serves as the foundation before cryptographic authentication and authorization layers are introduced in Lab 3.
 
 ## 2. Stakeholder Request Interpretation
-The IT department needs a functional MVP for Requesters to submit support tickets and track their progress. Since real authentication is coming in Lab 3, we need to simulate multi-user environments using a Development Requester selector. The interface must be visually consistent using the "Zen Green Theme" and support robust validation, error handling, and file attachments up to 5MB.
+The IT Service Management division requires a robust frontend interface and corresponding backend RESTful API for issue submission. Due to the absence of an integrated IAM (Identity and Access Management) system in the current phase, the application will simulate user identity via a strict "Development Requester Selection" interceptor. The system must enforce comprehensive data validation, support binary file uploads (capped at 5MB, restricted by MIME type), provide paginated and filterable ticket lists, and present immutable ticket records. The frontend architecture must rigidly adhere to the designated "Zen Green Theme" design system.
 
-## 3. Scope
-### Included
-- Development Requester selection context mechanism (simulated login).
-- Create Ticket workflow with data validation.
-- My Tickets workflow (paginated list, search, filtering, sorting).
-- Requester Ticket Detail workflow (read-only view of ticket).
-- Attachment lifecycle (upload, download, metadata viewing, soft removal).
-- Zen Green UI implementation and responsive design.
+## 3. Scope Definition
 
-### Excluded
-- Real authentication and security (login, passwords, sessions, JWTs, roles).
-- IT Staff workflow (staff dashboards, claiming tickets, prioritizing).
-- Ticket collaboration (public comments, internal notes, actions taken).
-- Ticket lifecycle beyond creation (resolving, closing, reopening).
-- Administration functions.
+### 3.1 Included
+- **Context Management:** Development Requester selection mechanism to simulate persistent session state.
+- **Ticket Ingestion:** "Create Ticket" workflow with synchronous client-side and asynchronous server-side payload validation.
+- **Data Aggregation:** "My Tickets" workflow featuring cursor/offset pagination, debounce-optimized full-text search, multi-dimensional filtering, and dynamic column sorting.
+- **Data Presentation:** "Requester Ticket Detail" read-only component mapping deeply nested JSON responses to presentation layers.
+- **Binary Blob Management:** Attachment lifecycle including strict MIME-type validation, streaming disk I/O, soft-delete mechanisms, and metadata preservation.
+- **Responsive Architecture:** Mobile-first structural compliance with viewport-specific layout transformations (Table to Stacked Cards).
 
-## 4. Functional Requirements
-- **FR-01 (Requester Selection):** The system must provide a screen to select an active Development Requester to simulate the current user context.
-- **FR-02 (Create Ticket):** A selected Requester must be able to create a ticket by providing Category, Related System, Priority, Summary, Description, and optional Attachments.
-- **FR-03 (My Tickets):** A selected Requester must be able to view a paginated list of their own tickets, with capabilities to search, filter by category/priority/status, and sort.
-- **FR-04 (Ticket Detail):** A selected Requester must be able to view the read-only details of their own ticket.
-- **FR-05 (Cross-Requester Protection):** The system must prevent a Requester from viewing or modifying tickets or attachments belonging to another Requester.
-- **FR-06 (Attachment Addition):** A Requester can add up to 5 valid attachments (JPG, PNG, WEBP, PDF; max 5MB each) to a new or existing ticket.
-- **FR-07 (Attachment Removal):** A Requester can soft-remove an attachment from their own ticket, making it inaccessible for download while retaining metadata.
+### 3.2 Excluded
+- Cryptographic authentication, session cookies, JWT generation, and RBAC (Role-Based Access Control).
+- IT Staff operational dashboards, ticket assignment, and prioritization workflows.
+- Bidirectional ticket collaboration (commenting, status transitions).
+- System administration and reference data modification endpoints.
 
-## 5. Business Rules
-- **BR-01:** The official Ticket Number is generated by the backend and must be unique (e.g., TKT-YYYY-NNNNNN where N is zero-padded).
-- **BR-02:** A new Ticket begins with Current Status 'New'.
-- **BR-03:** Lab 2 uses a Development Requester selector instead of login. The selected identity is for testing only and is not authentication.
-- **BR-04:** Attachments are limited to JPG/JPEG, PNG, WEBP, and PDF. Maximum size is 5 MB per file. Maximum active attachments is 5 per Ticket.
-- **BR-05:** Removed files must be implemented as a soft removal. Removed files must not be downloadable or previewed, but metadata remains visible.
-- **BR-06:** Ticket Summary and Description are required fields with appropriate length constraints (Summary max 150 chars, Description max 1000 chars).
-- **BR-07:** Ticket creation must be idempotent or protected against duplicate submissions while loading.
+## 4. Functional Requirements (FR)
 
-## 6. UI Specification Summary
-The interface will follow the "Zen Green Theme" defined in `docs/lab-02/ui-spec.md`.
-- **Primary Color:** `#006B3C`
-- **Application Shell:** Features a navigation bar with the active Requester's name and links to My Tickets and Create Ticket.
-- **Responsive Layouts:** Desktop uses multi-column layouts, Tablet uses two-column, Mobile stacks vertically.
-- **Key Screens:** Development Requester Selection, Create Ticket (form), My Tickets (list/table), Ticket Detail (read-only).
+- **FR-01 (Requester Selection):** The application must intercept unauthenticated route access and redirect to a mandatory selection screen exposing active simulated identities.
+- **FR-02 (Create Ticket):** An active session must allow the creation of a support ticket comprising Foreign Keys (Category, Related System), Enum types (Priority), and string payloads (Summary, Description).
+- **FR-03 (My Tickets Aggregation):** The system must serve a paginated array of tickets owned strictly by the active identity, exposing sorting (ascending/descending) and filtering (priority, status, category) parameters.
+- **FR-04 (Ticket Detail Rendering):** The application must fetch and render a read-only, deeply nested representation of a specific ticket and its associated entities.
+- **FR-05 (Horizontal Privilege Escalation Protection):** The API must actively evaluate the ownership of requested resources against the `X-Requester-Id` header, returning HTTP 404 for non-owned entities to prevent IDOR (Insecure Direct Object Reference) and enumeration vectors.
+- **FR-06 (Attachment Addition):** The system must accept `multipart/form-data` uploads, capping total active attachments at 5 per ticket. Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`, `application/pdf`. Size ceiling: 5,242,880 bytes (5MB) per blob.
+- **FR-07 (Attachment Soft-Delete):** A soft-delete mechanism must flag the attachment record as removed (`isRemoved: true`), immediately terminating binary download capabilities (HTTP 410 Gone) while permanently freezing the metadata in the presentation layer.
 
-## 7. Data Changes
-The PostgreSQL database (via Prisma) will include the following models:
-- **RequesterUser:** Stores Development Requesters. (Fields: `id`, `name`, `email`, `isActive`).
-- **Category:** Reference data (Account and Access, Hardware, Software, Network).
-- **RelatedSystem:** Reference data (Email, Campus Wi-Fi, VPN, LEB2 App, Grade Submission App, Printer, Corporate Laptop).
-- **Ticket:** Core entity. Fields: `id`, `ticketNumber` (unique), `requesterId` (FK), `categoryId` (FK), `relatedSystemId` (FK), `summary`, `description`, `requestedPriority`, `currentStatus`, `createdAt`, `updatedAt`.
-- **Attachment:** File metadata. Fields: `id`, `ticketId` (FK), `filename`, `originalName`, `mimeType`, `size`, `isRemoved`, `removedReason`, `createdAt`.
+## 5. Business Rules (BR)
 
-**Migration Decisions:** `requesterId` will map to the simulated login for now, and can be easily adapted to a real User ID in Lab 3.
+- **BR-01 (Deterministic Ticket Enumeration):** The primary ticket identifier must follow a strict, auto-incrementing format: `TKT-YYYY-NNNNNN` (e.g., TKT-2026-000001). The generation mechanism must implement retry logic and handle database unique constraint collisions gracefully.
+- **BR-02 (Default State Constraints):** A newly instantiated ticket record must be written to the database with the enum state `New`.
+- **BR-03 (Identity Simulation Protocol):** The Development Requester context is injected via a custom HTTP header (`X-Requester-Id`) for API requests. This is a non-secure simulation protocol unique to Lab 2 constraints.
+- **BR-04 (Payload Constraints):** Ticket Summary length must not exceed 150 characters. Ticket Description length must not exceed 1000 characters. Null or empty string values for required fields must yield an HTTP 400 response.
+- **BR-05 (Idempotency and Concurrency):** Client-side mutation actions (form submission) must disable interactive elements immediately upon trigger to prevent network race conditions and duplicate record generation.
 
-## 8. API Contract
-See `docs/lab-02/api-spec.md` for full details.
-Key endpoints include:
-- `GET /api/categories`, `GET /api/systems`, `GET /api/requesters`
-- `POST /api/tickets` (Create Ticket)
-- `GET /api/tickets` (List with search, filter, sort, pagination)
-- `GET /api/tickets/:id` (Get Ticket details)
-- `POST /api/tickets/:id/attachments` (Upload)
-- `GET /api/tickets/:id/attachments/:attachmentId/download` (Download)
-- `DELETE /api/tickets/:id/attachments/:attachmentId` (Soft remove)
+## 6. UI/UX and Architectural Constraints
 
-## 9. Acceptance Criteria
-- **AC-01 (Create):** Given valid Ticket data, when the Requester submits the form, then one Ticket is saved and the official Ticket Number is displayed.
-- **AC-02 (No Requester):** Given no Development Requester is selected, when the user attempts to open My Tickets, then the Requester Selection screen is shown.
-- **AC-03 (Ownership):** Given Requester B is selected, when a Ticket belonging to Requester A is requested, then the Ticket data is not returned (404 Not Found).
-- **AC-04 (Validation):** Given the Create Ticket form, when submitted without a Summary, then a field-level error message is displayed and the API is not called.
-- **AC-05 (Attachment Limit):** Given a ticket with 5 active attachments, when the Requester attempts to upload a 6th, then the upload is rejected with a clear error message.
-- **AC-06 (Soft Removal):** Given an active attachment, when the Requester soft-removes it, then it is marked as removed, remains in the UI as disabled/removed metadata, and the download API returns 410 Gone.
-- **AC-07 (Search):** Given the My Tickets screen, when the user searches for a keyword, then only tickets whose summary or ticket number match the keyword are displayed.
+- **Theme Compliance:** The implementation must map all visual elements to the "Zen Green Theme" (Primary: `#006B3C`, Secondary: `#0B7A46`).
+- **Responsive Mutations:** The "My Tickets" view must utilize a structural mutation based on viewport width. Viewports `>= 768px` must render standard HTML `<table>` elements. Viewports `< 768px` must suppress the table and render individual data cards with 100% data parity.
+- **Frameworks:** React 18, React DOM, Bootstrap 5 (CSS only), Vite. No client-side routers (`react-router-dom`) are permitted; state-based component rendering must be utilized.
 
-## 10. Definition of Done
-- [ ] Implementation of all approved scope complete on feature branches.
-- [ ] Satisfaction of all acceptance criteria (AC-01 to AC-07).
-- [ ] Passing and traceable automated tests (Unit, API, UI, E2E) as planned in `tests.md`.
-- [ ] Conformance to the data, API, UI, validation, and responsive specifications.
-- [ ] Correct handling of success, failure, and boundary cases.
-- [ ] Pull Requests reviewed and merged into `lab2-staging`.
-- [ ] Final visual inspection on Desktop, Tablet, and Mobile viewports passes without overlapping or clipping.
+## 7. Data Schema Architecture
 
-## 11. Assumptions and Decisions
-- Uploaded files will be stored locally in an `uploads` directory for simplicity during this lab. (Note: Ensure `uploads/` is added to `.gitignore`).
-- "Inactive" Development Requesters are used to test data integrity but will not appear in the Requester Selector dropdown.
-- **Requester Count:** The system is seeded with 8 active requesters (e.g., Cream Su, Bew Su) and 1 inactive requester to support realistic testing scenarios and customized grading requirements.
+The relational schema is enforced via Prisma ORM mapped to PostgreSQL:
+- **RequesterUser:** Base simulated identity model.
+- **Category / RelatedSystem:** Static reference dictionaries.
+- **Ticket:** Primary aggregate root containing relational maps to Category, RelatedSystem, RequesterUser, and one-to-many relationship with Attachments.
+- **Attachment:** Binary metadata index containing `originalName`, `mimeType`, `size`, and physical path pointers.
+
+## 8. API Contract Definition
+
+All endpoints operate under the `/api` namespace and require the `X-Requester-Id` header (excluding public reference routes).
+- `GET /categories` - Fetches active ticket categories.
+- `GET /systems` - Fetches active related systems.
+- `GET /requesters` - Fetches active requester identities for simulation.
+- `POST /tickets` - Accepts JSON payload to instantiate a ticket.
+- `GET /tickets` - Accepts query parameters (`page`, `limit`, `search`, `sortBy`, `sortDir`, `categoryId`, `status`, `priority`).
+- `GET /tickets/:id` - Fetches ticket entity graph.
+- `POST /tickets/:id/attachments` - Accepts `multipart/form-data`.
+- `GET /tickets/:id/attachments/:attachmentId/download` - Serves binary streams.
+- `DELETE /tickets/:id/attachments/:attachmentId` - Executes soft-delete mutation.
+
+## 9. Acceptance Criteria (AC)
+
+- **AC-01:** Given valid payload parameters, when the POST request is executed, then the database commits the transaction and returns a unique `TKT-YYYY-NNNNNN` identifier.
+- **AC-02:** Given a lack of identity context in the client state, when accessing the application, then the user is blocked by the Requester Selection interceptor.
+- **AC-03:** Given active Requester ID `A`, when attempting to query or mutate a Ticket bound to Requester ID `B`, then the server intercepts the request and responds with HTTP 404.
+- **AC-04:** Given empty required fields, when the client submits the form, then HTML5 and React state validations halt the submission, flag the fields, and prevent API invocation.
+- **AC-05:** Given a Ticket already holding 5 attachments, when a 6th upload is attempted, then the API rejects the request (HTTP 400) and the UI renders a limit-reached alert.
+- **AC-06:** Given a successful DELETE call to an attachment, when the attachment is subsequently requested for download, then the server returns HTTP 410 Gone.
+- **AC-07:** Given a search string input, when the GET /tickets endpoint is called, then the server executes a partial `ILIKE` match against the Summary and Ticket Number fields.
+
+## 10. Definition of Done (DoD)
+
+1. Total fulfillment of all Acceptance Criteria (AC-01 through AC-07).
+2. Automated test suite (Unit, API, Component, E2E) achieves 100% pass rate.
+3. No console errors or unresolved Promise rejections during E2E simulation.
+4. Strict enforcement of responsive layout mutations without horizontal overflow on mobile viewports (320px).
+5. Code committed, reviewed via Pull Request, and successfully merged into the primary integration branch.
+6. Documentation files (`ai-use.md`, `reviewer.md`, `tests.md`, `ui-spec.md`, `specification.md`) updated to accurately reflect the final technical state.
