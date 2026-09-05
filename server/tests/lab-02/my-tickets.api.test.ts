@@ -11,21 +11,16 @@ describe("GET /api/tickets (My Tickets API)", () => {
   let testSystemId: number;
 
   beforeAll(async () => {
-    // We assume the DB is seeded from setup.ts or seed.ts
-    // Let's grab the first two active requesters
-    const requesters = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 });
-    testRequesterId = requesters[0].id;
-    otherRequesterId = requesters[1].id;
+    // Create isolated requesters for this test to avoid conflicts with seeded DB data
+    const testUser1 = await prisma.requesterUser.create({ data: { name: "Test MyTickets 1", email: `test1-${Date.now()}@test.com` }});
+    const testUser2 = await prisma.requesterUser.create({ data: { name: "Test MyTickets 2", email: `test2-${Date.now()}@test.com` }});
+    testRequesterId = testUser1.id;
+    otherRequesterId = testUser2.id;
 
     const cat = await prisma.category.findFirst();
     const sys = await prisma.relatedSystem.findFirst();
     testCategoryId = cat!.id;
     testSystemId = sys!.id;
-
-    // Clear tickets before test
-    await prisma.ticket.deleteMany({
-      where: { ticketNumber: { startsWith: "TKT-2026-00000" } }
-    });
 
     // Seed some tickets for testRequester
     await prisma.ticket.createMany({
@@ -39,8 +34,12 @@ describe("GET /api/tickets (My Tickets API)", () => {
   });
 
   afterAll(async () => {
+    // Clean up
     await prisma.ticket.deleteMany({
-      where: { ticketNumber: { startsWith: "TKT-2026-00000" } }
+      where: { requesterId: { in: [testRequesterId, otherRequesterId] } }
+    });
+    await prisma.requesterUser.deleteMany({
+      where: { id: { in: [testRequesterId, otherRequesterId] } }
     });
   });
 
