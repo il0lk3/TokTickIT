@@ -12,6 +12,9 @@ export const app = express();
 app.use(cors());          // already wired: lets the Vite dev server call this API
 app.use(express.json());
 
+import ticketsRouter from "./routes/tickets.js";
+app.use("/api/tickets", ticketsRouter);
+
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
 // Make the test in tests/lab-01/health.test.ts pass.
@@ -36,6 +39,36 @@ app.get("/api/categories", async (_req: Request, res: Response) => {
     res.status(200).json(categories);
   } catch (error) {
     console.error("Failed to fetch categories:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Issue 3 — Requesters list
+// ---------------------------------------------------------------------------
+app.get("/api/requesters", async (_req: Request, res: Response) => {
+  try {
+    const requesters = await getPrisma().requesterUser.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: 'asc' },
+    });
+    res.status(200).json(requesters);
+  } catch (error) {
+    console.error("Failed to fetch requesters:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/systems", async (_req: Request, res: Response) => {
+  try {
+    const systems = await getPrisma().relatedSystem.findMany({
+      select: { id: true, name: true },
+      orderBy: { id: 'asc' },
+    });
+    res.status(200).json(systems);
+  } catch (error) {
+    console.error("Failed to fetch systems:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -1,0 +1,181 @@
+:root {
+  --zen-primary: #006B3C;
+  --zen-secondary: #0B7A46;
+  --zen-accent: #119859;
+  --zen-pale: #EAF6EF;
+  --zen-bg-gradient: radial-gradient(circle at 0% 0%, #d4f0df 0%, transparent 50%), radial-gradient(circle at 100% 100%, #c1ebd3 0%, transparent 50%), #f0f7f3;
+  --zen-text: #1F2924;
+  --zen-text-muted: #5C7064;
+  --zen-error: #D32F2F;
+  --zen-error-bg: #FDEDED;
+  
+  --zen-surface: rgba(255, 255, 255, 0.95);
+  --zen-glass: rgba(255, 255, 255, 0.7);
+  --zen-border: rgba(0, 107, 60, 0.1);
+  --zen-shadow: 0 10px 40px rgba(0, 30, 15, 0.05);
+  --zen-shadow-hover: 0 16px 50px rgba(0, 30, 15, 0.08);
+
+  /* Override Bootstrap Success to Zen Primary */
+  --bs-success-rgb: 0, 107, 60;
+  --bs-primary-rgb: 0, 107, 60;
+}
+
+body {
+  background: var(--zen-bg-gradient);
+  background-attachment: fixed;
+  color: var(--zen-text);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Zen Green Utilities */
+.text-zen-primary { color: var(--zen-primary) !important; }
+.bg-zen-primary { background-color: var(--zen-primary) !important; color: white !important; }
+.bg-zen-pale { background-color: var(--zen-pale) !important; }
+
+/* -------------------------------------
+ * Premium Component Styling
+ * ------------------------------------- */
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 107, 60, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.glass-panel:hover {
+  box-shadow: 0 16px 50px rgba(0, 107, 60, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+}
+
+/* Glassmorphism Navbar */
+.glass-navbar {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+/* Primary Button Override */
+.btn-primary {
+  background-color: var(--zen-primary);
+  border-color: var(--zen-primary);
+  color: #fff;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 107, 60, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--zen-secondary);
+  border-color: var(--zen-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 107, 60, 0.3);
+}
+
+/* Secondary Outline Button Override */
+.btn-outline-secondary {
+  color: var(--zen-text);
+  border-color: #dee2e6;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.2s ease;
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background-color: var(--zen-pale);
+  color: var(--zen-secondary);
+  border-color: #c1c9c5;
+  transform: translateY(-2px);
+}
+.btn-outline-success:hover {
+  background-color: var(--zen-primary);
+  color: white;
+}
+
+/* Premium Form Controls */
+.form-control, .form-select {
+  border: 1px solid #DFE6E1;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  background-color: #FCFDFD;
+  transition: all 0.25s ease;
+  color: var(--zen-text);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: #FFFFFF;
+  border-color: var(--zen-secondary);
+  box-shadow: 0 0 0 4px rgba(11, 122, 70, 0.1);
+  outline: none;
+}
+
+/* Validation Styling */
+.is-invalid {
+  border-color: var(--zen-error) !important;
+  background-color: var(--zen-error-bg) !important;
+}
+.is-invalid:focus {
+  box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1) !important;
+}
+.invalid-feedback {
+  color: var(--zen-error);
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+}
+
+/* Form Labels */
+.form-label {
+  font-weight: 600;
+  color: var(--zen-text);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+/* Table Enhancements */
+.custom-table th {
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  color: #6c757d;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.custom-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.custom-table tbody tr:hover {
+  background-color: rgba(234, 246, 239, 0.5) !important;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-enter {
+  animation: fadeInUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
