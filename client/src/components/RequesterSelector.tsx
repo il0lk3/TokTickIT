@@ -81,18 +81,24 @@ export function RequesterSelector() {
             {state === "success" && (
               <div className="mb-4">
                 <label htmlFor="requesterSelect" className="form-label fw-bold">Development Requester <span className="text-danger">*</span></label>
-                <select 
-                  id="requesterSelect"
-                  className="form-select mb-3"
-                  value={selectedId}
-                  onChange={(e) => setSelectedId(e.target.value)}
-                >
-                  {requesters.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
+                {requesters.length === 0 ? (
+                  <div className="alert alert-warning mb-3">
+                    No active Development Requesters found.
+                  </div>
+                ) : (
+                  <select 
+                    id="requesterSelect"
+                    className="form-select mb-3"
+                    value={selectedId}
+                    onChange={(e) => setSelectedId(e.target.value)}
+                  >
+                    {requesters.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
                 <div className="alert bg-zen-pale text-zen-secondary d-flex align-items-center p-3 mb-3 border-0 rounded" style={{ fontSize: '0.9rem' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-3 flex-shrink-0">
