@@ -26,12 +26,12 @@ This document maps Acceptance Criteria (AC) from `specification.md` to planned a
 | DB-01 | DB | Migration | RequesterUser to User migration | Schema valid, existing data intact, seed runs | `server/tests/lab-03/migration.test.ts` | TBD |
 | UI-01 | UI | FR-01 | Login screen behavior | Renders inputs, handles submit, shows errors | `client/tests/lab-03/Login.test.tsx` | Done |
 | UI-02 | UI | FR-01 | Change Password screen | Renders fields, validates rules | `client/tests/lab-03/ChangePassword.test.tsx` | Done |
-| UI-03 | UI | FR-04 | IT Staff Ticket Queue table | Renders rows, empty states, search/filter | `client/tests/lab-03/StaffTicketQueue.test.tsx` | TBD |
-| UI-04 | UI | FR-05 | IT Staff Ticket Detail forms | Editable fields render correctly | `client/tests/lab-03/StaffTicketDetail.test.tsx` | TBD |
-| UI-05 | UI | FR-06 | Admin User Management table | Lists users, opens edit modal | `client/tests/lab-03/UserManagement.test.tsx` | TBD |
-| UI-06 | UI | Style/A11y | UI component styling, responsive, accessibility | Badges, editable fields, focus, no clipping | `client/tests/lab-03/ui-style.test.tsx` | TBD |
+| UI-03 | UI | FR-04 | IT Staff Ticket Queue table | Renders rows, empty states, search/filter | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Done |
+| UI-04 | UI | FR-05 | IT Staff Ticket Detail forms | Editable fields render correctly | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Done |
+| UI-05 | UI | FR-06 | Admin User Management table | Lists users, opens edit modal | `client/tests/lab-03/UserManagement.test.tsx` | Done |
+| UI-06 | UI | Style/A11y | UI component styling, responsive, accessibility | Badges, editable fields, focus, no clipping | `client/tests/lab-03/ui-style.test.tsx` | Done |
 | E2E-01 | E2E | FR-01 | Full login/logout flow | Navigates to app, logout clears session | `e2e/lab-03/authentication.spec.ts` | Done |
 | E2E-02 | E2E | AC-02 | Initial password login and change | Normal app opens only after valid change | `e2e/lab-03/authentication.spec.ts` | Done |
 | E2E-03 | E2E | FR-04, FR-05| IT Staff queue to detail flow | Search queue, click ticket, update status | `e2e/lab-03/staff-ticket-flow.spec.ts` | TBD |
 | E2E-04 | E2E | FR-06 | Admin creates user flow | Creates user, logs in as new user | `e2e/lab-03/user-administration.spec.ts` | TBD |
-| E2E-05 | E2E | AC-14, BR-05| Requester Ticket flow | Create ticket, add comment, mark Appears Resolved | `e2e/lab-03/requester-flow.spec.ts` | TBD |
+| E2E-05 | E2E | AC-14, BR-05| Requester Ticket flow | Create ticket, add comment, mark Appears Resolved | `e2e/lab-03/requester-flow.spec.ts` | Done |

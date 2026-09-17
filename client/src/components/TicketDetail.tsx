@@ -13,6 +13,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [commenting, setCommenting] = useState(false);
+  const [commentText, setCommentText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -100,6 +102,37 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
       alert("Failed to download file. It may have been removed.");
+    }
+  };
+
+  const handlePostComment = async () => {
+    if (!user || !ticket || !commentText.trim()) return;
+    setCommenting(true);
+    try {
+      // @ts-ignore
+      const { postComment } = await import('../api.js');
+      const newComment = await postComment(ticketId, commentText.trim());
+      setTicket(prev => prev ? { ...prev, publicComments: [...prev.publicComments, newComment] } : null);
+      setCommentText("");
+    } catch (err: any) {
+      alert(err.message || "Failed to post comment");
+    } finally {
+      setCommenting(false);
+    }
+  };
+
+  const handleAppearsResolved = async () => {
+    if (!user || !ticket) return;
+    setCommenting(true);
+    try {
+      // @ts-ignore
+      const { postComment } = await import('../api.js');
+      const newComment = await postComment(ticketId, "The problem appears to be resolved.");
+      setTicket(prev => prev ? { ...prev, publicComments: [...prev.publicComments, newComment] } : null);
+    } catch (err: any) {
+      alert(err.message || "Failed to mark as resolved");
+    } finally {
+      setCommenting(false);
     }
   };
 
@@ -277,6 +310,61 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                 </div>
               )}
             </div>
+            
+            {/* Row 7: Comments & Notes */}
+            <div className="col-12 mt-4 pt-3 border-top">
+              <label className="form-label text-muted small fw-bold mb-3">Comments</label>
+              
+              <div className="mb-4">
+                {(!ticket.publicComments || ticket.publicComments.length === 0) ? (
+                  <p className="text-muted small fst-italic">No comments yet.</p>
+                ) : (
+                  <div className="d-flex flex-column gap-3">
+                    {ticket.publicComments.map(c => (
+                      <div key={c.id} className="bg-light p-3 rounded border border-light shadow-sm">
+                        <div className="d-flex justify-content-between mb-2">
+                          <strong className="small text-dark">{c.author.name} <span className="text-muted fw-normal">({c.author.role})</span></strong>
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(c.createdAt).toLocaleString()}</small>
+                        </div>
+                        <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap' }}>{c.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Comment Input */}
+              <div className="bg-white p-3 rounded border shadow-sm">
+                <textarea 
+                  className="form-control border-0 bg-light mb-2 small" 
+                  rows={3} 
+                  placeholder="Type a comment..." 
+                  style={{ resize: 'none' }}
+                  value={commentText}
+                  onChange={e => setCommentText(e.target.value)}
+                  disabled={commenting}
+                />
+                <div className="d-flex justify-content-between align-items-center">
+                  {user?.role === 'REQUESTER' && (
+                    <button 
+                      className="btn btn-outline-success btn-sm px-3 rounded-pill fw-medium"
+                      onClick={handleAppearsResolved}
+                      disabled={commenting}
+                    >
+                      Problem Appears Resolved
+                    </button>
+                  )}
+                  <button 
+                    className="btn btn-primary btn-sm px-4 rounded-pill fw-medium ms-auto"
+                    onClick={handlePostComment}
+                    disabled={commenting || !commentText.trim()}
+                  >
+                    {commenting ? "Posting..." : "Post Comment"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

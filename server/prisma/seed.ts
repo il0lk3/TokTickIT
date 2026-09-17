@@ -44,7 +44,7 @@ async function main() {
     { email: "cream.su@example.com", name: "Cream Su", role: Role.REQUESTER, isActive: true },
     { email: "bew.su@example.com", name: "Bew Su", role: Role.REQUESTER, isActive: true },
     { email: "kanta.su@example.com", name: "Kanta Su", role: Role.REQUESTER, isActive: true },
-    { email: "je.su@example.com", name: "Je Su", role: Role.REQUESTER, isActive: true },
+    { email: "je.su@example.com", name: "Je Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: false },
     { email: "bewnoi.su@example.com", name: "Bewnoi Su", role: Role.REQUESTER, isActive: true },
     { email: "grace.su@example.com", name: "Grace Su", role: Role.REQUESTER, isActive: true },
     { email: "phrao.su@example.com", name: "Phrao Su", role: Role.REQUESTER, isActive: true },
@@ -60,10 +60,11 @@ async function main() {
   ];
 
   for (const u of users) {
+    const { requiresPasswordChange = true, ...rest } = u as any;
     await prisma.user.upsert({
       where: { email: u.email },
-      update: { name: u.name, role: u.role, isActive: u.isActive },
-      create: { ...u, passwordHash, requiresPasswordChange: true },
+      update: { name: u.name, role: u.role, isActive: u.isActive, requiresPasswordChange },
+      create: { ...rest, passwordHash, requiresPasswordChange },
     });
   }
 

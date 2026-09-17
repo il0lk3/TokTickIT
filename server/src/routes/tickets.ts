@@ -148,7 +148,8 @@ router.post("/", async (req: Request, res: Response) => {
 
 // GET /api/tickets/:id - Get ticket details
 router.get("/:id", async (req: Request, res: Response) => {
-  const requesterId = res.locals.requesterId as number;
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
   const ticketId = parseInt(req.params.id, 10);
 
   try {
@@ -158,16 +159,27 @@ router.get("/:id", async (req: Request, res: Response) => {
         category: true,
         relatedSystem: true,
         requester: true,
-        attachments: true
+        attachments: true,
+        publicComments: { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } },
+        internalNotes: userRole === "IT_STAFF" ? { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } } : false
       }
     });
 
-    if (!ticket || ticket.requesterId !== requesterId) {
+    if (!ticket) {
       return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Authorization: Requester must own ticket. IT Staff can view any.
+    if (userRole === "REQUESTER" && ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+    if (userRole === "ADMINISTRATOR") {
+      return res.status(403).json({ error: "Administrators cannot view tickets" });
     }
 
     res.json(ticket);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch ticket" });
   }
 });
@@ -224,14 +236,23 @@ router.post("/:id/attachments", (req, res, next) => {
 
 // GET /api/tickets/:id/attachments/:attachmentId/download
 router.get("/:id/attachments/:attachmentId/download", async (req: Request, res: Response) => {
-  const requesterId = res.locals.requesterId as number;
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
   const ticketId = parseInt(req.params.id, 10);
   const attachmentId = parseInt(req.params.attachmentId, 10);
 
   try {
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
-    if (!ticket || ticket.requesterId !== requesterId) {
+    if (!ticket) {
       return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Authorization
+    if (userRole === "REQUESTER" && ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+    if (userRole === "ADMINISTRATOR") {
+      return res.status(403).json({ error: "Administrators cannot view tickets" });
     }
 
     const attachment = await prisma.attachment.findUnique({ where: { id: attachmentId, ticketId } });
@@ -256,14 +277,20 @@ router.get("/:id/attachments/:attachmentId/download", async (req: Request, res: 
 
 // DELETE /api/tickets/:id/attachments/:attachmentId
 router.delete("/:id/attachments/:attachmentId", async (req: Request, res: Response) => {
-  const requesterId = res.locals.requesterId as number;
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
   const ticketId = parseInt(req.params.id, 10);
   const attachmentId = parseInt(req.params.attachmentId, 10);
   const { reason } = req.body;
 
   try {
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
-    if (!ticket || ticket.requesterId !== requesterId) {
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Only Requester who owns the ticket can delete attachments in this implementation
+    if (userRole !== "REQUESTER" || ticket.requesterId !== userId) {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
@@ -360,6 +387,85 @@ router.get("/", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching tickets:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/tickets/:id/comments - Add a public comment
+router.post("/:id/comments", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+  const { content } = req.body;
+
+  try {
+    const trimmedContent = typeof content === 'string' ? content.trim() : "";
+    if (trimmedContent.length === 0 || trimmedContent.length > 1000) {
+      return res.status(400).json({ error: "Comment must be between 1 and 1000 characters" });
+    }
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    if (userRole === "ADMINISTRATOR") {
+      return res.status(403).json({ error: "Administrators cannot post comments" });
+    }
+    if (userRole === "REQUESTER" && ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" }); 
+    }
+
+    const comment = await prisma.publicComment.create({
+      data: {
+        content: trimmedContent,
+        authorId: userId,
+        ticketId
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to post comment" });
+  }
+});
+
+// POST /api/tickets/:id/notes - Add an internal note
+router.post("/:id/notes", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+  const { content } = req.body;
+
+  try {
+    if (userRole !== "IT_STAFF") {
+      return res.status(403).json({ error: "Only IT Staff can post internal notes" });
+    }
+
+    const trimmedContent = typeof content === 'string' ? content.trim() : "";
+    if (trimmedContent.length === 0 || trimmedContent.length > 1000) {
+      return res.status(400).json({ error: "Note must be between 1 and 1000 characters" });
+    }
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const note = await prisma.internalNote.create({
+      data: {
+        content: trimmedContent,
+        authorId: userId,
+        ticketId
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(note);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to post note" });
   }
 });
 
