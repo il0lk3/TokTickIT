@@ -1,22 +1,38 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MyTickets } from "../../src/components/MyTickets.js";
-import { RequesterProvider } from "../../src/contexts/RequesterContext.js";
-import * as api from "../../src/api.js";
+import { AuthProvider } from "../../src/contexts/AuthContext";
+import * as api from "../../src/api";
 
-vi.mock("../../src/api.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../src/api.js")>();
+vi.mock("../../src/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/api")>();
   return {
     ...actual,
-    getTickets: vi.fn(),
+    getTickets: vi.fn()
   };
 });
+
+const { mockUser } = vi.hoisted(() => ({
+  mockUser: { id: 1, name: "Test User", email: "test@example.com", role: "REQUESTER", requiresPasswordChange: false }
+}));
+
+vi.mock("../../src/contexts/AuthContext", () => {
+  return {
+    useAuth: () => ({
+      user: mockUser,
+      login: vi.fn(),
+      logout: vi.fn(),
+    }),
+    AuthProvider: ({ children }: any) => children
+  };
+});
+
 
 // Helper component to provide context
 const TestWrapper = ({ children, requester }: any) => {
   // Mock localStorage for the context
   localStorage.setItem("toktickit_requester", JSON.stringify(requester));
-  return <RequesterProvider>{children}</RequesterProvider>;
+  return <>{children}</>;
 };
 
 describe("MyTickets Component", () => {
@@ -35,7 +51,7 @@ describe("MyTickets Component", () => {
     });
 
     render(
-      <TestWrapper requester={mockRequester}>
+      <TestWrapper>
         <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
@@ -47,8 +63,7 @@ describe("MyTickets Component", () => {
     });
 
     expect(api.getTickets).toHaveBeenCalledWith(
-      expect.objectContaining({ search: "", categoryId: "", requestedPriority: "", status: "", page: 1 }),
-      mockRequester.id
+      expect.objectContaining({ search: "", categoryId: "", requestedPriority: "", status: "", page: 1 })
     );
   });
 
@@ -61,7 +76,7 @@ describe("MyTickets Component", () => {
     });
 
     render(
-      <TestWrapper requester={mockRequester}>
+      <TestWrapper>
         <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
@@ -82,7 +97,7 @@ describe("MyTickets Component", () => {
     });
 
     render(
-      <TestWrapper requester={mockRequester}>
+      <TestWrapper>
         <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
@@ -100,8 +115,7 @@ describe("MyTickets Component", () => {
     // Wait for debounce timeout
     await waitFor(() => {
       expect(api.getTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ search: "error" }),
-        mockRequester.id
+        expect.objectContaining({ search: "error" })
       );
     }, { timeout: 1000 });
   });
@@ -113,7 +127,7 @@ describe("MyTickets Component", () => {
     });
 
     render(
-      <TestWrapper requester={mockRequester}>
+      <TestWrapper>
         <MyTickets categories={mockCategories} onSelectTicket={vi.fn()} />
       </TestWrapper>
     );
@@ -121,8 +135,7 @@ describe("MyTickets Component", () => {
     // Initial fetch
     await waitFor(() => {
       expect(api.getTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ sortBy: "createdAt", sortOrder: "desc" }),
-        mockRequester.id
+        expect.objectContaining({ sortBy: "createdAt", sortOrder: "desc" })
       );
     });
 
@@ -133,8 +146,7 @@ describe("MyTickets Component", () => {
 
     await waitFor(() => {
       expect(api.getTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ sortBy: "ticketNumber", sortOrder: "desc" }),
-        mockRequester.id
+        expect.objectContaining({ sortBy: "ticketNumber", sortOrder: "desc" })
       );
     });
     
@@ -142,8 +154,7 @@ describe("MyTickets Component", () => {
     fireEvent.click(ticketHeader);
     await waitFor(() => {
       expect(api.getTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ sortBy: "ticketNumber", sortOrder: "asc" }),
-        mockRequester.id
+        expect.objectContaining({ sortBy: "ticketNumber", sortOrder: "asc" })
       );
     });
   });

@@ -1,21 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { TicketDetail } from "../../src/components/TicketDetail.js";
-import { RequesterProvider } from "../../src/contexts/RequesterContext.js";
-import * as api from "../../src/api.js";
+import { AuthProvider } from "../../src/contexts/AuthContext";
+import * as api from "../../src/api";
 
-vi.mock("../../src/api.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../src/api.js")>();
+vi.mock("../../src/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/api")>();
   return {
     ...actual,
-    getTicketDetail: vi.fn(),
+    getTicketDetail: vi.fn()
   };
 });
 
-const TestWrapper = ({ children, requester }: any) => {
-  localStorage.setItem("toktickit_requester", JSON.stringify(requester));
-  return <RequesterProvider>{children}</RequesterProvider>;
-};
+const { mockUser } = vi.hoisted(() => ({
+  mockUser: { id: 1, name: "Test User", email: "test@example.com", role: "REQUESTER", requiresPasswordChange: false }
+}));
+
+vi.mock("../../src/contexts/AuthContext", () => {
+  return {
+    useAuth: () => ({
+      user: mockUser,
+      login: vi.fn(),
+      logout: vi.fn(),
+    }),
+    AuthProvider: ({ children }: any) => children
+  };
+});
+
+
+const TestWrapper = ({ children }: any) => { return <>{children}</>; };
 
 describe("TicketDetail Component", () => {
   const mockRequester = { id: 1, name: "Test User", email: "test@example.com" };
@@ -43,7 +56,7 @@ describe("TicketDetail Component", () => {
     });
 
     render(
-      <TestWrapper requester={mockRequester}>
+      <TestWrapper>
         <TicketDetail ticketId={1} onBack={vi.fn()} />
       </TestWrapper>
     );
@@ -57,6 +70,6 @@ describe("TicketDetail Component", () => {
     expect(screen.getByDisplayValue("My broken laptop")).toBeInTheDocument();
     expect(screen.getByDisplayValue("It just won't turn on.")).toBeInTheDocument();
     expect(screen.getByText("error.png")).toBeInTheDocument();
-    expect(api.getTicketDetail).toHaveBeenCalledWith(1, mockRequester.id);
+    expect(api.getTicketDetail).toHaveBeenCalledWith(1);
   });
 });

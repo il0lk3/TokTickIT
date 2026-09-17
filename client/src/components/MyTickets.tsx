@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getTickets, TicketResponse, Category } from "../api.js";
-import { useRequester } from "../contexts/RequesterContext.js";
+import { useAuth } from "../contexts/AuthContext";
 
 interface MyTicketsProps {
   categories: Category[];
@@ -8,7 +8,7 @@ interface MyTicketsProps {
 }
 
 export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
-  const { activeRequester } = useRequester();
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +37,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   }, [search]);
 
   const fetchTickets = useCallback(async () => {
-    if (!activeRequester) return;
+    if (!user) return;
     setLoading(true);
     setError("");
     try {
@@ -50,7 +50,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         limit: 10,
         sortBy,
         sortOrder
-      }, activeRequester.id);
+      });
       setTickets(res.data);
       setTotalPages(res.meta.totalPages);
       setTotalTickets(res.meta.total);
@@ -59,7 +59,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
     } finally {
       setLoading(false);
     }
-  }, [activeRequester, debouncedSearch, categoryId, requestedPriority, status, page, sortBy, sortOrder]);
+  }, [user, debouncedSearch, categoryId, requestedPriority, status, page, sortBy, sortOrder]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
