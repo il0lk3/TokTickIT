@@ -86,7 +86,7 @@ Detailed wireframes and responsive behavior are defined in `docs/lab-03/ui-spec.
 - **Relationships**:
   - `Ticket.requesterId` maps to `User.id` (Requester).
   - `Ticket.ownerId` maps to `User.id` (IT Staff, optional).
-- **Migration**: Existing `RequesterUser` records will be migrated to `User` records with role `Requester`. Existing tickets remain linked correctly.
+- **Migration**: Existing `RequesterUser` records will be migrated to `User` records with role `Requester`. Existing tickets remain linked correctly. Migrated users will receive the universal initial password `Password123!` (securely hashed) to maintain immediate accessibility.
 - **Seed**: Updated to include 4 active/1 inactive Requesters, 3 active/1 inactive IT Staff, 1 active Admin, and realistic ticket/comment data.
 
 ## 8. API Contract
