@@ -63,42 +63,84 @@ async function main() {
     await prisma.user.upsert({
       where: { email: u.email },
       update: { name: u.name, role: u.role, isActive: u.isActive },
-      create: { ...u, passwordHash, mustChangePassword: true },
+      create: { ...u, passwordHash, requiresPasswordChange: true },
     });
   }
 
-  // 4. Seed Example Tickets (Safe create, avoid duplicate errors with findFirst)
+  // 4. Seed Example Tickets
   const reqUser = await prisma.user.findUnique({ where: { email: "cream.su@example.com" } });
+  const reqUser2 = await prisma.user.findUnique({ where: { email: "bew.su@example.com" } });
   const staffUser = await prisma.user.findUnique({ where: { email: "staff1@example.com" } });
+  
   const catHardware = await prisma.category.findUnique({ where: { name: "Hardware" } });
+  const catSoftware = await prisma.category.findUnique({ where: { name: "Software" } });
   const sysPrinter = await prisma.relatedSystem.findUnique({ where: { name: "Printer" } });
+  const sysEmail = await prisma.relatedSystem.findUnique({ where: { name: "Email" } });
 
-  if (reqUser && staffUser && catHardware && sysPrinter) {
-    const existingTicket = await prisma.ticket.findUnique({ where: { ticketNumber: "TKT-2026-000001" } });
-    if (!existingTicket) {
-      const ticket = await prisma.ticket.create({
-        data: {
-          ticketNumber: "TKT-2026-000001",
-          summary: "Printer not working",
-          description: "The printer in the main office is jammed.",
-          requestedPriority: TicketPriority.MEDIUM,
-          itPriority: TicketPriority.MEDIUM,
-          currentStatus: TicketStatus.InProgress,
-          requesterId: reqUser.id,
-          categoryId: catHardware.id,
-          relatedSystemId: sysPrinter.id,
-          ownerId: staffUser.id,
-        },
-      });
+  if (reqUser && reqUser2 && staffUser && catHardware && catSoftware && sysPrinter && sysEmail) {
+    // Ticket 1: In Progress, assigned
+    const t1 = await prisma.ticket.upsert({
+      where: { ticketNumber: "TKT-2026-000001" },
+      update: {},
+      create: {
+        ticketNumber: "TKT-2026-000001",
+        summary: "Printer not working",
+        description: "The printer in the main office is jammed.",
+        requestedPriority: TicketPriority.MEDIUM,
+        itPriority: TicketPriority.MEDIUM,
+        currentStatus: TicketStatus.InProgress,
+        requesterId: reqUser.id,
+        categoryId: catHardware.id,
+        relatedSystemId: sysPrinter.id,
+        ownerId: staffUser.id,
+      },
+    });
 
-      // Seed comments safely
-      await prisma.publicComment.create({
-        data: { content: "I am looking into this.", authorId: staffUser.id, ticketId: ticket.id },
-      });
-      await prisma.internalNote.create({
-        data: { content: "Needs new toner.", authorId: staffUser.id, ticketId: ticket.id },
-      });
-    }
+    await prisma.publicComment.upsert({
+      where: { id: 1 },
+      update: {},
+      create: { id: 1, content: "I am looking into this.", authorId: staffUser.id, ticketId: t1.id }
+    });
+    await prisma.internalNote.upsert({
+      where: { id: 1 },
+      update: {},
+      create: { id: 1, content: "Needs new toner.", authorId: staffUser.id, ticketId: t1.id }
+    });
+
+    // Ticket 2: New, unassigned
+    await prisma.ticket.upsert({
+      where: { ticketNumber: "TKT-2026-000002" },
+      update: {},
+      create: {
+        ticketNumber: "TKT-2026-000002",
+        summary: "Email sync issue",
+        description: "Emails are not syncing on my phone.",
+        requestedPriority: TicketPriority.HIGH,
+        itPriority: TicketPriority.LOW,
+        currentStatus: TicketStatus.New,
+        requesterId: reqUser2.id,
+        categoryId: catSoftware.id,
+        relatedSystemId: sysEmail.id,
+      },
+    });
+
+    // Ticket 3: Resolved, assigned
+    await prisma.ticket.upsert({
+      where: { ticketNumber: "TKT-2026-000003" },
+      update: {},
+      create: {
+        ticketNumber: "TKT-2026-000003",
+        summary: "Need a new mouse",
+        description: "My mouse is broken.",
+        requestedPriority: TicketPriority.LOW,
+        itPriority: TicketPriority.LOW,
+        currentStatus: TicketStatus.Resolved,
+        requesterId: reqUser.id,
+        categoryId: catHardware.id,
+        relatedSystemId: sysPrinter.id, // Just using printer as placeholder system
+        ownerId: staffUser.id,
+      },
+    });
   }
 
   console.log("Database seeded successfully.");

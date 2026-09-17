@@ -9,8 +9,8 @@ describe("POST /api/tickets", () => {
 
   beforeAll(async () => {
     // Find a valid active requester from the seed
-    const requester = await getPrisma().requesterUser.findFirst({
-      where: { isActive: true },
+    const requester = await getPrisma().user.findFirst({
+      where: { isActive: true, role: 'REQUESTER' },
     });
     if (requester) {
       validRequesterId = requester.id;

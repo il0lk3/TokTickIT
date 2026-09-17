@@ -48,8 +48,8 @@ app.get("/api/categories", async (_req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 app.get("/api/requesters", async (_req: Request, res: Response) => {
   try {
-    const requesters = await getPrisma().requesterUser.findMany({
-      where: { isActive: true },
+    const requesters = await getPrisma().user.findMany({
+      where: { isActive: true, role: 'REQUESTER' },
       select: { id: true, name: true, email: true },
       orderBy: { name: 'asc' },
     });
