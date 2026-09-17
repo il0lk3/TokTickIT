@@ -88,7 +88,7 @@ All Requester operations from Lab 2 must continue to work securely using the aut
     "requester": { "id": 1, "name": "Jane Doe" },
     "owner": null,
     "comments": [...],
-    "internalNotes": [...] // Only included if requester role is IT Staff/Admin
+    "internalNotes": [...] // Only included if requester role is IT Staff
   }
   ```
 

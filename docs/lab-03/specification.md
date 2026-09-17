@@ -34,16 +34,16 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 - **BR-01**: Only an active user with valid credentials may authenticate.
 - **BR-02**: A user marked as requiring a password change cannot enter the normal application until a new valid password is saved.
 - **BR-03**: The authenticated user identity, not a requesterId supplied by the client, determines ownership of Requester operations.
-- **BR-04**: Public Comments are visible to the Requester, IT Staff, and Administrator. Internal Notes are visible only to IT Staff and Administrator.
+- **BR-04**: Public Comments are visible to the Requester and IT Staff. Internal Notes are visible only to IT Staff.
 - **BR-05**: A Requester may indicate that the problem appears resolved, but cannot formally set the Ticket to Resolved or Closed.
 - **BR-06**: An Administrator cannot deactivate their own account or remove the last active Administrator.
 - **BR-07**: Duplicate email addresses are prevented during user creation or updates.
-- **BR-08**: Requested Priority remains the value submitted by the Requester. IT Priority initially copies Requested Priority and may later be changed only by IT Staff or Administrator.
+- **BR-08**: Requested Priority remains the value submitted by the Requester. IT Priority initially copies Requested Priority and may later be changed only by IT Staff.
 - **BR-09**: Valid Ticket statuses are New, Open, In Progress, Waiting for Requester, Resolved, Closed, Reopened, and Cancelled. The explicit transition matrix is as follows:
   - `New` -> `Open` (IT Staff claims the ticket)
   - `Open` -> `In Progress` (IT Staff begins work)
   - `In Progress` -> `Waiting for Requester` (IT Staff needs more info)
-  - `Waiting for Requester` -> `In Progress` (Requester replies)
+  - `Waiting for Requester` -> `In Progress` (IT Staff resumes work after Requester replies)
   - `In Progress` / `Open` -> `Resolved` (IT Staff marks resolved)
   - `Resolved` -> `Closed` (IT Staff closes after confirmation)
   - `Resolved` -> `Reopened` (IT Staff reopens if issue persists)
@@ -58,7 +58,7 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 ### 5.1. Authorization Matrix
 | Operation | Requester | IT Staff | Administrator |
 |---|---|---|---|
-| View own tickets | Yes | Yes | Yes |
+| View own tickets | Yes | Yes | No |
 | Create ticket | Yes | No | No |
 | View Ticket Queue | No | Yes | No |
 | Change Ticket Owner | No | Yes | No |
@@ -85,7 +85,7 @@ Detailed wireframes and responsive behavior are defined in `docs/lab-03/ui-spec.
   - `InternalNote`: Includes `content`, `authorId`, `ticketId`, `createdAt`.
 - **Relationships**:
   - `Ticket.requesterId` maps to `User.id` (Requester).
-  - `Ticket.ownerId` maps to `User.id` (IT Staff/Admin, optional).
+  - `Ticket.ownerId` maps to `User.id` (IT Staff, optional).
 - **Migration**: Existing `RequesterUser` records will be migrated to `User` records with role `Requester`. Existing tickets remain linked correctly.
 - **Seed**: Updated to include 4 active/1 inactive Requesters, 3 active/1 inactive IT Staff, 1 active Admin, and realistic ticket/comment data.
 

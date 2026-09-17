@@ -10,7 +10,7 @@ This document maps Acceptance Criteria (AC) from `specification.md` to planned a
 | API-04 | API | AC-02 | Password change required | 403 Forbidden for normal API endpoints if `requiresPasswordChange` is true | `server/tests/lab-03/authorization.api.test.ts` | TBD |
 | API-05 | API | AC-03 | Requester accessing own ticket | 200 OK; returns ticket data | `server/tests/lab-03/authorization.api.test.ts` | TBD |
 | API-06 | API | AC-03 | Requester accessing other's ticket | 403 Forbidden or 404 Not Found | `server/tests/lab-03/authorization.api.test.ts` | TBD |
-| API-07 | API | BR-04 | Public comment access | 200 OK for Requester, IT Staff, Admin | `server/tests/lab-03/comments-notes.api.test.ts` | TBD |
+| API-07 | API | BR-04 | Public comment access | 200 OK for Requester, IT Staff (403 for Admin) | `server/tests/lab-03/comments-notes.api.test.ts` | TBD |
 | API-08 | API | AC-04 | Requester requests Internal Notes | Forbidden; no note data returned | `server/tests/lab-03/comments-notes.api.test.ts` | TBD |
 | API-09 | API | AC-05 | IT Staff Ticket Queue with search/filter/sort | Returns filtered/sorted/paginated tickets | `server/tests/lab-03/staff-queue.api.test.ts` | TBD |
 | API-10 | API | BR-08, BR-09 | IT Staff update ticket operational fields | 200 OK; fields updated successfully | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | TBD |
@@ -20,6 +20,9 @@ This document maps Acceptance Criteria (AC) from `specification.md` to planned a
 | API-14 | API | AC-10 | Admin attempts to deactivate last active Admin | 403 Forbidden / 400 Bad Request | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
 | API-15 | API | AC-15 | Non-Admin access to User Management API | 403 Forbidden | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
 | API-16 | API | AC-14 | Requester Lab 2 API continuation (Auth Identity) | 200/201 OK; operations succeed for own data | `server/tests/lab-03/requester-regression.api.test.ts` | TBD |
+| API-17 | API | AC-11 | Logout invalidates session token | 401 Unauthorized on subsequent requests | `server/tests/lab-03/auth.api.test.ts` | TBD |
+| API-18 | API | AC-12 | IT Staff attempts invalid status transition | 400 Bad Request | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | TBD |
+| API-19 | API | AC-13 | Empty or over-length comment/note rejected | 400 Bad Request | `server/tests/lab-03/comments-notes.api.test.ts` | TBD |
 | DB-01 | DB | Migration | RequesterUser to User migration | Schema valid, existing data intact, seed runs | `server/tests/lab-03/migration.test.ts` | TBD |
 | UI-01 | UI | FR-01 | Login screen behavior | Renders inputs, handles submit, shows errors | `client/tests/lab-03/Login.test.tsx` | TBD |
 | UI-02 | UI | FR-01 | Change Password screen | Renders fields, validates rules | `client/tests/lab-03/ChangePassword.test.tsx` | TBD |
