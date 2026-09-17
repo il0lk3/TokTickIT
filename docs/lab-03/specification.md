@@ -39,8 +39,21 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 - **BR-06**: An Administrator cannot deactivate their own account or remove the last active Administrator.
 - **BR-07**: Duplicate email addresses are prevented during user creation or updates.
 - **BR-08**: Requested Priority remains the value submitted by the Requester. IT Priority initially copies Requested Priority and may later be changed only by IT Staff or Administrator.
-- **BR-09**: Valid Ticket statuses are New, Open, In Progress, Waiting for Requester, Resolved, Closed, Reopened, and Cancelled.
+- **BR-09**: Valid Ticket statuses are New, Open, In Progress, Waiting for Requester, Resolved, Closed, Reopened, and Cancelled. The explicit transition matrix is as follows:
+  - `New` -> `Open` (IT Staff claims the ticket)
+  - `Open` -> `In Progress` (IT Staff begins work)
+  - `In Progress` -> `Waiting for Requester` (IT Staff needs more info)
+  - `Waiting for Requester` -> `In Progress` (Requester replies)
+  - `In Progress` / `Open` -> `Resolved` (IT Staff marks resolved)
+  - `Resolved` -> `Closed` (IT Staff closes after confirmation)
+  - `Resolved` -> `Reopened` (IT Staff reopens if issue persists)
+  - `Any` -> `Cancelled` (IT Staff cancels ticket)
 - **BR-10**: Both Public Comments and Internal Notes are append-only. Editing, deletion, or whitespace-only content is not permitted.
+- **BR-11**: Passwords must meet complexity requirements and JWT sessions must securely expire.
+- **BR-12**: Logout must fully invalidate the session/token.
+- **BR-13**: A user can only be assigned exactly one role.
+- **BR-14**: A Ticket can have zero or one primary Ticket Owner, who must be an active IT Staff user.
+- **BR-15**: Public Comments and Internal Notes must have justified length limits (e.g., maximum 1000 characters) and cannot be empty.
 
 ### 5.1. Authorization Matrix
 | Operation | Requester | IT Staff | Administrator |
@@ -48,11 +61,11 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 | View own tickets | Yes | Yes | Yes |
 | Create ticket | Yes | No | No |
 | View Ticket Queue | No | Yes | No |
-| Change Ticket Owner | No | Yes | Yes |
-| Change IT Priority | No | Yes | Yes |
-| Change Status | No | Yes | Yes |
-| Post Public Comment | Yes (own ticket) | Yes | Yes |
-| Post Internal Note | No | Yes | Yes |
+| Change Ticket Owner | No | Yes | No |
+| Change IT Priority | No | Yes | No |
+| Change Status | No | Yes | No |
+| Post Public Comment | Yes (own ticket) | Yes | No |
+| Post Internal Note | No | Yes | No |
 | Manage Users | No | No | Yes |
 
 ## 6. UI Specification Summary
@@ -83,7 +96,7 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 - `GET /api/auth/me`: Retrieve current user.
 - `POST /api/auth/change-password`: Update initial password.
 - `GET /api/staff/tickets`: IT Staff queue retrieval.
-- `PUT /api/staff/tickets/:id`: Update ticket operational fields.
+- `PATCH /api/staff/tickets/:id`: Update ticket operational fields.
 - `POST /api/tickets/:id/comments`: Add public comment.
 - `POST /api/tickets/:id/notes`: Add internal note (restricted).
 - `GET /api/admin/users`: List users.
@@ -98,12 +111,28 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 - **AC-05**: Given an IT Staff user, when viewing the Queue, then tickets are filterable, sortable, and paginated correctly.
 - **AC-06**: Given an Admin user, when attempting to deactivate their own account, then the system rejects the operation.
 - **AC-07**: Given an inactive user, when attempting to log in, then the system returns a safe generic failure without exposing exact account status.
+- **AC-08**: Given an Admin user, when creating or updating a user, duplicate email addresses are rejected with a 409 Conflict.
+- **AC-09**: Given an Admin user, when setting a new initial password, the target user's `requiresPasswordChange` is set to true.
+- **AC-10**: Given an Admin user, attempting to delete or deactivate the last active Admin is rejected.
+- **AC-11**: Given an authenticated user, when logging out, the session token is fully invalidated and protected routes return 401.
+- **AC-12**: Given an IT Staff user, when changing a ticket status, invalid transitions according to the matrix are rejected.
+- **AC-13**: Given any user, when posting a comment or note, empty content or content exceeding length limits is rejected.
+- **AC-14**: Given a Requester, all Lab 2 Ticket and Attachment functions continue to work seamlessly using their authenticated identity.
+- **AC-15**: Given a non-Admin user, any attempt to access the Admin User Management endpoints returns 403 Forbidden.
 
 ## 10. Definition of Done
-Defined in `implementation_plan.md` and `task.md`. Includes completed code, passing tests (Unit/API/E2E), responsive UI verification, documentation (Spec DD), and GitHub PR merge to main.
+- **Git Workflow**: Commit history shows feature branches merged into `lab3-staging` and then `main`; final GitHub Project/Kanban with all Issues in Done; rendered `reviewer.md` with reviewer identity, PR links, comments, responses, and approvals; README and `.gitignore` evidence; repository directory structure.
+- **Spec DD**: Rendered `docs/lab-03/specification.md` showing numbered requirements, business rules, authorization matrix or rules, acceptance criteria, migration decisions, and Product Definition of Done.
+- **Test DD and Traceability**: Rendered `docs/lab-03/tests.md` including planned tests, AC traceability, actual test-file paths, and final status. Complete unit, API/integration, UI, authorization, regression, and E2E passing test output from main.
+- **AI Use with Reflection**: Rendered `docs/lab-03/ai-use.md` naming the LLM used and showing 6-10 selected key prompts, with a brief "My Reflection".
+- **Working Login and Password Change UI**: Valid and invalid login, inactive-account handling, busy and safe failure feedback, mandatory first-password change, authenticated user/role display, logout, and direct access blocked after logout.
+- **Working IT Staff Ticket Queue UI**: Realistic queue data, search, filters, sorting, pagination, assigned/unassigned ownership, status and priority badges, open-detail action, empty/no-results/failure feedback, and responsive behavior.
+- **Working IT Staff Ticket Detail UI**: Claim/reassign, IT Priority, permitted status changes, Public Comments, Internal Notes, Attachment continuity, Requester resolution indication, role restrictions, validation, and safe failure behavior. Include direct API authorization evidence.
+- **Working Administrator User Management UI**: User list, search by name/email, optional role filtering, create user, duplicate-email and invalid-input validation, edit name/email/role/activation state, set new initial password, prevention of self-deactivation/removing last active Admin, forbidden access for non-Administrators.
+- **Zen Green UI and Responsive Evidence**: Rendered `ui-spec.md` plus desktop, tablet, and mobile screenshots for all major Lab 3 screens.
 
 ## 11. Assumptions and Decisions
-- **Authentication**: We will use JWT stored in HttpOnly cookies for secure session management without complex session stores.
+- **Authentication**: We will use JWT stored in `HttpOnly` and `SameSite=Strict` cookies for secure session management without complex session stores. The JWT token lifetime will be set to 2 hours. Logout will invalidate the session by clearing the cookie.
 - **Passwords**: `bcrypt` will be used for password hashing.
 - **Migration Strategy**: During startup or via a script, the existing `RequesterUser` table will be renamed/migrated to `User`. The existing SQLite/Postgres data will be preserved.
 - **Pagination**: The IT Staff queue will use standard offset/limit pagination (e.g., `page=1, limit=10`).
