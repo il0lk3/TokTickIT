@@ -6,6 +6,7 @@ import path from "path";
 
 const router = Router();
 const prisma = getPrisma();
+import { authenticateToken } from "../middleware/auth.js";
 
 // Setup Multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -31,36 +32,12 @@ const upload = multer({
   }
 });
 
-// Middleware: Authenticate via X-Requester-Id header
-router.use(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const requesterId = req.header("X-Requester-Id");
-    if (!requesterId) {
-      res.status(401).json({ error: "Requester not found or missing X-Requester-Id header" });
-      return;
-    }
-
-    const id = parseInt(requesterId, 10);
-    if (isNaN(id)) {
-      res.status(401).json({ error: "Requester not found or missing X-Requester-Id header" });
-      return;
-    }
-
-    const requester = await getPrisma().user.findUnique({
-      where: { id, isActive: true, role: 'REQUESTER' }
-    });
-
-    if (!requester) {
-      res.status(401).json({ error: "Requester not found or missing X-Requester-Id header" });
-      return;
-    }
-
-    // Attach requesterId to locals for use in route handlers
-    res.locals.requesterId = id;
-    next();
-  } catch (error) {
-    next(error);
-  }
+// Middleware: Authenticate via JWT
+router.use(authenticateToken, (req: Request, res: Response, next: NextFunction) => {
+  // Map user id to requesterId for Lab 2 routes backward compatibility
+  // Note: IT Staff also uses this router for some endpoints in Lab 3 (e.g. GET /api/tickets/:id).
+  res.locals.requesterId = res.locals.user.id;
+  next();
 });
 
 // POST /api/tickets - Create a new ticket
