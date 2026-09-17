@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { TicketDetailResponse, getTicketDetail, uploadAttachment, removeAttachment, downloadAttachmentBlob } from "../api.js";
-import { useRequester } from "../contexts/RequesterContext.js";
+import { useAuth } from "../contexts/AuthContext";
 
 interface TicketDetailProps {
   ticketId: number;
@@ -8,7 +8,7 @@ interface TicketDetailProps {
 }
 
 export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
-  const { activeRequester } = useRequester();
+  const { user } = useAuth();
   const [ticket, setTicket] = useState<TicketDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,10 +17,10 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
   useEffect(() => {
     async function load() {
-      if (!activeRequester) return;
+      if (!user) return;
       try {
-        const data = await getTicketDetail(ticketId, activeRequester.id);
-        setTicket(data);
+        const detail = await getTicketDetail(ticketId);
+        setTicket(detail);
       } catch (err: any) {
         setError(err.message || "Failed to load ticket");
       } finally {
@@ -28,10 +28,10 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
       }
     }
     load();
-  }, [ticketId, activeRequester]);
+  }, [ticketId, user]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!activeRequester || !ticket || !e.target.files?.length) return;
+    if (!user || !ticket || !e.target.files?.length) return;
     const file = e.target.files[0];
 
     const activeCount = ticket.attachments.filter(a => !a.isRemoved).length;
@@ -53,7 +53,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
     setUploading(true);
     try {
-      const newAttachment = await uploadAttachment(ticket.id, file, activeRequester.id);
+      const newAttachment = await uploadAttachment(ticketId, file);
       setTicket(prev => prev ? { ...prev, attachments: [...prev.attachments, newAttachment] } : null);
     } catch (err: any) {
       alert(err.message || "Failed to upload file");
@@ -64,12 +64,16 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   };
 
   const handleRemove = async (attachmentId: number) => {
-    if (!activeRequester || !ticket) return;
+    if (!user || !ticket) return;
     const reason = prompt("Please provide a reason for removing this attachment:");
     if (reason === null) return; // User cancelled
+    if (reason.trim() === "") {
+      alert("A reason is required.");
+      return;
+    }
 
     try {
-      await removeAttachment(ticket.id, attachmentId, reason, activeRequester.id);
+      await removeAttachment(ticketId, attachmentId, reason);
       setTicket(prev => {
         if (!prev) return null;
         return {
@@ -83,9 +87,9 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   };
 
   const handleDownload = async (attachmentId: number, originalName: string) => {
-    if (!activeRequester || !ticket) return;
+    if (!user || !ticket) return;
     try {
-      const blob = await downloadAttachmentBlob(ticket.id, attachmentId, activeRequester.id);
+      const blob = await downloadAttachmentBlob(ticketId, attachmentId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

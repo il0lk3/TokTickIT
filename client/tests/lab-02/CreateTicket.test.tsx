@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CreateTicket from "../../src/components/CreateTicket";
-import { RequesterProvider } from "../../src/contexts/RequesterContext.js";
-import * as api from "../../src/api.js";
+import { AuthProvider } from "../../src/contexts/AuthContext";
+import * as api from "../../src/api";
 
 // Mock the API module
-vi.mock("../../src/api.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../src/api.js")>();
+vi.mock("../../src/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/api")>();
   return {
     ...actual,
     getSystems: vi.fn(),
@@ -15,13 +15,18 @@ vi.mock("../../src/api.js", async (importOriginal) => {
 });
 
 // Mock the RequesterContext to provide an active user
-vi.mock("../../src/contexts/RequesterContext.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../src/contexts/RequesterContext.js")>();
+const { mockUser } = vi.hoisted(() => ({
+  mockUser: { id: 1, name: "Test User", email: "test@example.com", role: "REQUESTER", requiresPasswordChange: false }
+}));
+
+vi.mock("../../src/contexts/AuthContext", async (importOriginal) => {
+  const actual = await importOriginal();
   return {
     ...actual,
-    useRequester: () => ({
-      activeRequester: { id: 1, name: "Test User", email: "test@example.com" },
-      setRequester: vi.fn()
+    useAuth: () => ({
+      user: mockUser,
+      login: vi.fn(),
+      logout: vi.fn(),
     })
   };
 });
@@ -39,9 +44,9 @@ describe("UI-02: CreateTicket Validation", () => {
     ]);
 
     render(
-      <RequesterProvider>
+      <>
         <CreateTicket categories={mockCategories} />
-      </RequesterProvider>
+      </>
     );
 
     // Wait for form to render completely
@@ -74,7 +79,7 @@ describe("UI-02: CreateTicket Validation", () => {
 
   it("Submit without Category shows field-level error message and API is not called", async () => {
     (api.getSystems as any).mockResolvedValue([{ id: 1, name: "Windows Laptop" }]);
-    render(<RequesterProvider><CreateTicket categories={mockCategories} /></RequesterProvider>);
+    render(<><CreateTicket categories={mockCategories} /></>);
     await waitFor(() => { expect(screen.getByLabelText(/Category/i)).toBeInTheDocument(); });
 
     fireEvent.change(screen.getByLabelText(/Related System/i), { target: { value: "1" } });
@@ -89,7 +94,7 @@ describe("UI-02: CreateTicket Validation", () => {
 
   it("Submit without Related System shows field-level error message and API is not called", async () => {
     (api.getSystems as any).mockResolvedValue([{ id: 1, name: "Windows Laptop" }]);
-    render(<RequesterProvider><CreateTicket categories={mockCategories} /></RequesterProvider>);
+    render(<><CreateTicket categories={mockCategories} /></>);
     await waitFor(() => { expect(screen.getByLabelText(/Related System/i)).toBeInTheDocument(); });
 
     fireEvent.change(screen.getByLabelText(/Category/i), { target: { value: "1" } });
@@ -104,7 +109,7 @@ describe("UI-02: CreateTicket Validation", () => {
 
   it("Submit with Description over 1000 chars shows field-level error message and API is not called", async () => {
     (api.getSystems as any).mockResolvedValue([{ id: 1, name: "Windows Laptop" }]);
-    render(<RequesterProvider><CreateTicket categories={mockCategories} /></RequesterProvider>);
+    render(<><CreateTicket categories={mockCategories} /></>);
     await waitFor(() => { expect(screen.getByLabelText(/Description/i)).toBeInTheDocument(); });
 
     fireEvent.change(screen.getByLabelText(/Category/i), { target: { value: "1" } });
