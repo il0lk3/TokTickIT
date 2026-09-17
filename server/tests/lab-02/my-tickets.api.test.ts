@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
+import jwt from "jsonwebtoken";
 
 describe("GET /api/tickets (My Tickets API)", () => {
   const prisma = getPrisma();
@@ -9,13 +10,19 @@ describe("GET /api/tickets (My Tickets API)", () => {
   let otherRequesterId: number;
   let testCategoryId: number;
   let testSystemId: number;
+  let testAuthCookie: string;
+  let otherAuthCookie: string;
 
   beforeAll(async () => {
     // Create isolated requesters for this test to avoid conflicts with seeded DB data
-    const testUser1 = await prisma.user.create({ data: { name: "Test MyTickets 1", email: `test1-${Date.now()}@test.com`, passwordHash: "dummy", role: "REQUESTER" }});
-    const testUser2 = await prisma.user.create({ data: { name: "Test MyTickets 2", email: `test2-${Date.now()}@test.com`, passwordHash: "dummy", role: "REQUESTER" }});
+    const testUser1 = await prisma.user.create({ data: { name: "Test MyTickets 1", email: `test1-${Date.now()}@test.com`, passwordHash: "dummy", role: "REQUESTER", requiresPasswordChange: false }});
+    const testUser2 = await prisma.user.create({ data: { name: "Test MyTickets 2", email: `test2-${Date.now()}@test.com`, passwordHash: "dummy", role: "REQUESTER", requiresPasswordChange: false }});
     testRequesterId = testUser1.id;
     otherRequesterId = testUser2.id;
+    
+    const secret = process.env.JWT_SECRET || "supersecretdevkey";
+    testAuthCookie = `accessToken=${jwt.sign({ id: testRequesterId }, secret, { expiresIn: "2h" })}`;
+    otherAuthCookie = `accessToken=${jwt.sign({ id: otherRequesterId }, secret, { expiresIn: "2h" })}`;
 
     const cat = await prisma.category.findFirst();
     const sys = await prisma.relatedSystem.findFirst();
@@ -49,7 +56,9 @@ describe("GET /api/tickets (My Tickets API)", () => {
   });
 
   it("should return only the requester's own tickets (AC-03)", async () => {
-    const res = await request(app).get("/api/tickets").set("X-Requester-Id", testRequesterId.toString());
+    const res = await request(app)
+      .get("/api/tickets")
+      .set("Cookie", testAuthCookie);
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(3);
     
@@ -61,7 +70,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
   it("should filter tickets by search keyword (AC-07)", async () => {
     const res = await request(app)
       .get("/api/tickets?search=mouse")
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
@@ -71,7 +80,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
   it("should filter tickets by status", async () => {
     const res = await request(app)
       .get("/api/tickets?status=Resolved")
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
@@ -81,7 +90,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
   it("should filter tickets by categoryId", async () => {
     const res = await request(app)
       .get(`/api/tickets?categoryId=${testCategoryId}`)
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(3);
@@ -90,7 +99,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
   it("should filter tickets by requestedPriority", async () => {
     const res = await request(app)
       .get("/api/tickets?requestedPriority=HIGH")
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(1);
@@ -100,7 +109,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
   it("should sort tickets", async () => {
     const res = await request(app)
       .get("/api/tickets?sortBy=requestedPriority&sortOrder=asc")
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.data[0].requestedPriority).toBe("LOW"); // Sorts by ENUM definition order or DB rule
@@ -111,7 +120,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
   it("should support pagination", async () => {
     const res = await request(app)
       .get("/api/tickets?limit=2&page=1")
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(2);

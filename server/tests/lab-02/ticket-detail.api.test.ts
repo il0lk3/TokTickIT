@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
+import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
 
@@ -10,11 +11,22 @@ describe("Ticket Detail & Attachments API", () => {
   let testRequesterId: number;
   let testTicketId: number;
   let otherRequesterId: number;
+  let testAuthCookie: string;
+  let otherAuthCookie: string;
 
   beforeAll(async () => {
     const requesters = await prisma.user.findMany({ where: { isActive: true, role: 'REQUESTER' }, take: 2 });
     testRequesterId = requesters[0].id;
     otherRequesterId = requesters[1].id;
+
+    await prisma.user.updateMany({
+      where: { id: { in: [testRequesterId, otherRequesterId] } },
+      data: { requiresPasswordChange: false }
+    });
+
+    const secret = process.env.JWT_SECRET || "supersecretdevkey";
+    testAuthCookie = `accessToken=${jwt.sign({ id: testRequesterId }, secret, { expiresIn: "2h" })}`;
+    otherAuthCookie = `accessToken=${jwt.sign({ id: otherRequesterId }, secret, { expiresIn: "2h" })}`;
 
     const cat = await prisma.category.findFirst();
     const sys = await prisma.relatedSystem.findFirst();
@@ -64,7 +76,7 @@ describe("Ticket Detail & Attachments API", () => {
   it("should get ticket details for owner", async () => {
     const res = await request(app)
       .get(`/api/tickets/${testTicketId}`)
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(res.status).toBe(200);
     expect(res.body.summary).toBe("Test Detail");
@@ -75,7 +87,7 @@ describe("Ticket Detail & Attachments API", () => {
   it("should deny ticket details for non-owner", async () => {
     const res = await request(app)
       .get(`/api/tickets/${testTicketId}`)
-      .set("X-Requester-Id", otherRequesterId.toString());
+      .set("Cookie", otherAuthCookie);
     
     expect(res.status).toBe(404);
   });
@@ -87,7 +99,7 @@ describe("Ticket Detail & Attachments API", () => {
 
     const res = await request(app)
       .post(`/api/tickets/${testTicketId}/attachments`)
-      .set("X-Requester-Id", testRequesterId.toString())
+      .set("Cookie", testAuthCookie)
       // Multer file filter allows only image/jpeg, image/png, image/webp, application/pdf
       // We will pretend it's a PDF to bypass the filter
       .attach("file", filePath, { contentType: "application/pdf" });
@@ -105,7 +117,7 @@ describe("Ticket Detail & Attachments API", () => {
 
     const res = await request(app)
       .post(`/api/tickets/${testTicketId}/attachments`)
-      .set("X-Requester-Id", testRequesterId.toString())
+      .set("Cookie", testAuthCookie)
       .attach("file", filePath, { contentType: "text/plain" }); // Invalid mime type
     
     fs.unlinkSync(filePath);
@@ -118,13 +130,13 @@ describe("Ticket Detail & Attachments API", () => {
     // First, fetch the ticket to get the attachment ID
     const getRes = await request(app)
       .get(`/api/tickets/${testTicketId}`)
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     const attachmentId = getRes.body.attachments[0].id;
 
     const delRes = await request(app)
       .delete(`/api/tickets/${testTicketId}/attachments/${attachmentId}`)
-      .set("X-Requester-Id", testRequesterId.toString())
+      .set("Cookie", testAuthCookie)
       .send({ reason: "Accidental upload" });
     
     expect(delRes.status).toBe(200);
@@ -132,7 +144,7 @@ describe("Ticket Detail & Attachments API", () => {
     // Verify it is removed
     const checkRes = await request(app)
       .get(`/api/tickets/${testTicketId}`)
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(checkRes.body.attachments[0].isRemoved).toBe(true);
     expect(checkRes.body.attachments[0].removedReason).toBe("Accidental upload");
@@ -140,7 +152,7 @@ describe("Ticket Detail & Attachments API", () => {
     // Verify download is blocked
     const dlRes = await request(app)
       .get(`/api/tickets/${testTicketId}/attachments/${attachmentId}/download`)
-      .set("X-Requester-Id", testRequesterId.toString());
+      .set("Cookie", testAuthCookie);
     
     expect(dlRes.status).toBe(410);
   });
