@@ -50,6 +50,18 @@ cd ..
 
 ---
 
+## Test Accounts (Seed Data)
+
+The following accounts are seeded with the universal password `Password123!` to facilitate local testing:
+
+| Role | Email |
+|------|-------|
+| **Requester** | `cream.su@example.com`, `bew.su@example.com`, `kanta.su@example.com`, `je.su@example.com`, `bewnoi.su@example.com`, `grace.su@example.com`, `phrao.su@example.com`, `pueng.su@example.com` |
+| **IT Staff** | `staff1@example.com`, `staff2@example.com`, `staff3@example.com` |
+| **Admin** | `admin@example.com` |
+
+---
+
 ## Running the Application
 
 Open two separate terminals to start the development servers.

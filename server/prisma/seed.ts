@@ -1,4 +1,6 @@
 import { getPrisma } from "../src/prisma.js";
+import bcrypt from "bcryptjs";
+import { Role, TicketPriority, TicketStatus } from "@prisma/client";
 
 async function main() {
   const prisma = getPrisma();
@@ -33,24 +35,111 @@ async function main() {
     });
   }
 
-  // 3. Seed Development Requesters
-  const requesters = [
-    { email: "cream.su@example.com", name: "Cream Su", isActive: true },
-    { email: "bew.su@example.com", name: "Bew Su", isActive: true },
-    { email: "kanta.su@example.com", name: "Kanta Su", isActive: true },
-    { email: "je.su@example.com", name: "Je Su", isActive: true },
-    { email: "bewnoi.su@example.com", name: "Bewnoi Su", isActive: true },
-    { email: "grace.su@example.com", name: "Grace Su", isActive: true },
-    { email: "phrao.su@example.com", name: "Phrao Su", isActive: true },
-    { email: "pueng.su@example.com", name: "Pueng Su", isActive: true },
-    { email: "inactive.user@example.com", name: "Inactive TestUser", isActive: false },
+  // 3. Seed Users
+  const defaultPassword = "Password123!";
+  const passwordHash = await bcrypt.hash(defaultPassword, 10);
+
+  const users = [
+    // Requesters (existing ones from Lab 2)
+    { email: "cream.su@example.com", name: "Cream Su", role: Role.REQUESTER, isActive: true },
+    { email: "bew.su@example.com", name: "Bew Su", role: Role.REQUESTER, isActive: true },
+    { email: "kanta.su@example.com", name: "Kanta Su", role: Role.REQUESTER, isActive: true },
+    { email: "je.su@example.com", name: "Je Su", role: Role.REQUESTER, isActive: true },
+    { email: "bewnoi.su@example.com", name: "Bewnoi Su", role: Role.REQUESTER, isActive: true },
+    { email: "grace.su@example.com", name: "Grace Su", role: Role.REQUESTER, isActive: true },
+    { email: "phrao.su@example.com", name: "Phrao Su", role: Role.REQUESTER, isActive: true },
+    { email: "pueng.su@example.com", name: "Pueng Su", role: Role.REQUESTER, isActive: true },
+    { email: "inactive.user@example.com", name: "Inactive TestUser", role: Role.REQUESTER, isActive: false },
+    // IT Staff
+    { email: "staff1@example.com", name: "IT Staff 1", role: Role.IT_STAFF, isActive: true },
+    { email: "staff2@example.com", name: "IT Staff 2", role: Role.IT_STAFF, isActive: true },
+    { email: "staff3@example.com", name: "IT Staff 3", role: Role.IT_STAFF, isActive: true },
+    { email: "inactive.staff@example.com", name: "Inactive Staff", role: Role.IT_STAFF, isActive: false },
+    // Administrator
+    { email: "admin@example.com", name: "System Admin", role: Role.ADMINISTRATOR, isActive: true },
   ];
 
-  for (const req of requesters) {
-    await prisma.requesterUser.upsert({
-      where: { email: req.email },
-      update: { name: req.name, isActive: req.isActive },
-      create: req,
+  for (const u of users) {
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, isActive: u.isActive },
+      create: { ...u, passwordHash, requiresPasswordChange: true },
+    });
+  }
+
+  // 4. Seed Example Tickets
+  const reqUser = await prisma.user.findUnique({ where: { email: "cream.su@example.com" } });
+  const reqUser2 = await prisma.user.findUnique({ where: { email: "bew.su@example.com" } });
+  const staffUser = await prisma.user.findUnique({ where: { email: "staff1@example.com" } });
+  
+  const catHardware = await prisma.category.findUnique({ where: { name: "Hardware" } });
+  const catSoftware = await prisma.category.findUnique({ where: { name: "Software" } });
+  const sysPrinter = await prisma.relatedSystem.findUnique({ where: { name: "Printer" } });
+  const sysEmail = await prisma.relatedSystem.findUnique({ where: { name: "Email" } });
+
+  if (reqUser && reqUser2 && staffUser && catHardware && catSoftware && sysPrinter && sysEmail) {
+    // Ticket 1: In Progress, assigned
+    const t1 = await prisma.ticket.upsert({
+      where: { ticketNumber: "TKT-2026-000001" },
+      update: {},
+      create: {
+        ticketNumber: "TKT-2026-000001",
+        summary: "Printer not working",
+        description: "The printer in the main office is jammed.",
+        requestedPriority: TicketPriority.MEDIUM,
+        itPriority: TicketPriority.MEDIUM,
+        currentStatus: TicketStatus.InProgress,
+        requesterId: reqUser.id,
+        categoryId: catHardware.id,
+        relatedSystemId: sysPrinter.id,
+        ownerId: staffUser.id,
+      },
+    });
+
+    await prisma.publicComment.upsert({
+      where: { id: 1 },
+      update: {},
+      create: { id: 1, content: "I am looking into this.", authorId: staffUser.id, ticketId: t1.id }
+    });
+    await prisma.internalNote.upsert({
+      where: { id: 1 },
+      update: {},
+      create: { id: 1, content: "Needs new toner.", authorId: staffUser.id, ticketId: t1.id }
+    });
+
+    // Ticket 2: New, unassigned
+    await prisma.ticket.upsert({
+      where: { ticketNumber: "TKT-2026-000002" },
+      update: {},
+      create: {
+        ticketNumber: "TKT-2026-000002",
+        summary: "Email sync issue",
+        description: "Emails are not syncing on my phone.",
+        requestedPriority: TicketPriority.HIGH,
+        itPriority: TicketPriority.LOW,
+        currentStatus: TicketStatus.New,
+        requesterId: reqUser2.id,
+        categoryId: catSoftware.id,
+        relatedSystemId: sysEmail.id,
+      },
+    });
+
+    // Ticket 3: Resolved, assigned
+    await prisma.ticket.upsert({
+      where: { ticketNumber: "TKT-2026-000003" },
+      update: {},
+      create: {
+        ticketNumber: "TKT-2026-000003",
+        summary: "Need a new mouse",
+        description: "My mouse is broken.",
+        requestedPriority: TicketPriority.LOW,
+        itPriority: TicketPriority.LOW,
+        currentStatus: TicketStatus.Resolved,
+        requesterId: reqUser.id,
+        categoryId: catHardware.id,
+        relatedSystemId: sysPrinter.id, // Just using printer as placeholder system
+        ownerId: staffUser.id,
+      },
     });
   }
 

@@ -12,7 +12,7 @@ describe("Ticket Detail & Attachments API", () => {
   let otherRequesterId: number;
 
   beforeAll(async () => {
-    const requesters = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 });
+    const requesters = await prisma.user.findMany({ where: { isActive: true, role: 'REQUESTER' }, take: 2 });
     testRequesterId = requesters[0].id;
     otherRequesterId = requesters[1].id;
 

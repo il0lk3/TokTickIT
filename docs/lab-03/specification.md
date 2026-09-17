@@ -86,7 +86,7 @@ Detailed wireframes and responsive behavior are defined in `docs/lab-03/ui-spec.
 - **Relationships**:
   - `Ticket.requesterId` maps to `User.id` (Requester).
   - `Ticket.ownerId` maps to `User.id` (IT Staff, optional).
-- **Migration**: Existing `RequesterUser` records will be migrated to `User` records with role `Requester`. Existing tickets remain linked correctly.
+- **Migration**: Existing `RequesterUser` records will be migrated to `User` records with role `Requester`. Existing tickets remain linked correctly. Migrated users will receive the universal initial password `Password123!` (securely hashed) to maintain immediate accessibility.
 - **Seed**: Updated to include 4 active/1 inactive Requesters, 3 active/1 inactive IT Staff, 1 active Admin, and realistic ticket/comment data.
 
 ## 8. API Contract
@@ -133,6 +133,6 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 
 ## 11. Assumptions and Decisions
 - **Authentication**: We will use JWT stored in `HttpOnly` and `SameSite=Strict` cookies for secure session management without complex session stores. The JWT token lifetime will be set to 2 hours. Logout will invalidate the session by clearing the cookie.
-- **Passwords**: `bcrypt` will be used for password hashing.
+- **Passwords**: `bcryptjs` will be used for password hashing with a cost factor (salt rounds) of 10 to balance security and performance during local development.
 - **Migration Strategy**: During startup or via a script, the existing `RequesterUser` table will be renamed/migrated to `User`. The existing SQLite/Postgres data will be preserved.
 - **Pagination**: The IT Staff queue will use standard offset/limit pagination (e.g., `page=1, limit=10`).

@@ -9,15 +9,23 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-// 1. Development Requester (Simulated User)
-model RequesterUser {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+// 1. User Model
+model User {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  email              String   @unique
+  passwordHash       String
+  role                   Role     @default(REQUESTER)
+  isActive               Boolean  @default(true)
+  requiresPasswordChange Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt          DateTime @updatedAt
   
-  tickets   Ticket[] // One-to-many relationship with Ticket
+  // Relations
+  tickets            Ticket[]         @relation("TicketRequester")
+  ownedTickets       Ticket[]         @relation("TicketOwner")
+  publicComments     PublicComment[]
+  internalNotes      InternalNote[]
 }
 
 // 2. Reference Data: Ticket Category
@@ -39,6 +47,12 @@ model RelatedSystem {
 }
 
 // Enums
+enum Role {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
+}
+
 enum TicketPriority {
   LOW
   MEDIUM
@@ -47,8 +61,13 @@ enum TicketPriority {
 
 enum TicketStatus {
   New
+  Open
   InProgress @map("In Progress")
+  WaitingForRequester @map("Waiting for Requester")
   Resolved
+  Closed
+  Reopened
+  Cancelled
 }
 
 // 4. Core Ticket Model
@@ -58,22 +77,28 @@ model Ticket {
   summary           String         @db.VarChar(150)
   description       String         @db.VarChar(1000)
   requestedPriority TicketPriority
+  itPriority        TicketPriority @default(LOW)
   currentStatus     TicketStatus   @default(New)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
   // Foreign Keys & Relationships
   requesterId       Int
+  ownerId           Int?
   categoryId        Int
   relatedSystemId   Int
   
-  requester         RequesterUser  @relation(fields: [requesterId], references: [id])
+  requester         User           @relation("TicketRequester", fields: [requesterId], references: [id])
+  owner             User?          @relation("TicketOwner", fields: [ownerId], references: [id])
   category          Category       @relation(fields: [categoryId], references: [id])
   relatedSystem     RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
   
   attachments       Attachment[]
+  publicComments    PublicComment[]
+  internalNotes     InternalNote[]
 
   @@index([requesterId])
+  @@index([ownerId])
   @@index([categoryId])
   @@index([relatedSystemId])
   @@index([createdAt])
@@ -96,5 +121,37 @@ model Attachment {
   ticketId      Int
   ticket        Ticket   @relation(fields: [ticketId], references: [id])
 
+  @@index([ticketId])
+}
+
+// 6. Public Comment Model
+model PublicComment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.VarChar(1000)
+  createdAt DateTime @default(now())
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+
+  @@index([authorId])
+  @@index([ticketId])
+}
+
+// 7. Internal Note Model
+model InternalNote {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.VarChar(1000)
+  createdAt DateTime @default(now())
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+
+  @@index([authorId])
   @@index([ticketId])
 }

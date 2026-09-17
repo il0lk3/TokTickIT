@@ -46,8 +46,8 @@ router.use(async (req: Request, res: Response, next: NextFunction) => {
       return;
     }
 
-    const requester = await getPrisma().requesterUser.findUnique({
-      where: { id, isActive: true }
+    const requester = await getPrisma().user.findUnique({
+      where: { id, isActive: true, role: 'REQUESTER' }
     });
 
     if (!requester) {
@@ -142,6 +142,7 @@ router.post("/", async (req: Request, res: Response) => {
             summary: trimmedSummary,
             description: trimmedDesc,
             requestedPriority: requestedPriority as "LOW" | "MEDIUM" | "HIGH",
+            itPriority: requestedPriority as "LOW" | "MEDIUM" | "HIGH",
             currentStatus: "New",
             requesterId,
             categoryId: catId,

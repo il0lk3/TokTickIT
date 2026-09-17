@@ -12,8 +12,8 @@ describe("GET /api/tickets (My Tickets API)", () => {
 
   beforeAll(async () => {
     // Create isolated requesters for this test to avoid conflicts with seeded DB data
-    const testUser1 = await prisma.requesterUser.create({ data: { name: "Test MyTickets 1", email: `test1-${Date.now()}@test.com` }});
-    const testUser2 = await prisma.requesterUser.create({ data: { name: "Test MyTickets 2", email: `test2-${Date.now()}@test.com` }});
+    const testUser1 = await prisma.user.create({ data: { name: "Test MyTickets 1", email: `test1-${Date.now()}@test.com`, passwordHash: "dummy", role: "REQUESTER" }});
+    const testUser2 = await prisma.user.create({ data: { name: "Test MyTickets 2", email: `test2-${Date.now()}@test.com`, passwordHash: "dummy", role: "REQUESTER" }});
     testRequesterId = testUser1.id;
     otherRequesterId = testUser2.id;
 
@@ -25,10 +25,10 @@ describe("GET /api/tickets (My Tickets API)", () => {
     // Seed some tickets for testRequester
     await prisma.ticket.createMany({
       data: [
-        { ticketNumber: "TKT-2026-000001", requesterId: testRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Fix WiFi", description: "WiFi is down", requestedPriority: "HIGH", currentStatus: "New" },
-        { ticketNumber: "TKT-2026-000002", requesterId: testRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Mouse broken", description: "Mouse clicks twice", requestedPriority: "LOW", currentStatus: "InProgress" },
-        { ticketNumber: "TKT-2026-000003", requesterId: testRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Email issue", description: "Cannot send email", requestedPriority: "MEDIUM", currentStatus: "Resolved" },
-        { ticketNumber: "TKT-2026-000004", requesterId: otherRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Printer jam", description: "Paper jam", requestedPriority: "LOW", currentStatus: "New" }
+        { ticketNumber: "TKT-MYTEST-000001", requesterId: testRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Fix WiFi", description: "WiFi is down", requestedPriority: "HIGH", currentStatus: "New" },
+        { ticketNumber: "TKT-MYTEST-000002", requesterId: testRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Mouse broken", description: "Mouse clicks twice", requestedPriority: "LOW", currentStatus: "InProgress" },
+        { ticketNumber: "TKT-MYTEST-000003", requesterId: testRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Email issue", description: "Cannot send email", requestedPriority: "MEDIUM", currentStatus: "Resolved" },
+        { ticketNumber: "TKT-MYTEST-000004", requesterId: otherRequesterId, categoryId: testCategoryId, relatedSystemId: testSystemId, summary: "Printer jam", description: "Paper jam", requestedPriority: "LOW", currentStatus: "New" }
       ]
     });
   });
@@ -38,7 +38,7 @@ describe("GET /api/tickets (My Tickets API)", () => {
     await prisma.ticket.deleteMany({
       where: { requesterId: { in: [testRequesterId, otherRequesterId] } }
     });
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: { id: { in: [testRequesterId, otherRequesterId] } }
     });
   });
