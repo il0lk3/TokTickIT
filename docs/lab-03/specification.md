@@ -133,6 +133,6 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 
 ## 11. Assumptions and Decisions
 - **Authentication**: We will use JWT stored in `HttpOnly` and `SameSite=Strict` cookies for secure session management without complex session stores. The JWT token lifetime will be set to 2 hours. Logout will invalidate the session by clearing the cookie.
-- **Passwords**: `bcrypt` will be used for password hashing.
+- **Passwords**: `bcryptjs` will be used for password hashing with a cost factor (salt rounds) of 10 to balance security and performance during local development.
 - **Migration Strategy**: During startup or via a script, the existing `RequesterUser` table will be renamed/migrated to `User`. The existing SQLite/Postgres data will be preserved.
 - **Pagination**: The IT Staff queue will use standard offset/limit pagination (e.g., `page=1, limit=10`).
