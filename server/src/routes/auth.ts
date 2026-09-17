@@ -74,10 +74,15 @@ authRouter.get("/me", authenticateToken, (req, res) => {
 
 authRouter.post("/change-password", authenticateToken, async (req, res) => {
   const user = res.locals.user;
-  const { currentPassword, newPassword } = req.body;
+  const { currentPassword, newPassword, confirmPassword } = req.body;
 
-  if (!currentPassword || !newPassword) {
-    res.status(400).json({ error: "Current and new password are required" });
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    res.status(400).json({ error: "Current, new, and confirm passwords are required" });
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    res.status(400).json({ error: "New passwords do not match" });
     return;
   }
 

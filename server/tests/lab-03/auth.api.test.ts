@@ -97,13 +97,27 @@ describe("API-01 to API-03, API-17: Authentication Endpoints", () => {
     expect(res.body.requiresPasswordChange).toBe(true);
   });
 
+  it("should reject change-password if passwords do not match", async () => {
+    const res = await request(app)
+      .post("/api/auth/change-password")
+      .set("Cookie", authCookie)
+      .send({
+        currentPassword: testPassword,
+        newPassword: "NewStrongPassword123!",
+        confirmPassword: "DifferentPassword123!"
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("New passwords do not match");
+  });
+
   it("should reject change-password if complex requirements not met", async () => {
     const res = await request(app)
       .post("/api/auth/change-password")
       .set("Cookie", authCookie)
       .send({
         currentPassword: testPassword,
-        newPassword: "weak"
+        newPassword: "weak",
+        confirmPassword: "weak"
       });
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("Password does not meet complexity requirements");
@@ -115,7 +129,8 @@ describe("API-01 to API-03, API-17: Authentication Endpoints", () => {
       .set("Cookie", authCookie)
       .send({
         currentPassword: testPassword,
-        newPassword: "NewStrongPassword123!"
+        newPassword: "NewStrongPassword123!",
+        confirmPassword: "NewStrongPassword123!"
       });
     expect(res.status).toBe(200);
 
