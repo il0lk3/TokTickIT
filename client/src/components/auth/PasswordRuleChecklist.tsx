@@ -1,15 +1,11 @@
 import React from "react";
 
-interface PasswordRuleChecklistProps {
-  password: "";
-}
-
 export default function PasswordRuleChecklist({ password }: { password: string }) {
   const hasLength = password.length >= 8;
   const hasUpper = /[A-Z]/.test(password);
   const hasLower = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[\W_]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password);
 
   const rules = [
     { label: "At least 8 characters", valid: hasLength },

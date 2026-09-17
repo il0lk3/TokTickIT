@@ -67,9 +67,13 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     if (!user || !ticket) return;
     const reason = prompt("Please provide a reason for removing this attachment:");
     if (reason === null) return; // User cancelled
+    if (reason.trim() === "") {
+      alert("A reason is required.");
+      return;
+    }
 
     try {
-      await removeAttachment(ticketId, attachmentId, "Removed by requester");
+      await removeAttachment(ticketId, attachmentId, reason);
       setTicket(prev => {
         if (!prev) return null;
         return {

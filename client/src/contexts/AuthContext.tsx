@@ -36,9 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await apiLogout();
-    setUser(null);
-    // history.replace state reset is handled in App.tsx by the user state going null
+    try {
+      await apiLogout();
+    } finally {
+      setUser(null);
+    }
   };
 
   return (

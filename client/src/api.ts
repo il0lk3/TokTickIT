@@ -84,12 +84,6 @@ export interface Requester {
   email: string;
 }
 
-export async function getRequesters(): Promise<Requester[]> {
-  const res = await fetch(`${API_URL}/api/requesters`, { credentials: "include" });
-  if (!res.ok) throw new Error("Failed to fetch requesters");
-  return res.json();
-}
-
 export interface RelatedSystem {
   id: number;
   name: string;

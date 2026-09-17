@@ -2,27 +2,40 @@ import { test, expect } from '@playwright/test';
 
 test.describe('E2E-03: Authentication and Identity Flow', () => {
 
-  test.beforeEach(async ({ page }) => {
-    // Reset database or seed required users if possible. 
-    // This assumes backend is running at localhost:3000 and has a /api/health or test-reset endpoint
-    // For now we will test standard flows assuming some seeded data like test@example.com
+  test.beforeAll(() => {
+    // Reset database to known state before tests run
+    // Assuming backend is accessible and we can run prisma commands
+    try {
+      require('child_process').execSync('npx prisma db seed', { cwd: '../server', stdio: 'ignore' });
+    } catch (e) {
+      console.log('Failed to run seed, tests might depend on prior state');
+    }
   });
 
-  test('should login successfully and load application shell', async ({ page }) => {
+  test('should login and navigate to app shell after mandatory password change', async ({ page }) => {
     await page.goto('/');
 
     // 1. Check Login UI is displayed
     await expect(page.getByRole('heading', { name: 'TokTickIT' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible();
 
-    // 2. Perform Login with known credentials (assumes lab-03 DB seed has active user)
-    await page.fill('input[type="email"]', 'karn@toktick.com'); // example user from DB
-    await page.fill('input[type="password"]', 'P@ssword123'); // example valid password
+    // 2. Perform Login with known credentials (Requester)
+    await page.fill('input[type="email"]', 'cream.su@example.com'); 
+    await page.fill('input[type="password"]', 'Password123!');
 
     // Submit form
     await page.getByRole('button', { name: 'Sign In' }).click();
 
-    // 3. Verify successful redirection / App Shell loads
+    // 3. User requires password change on first login
+    await expect(page.getByRole('heading', { name: 'Update Password' })).toBeVisible();
+    
+    // Complete password change
+    await page.fill('input[id="currentPasswordInput"]', 'Password123!');
+    await page.fill('input[id="newPasswordInput"]', 'StrongPass1!');
+    await page.fill('input[id="confirmPasswordInput"]', 'StrongPass1!');
+    await page.getByRole('button', { name: 'Update Password' }).click();
+
+    // 4. Verify successful redirection / App Shell loads
     await expect(page.getByRole('button', { name: 'My Tickets' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Create Ticket' })).toBeVisible();
     
@@ -41,15 +54,15 @@ test.describe('E2E-03: Authentication and Identity Flow', () => {
     await expect(page.getByText('Invalid email or password')).toBeVisible();
   });
 
-  test('should enforce password change if required', async ({ page }) => {
+  test('should enforce password change rules and live validation', async ({ page }) => {
     await page.goto('/');
 
-    // Perform Login with a user that requires password change
-    await page.fill('input[type="email"]', 'newstaff@toktick.com'); 
-    await page.fill('input[type="password"]', 'Changeme1!'); 
+    // Perform Login with another user that requires password change (IT Staff)
+    await page.fill('input[type="email"]', 'staff1@example.com'); 
+    await page.fill('input[type="password"]', 'Password123!'); 
     await page.getByRole('button', { name: 'Sign In' }).click();
 
-    // Should redirect to change password UI instead of main app
+    // Should redirect to change password UI
     await expect(page.getByRole('heading', { name: 'Update Password' })).toBeVisible();
     
     // Validate live checklist interactions

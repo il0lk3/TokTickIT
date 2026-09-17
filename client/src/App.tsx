@@ -18,7 +18,16 @@ function AppShell() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (user && !user.requiresPasswordChange) {
+    if (!user) {
+      // Reset state on logout
+      setActiveTab("list");
+      setCategories([]);
+      setAppState("loading");
+      setSelectedTicketId(null);
+      return;
+    }
+
+    if (!user.requiresPasswordChange) {
       // Default tabs based on role
       if (user.role === "REQUESTER") setActiveTab("list");
       else if (user.role === "IT_STAFF") setActiveTab("queue");

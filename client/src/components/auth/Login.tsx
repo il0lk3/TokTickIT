@@ -16,8 +16,8 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setIsSubmitting(false);
     }
@@ -48,36 +48,39 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="emailInput" className="form-label text-muted small fw-medium mb-1">Email</label>
-              <input
-                type="email"
-                className="form-control bg-light border-0"
-                id="emailInput"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="mb-4">
-              <div className="d-flex justify-content-between align-items-center mb-1">
-                <label htmlFor="passwordInput" className="form-label text-muted small fw-medium mb-0">Password</label>
-                <a href="#" className="small text-decoration-none text-zen-primary" onClick={(e) => e.preventDefault()}>
-                  Forgot your password?
-                </a>
+            <fieldset disabled={isSubmitting} className="border-0 p-0 m-0">
+              <div className="mb-3">
+                <label htmlFor="emailInput" className="form-label text-muted small fw-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  className="form-control bg-light border-0"
+                  id="emailInput"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
+                  required
+                />
               </div>
-              <input
-                type="password"
-                className="form-control bg-light border-0"
-                id="passwordInput"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+              
+              <div className="mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <label htmlFor="passwordInput" className="form-label text-muted small fw-medium mb-0">Password</label>
+                  <a href="#" className="small text-decoration-none text-zen-primary" onClick={(e) => e.preventDefault()}>
+                    Forgot your password?
+                  </a>
+                </div>
+                <input
+                  type="password"
+                  className="form-control bg-light border-0"
+                  id="passwordInput"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
 
             <button 
               type="submit" 
@@ -93,6 +96,7 @@ export default function Login() {
                 "Sign In"
               )}
             </button>
+            </fieldset>
           </form>
         </div>
       </div>

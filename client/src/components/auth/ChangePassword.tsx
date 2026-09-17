@@ -15,7 +15,7 @@ export default function ChangePassword() {
   const hasUpper = /[A-Z]/.test(newPassword);
   const hasLower = /[a-z]/.test(newPassword);
   const hasNumber = /[0-9]/.test(newPassword);
-  const hasSpecial = /[\W_]/.test(newPassword);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(newPassword);
 
   const isRulesValid = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
   const isMatch = newPassword === confirmPassword && newPassword !== "";
@@ -30,8 +30,8 @@ export default function ChangePassword() {
       await apiChangePassword(currentPassword, newPassword, confirmPassword);
       // Fetch user again to clear the requiresPasswordChange flag
       await refreshUser();
-    } catch (err: any) {
-      setError(err.message || "Failed to change password");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to change password");
     } finally {
       setIsSubmitting(false);
     }
@@ -58,47 +58,51 @@ export default function ChangePassword() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="currentPasswordInput" className="form-label text-muted small fw-medium mb-1">Current Password</label>
-              <input
-                type="password"
-                className="form-control bg-light border-0"
-                id="currentPasswordInput"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="mb-3">
-              <label htmlFor="newPasswordInput" className="form-label text-muted small fw-medium mb-1">New Password</label>
-              <input
-                type="password"
-                className="form-control bg-light border-0"
-                id="newPasswordInput"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-              <div className="mt-2 p-3 bg-white bg-opacity-50 rounded border border-light">
-                <PasswordRuleChecklist password={newPassword} />
+            <fieldset disabled={isSubmitting} className="border-0 p-0 m-0">
+              <div className="mb-3">
+                <label htmlFor="currentPasswordInput" className="form-label text-muted small fw-medium mb-1">Current Password</label>
+                <input
+                  type="password"
+                  className="form-control bg-light border-0"
+                  id="currentPasswordInput"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
               </div>
-            </div>
+              
+              <div className="mb-3">
+                <label htmlFor="newPasswordInput" className="form-label text-muted small fw-medium mb-1">New Password</label>
+                <input
+                  type="password"
+                  className="form-control bg-light border-0"
+                  id="newPasswordInput"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
+                <div className="mt-2 p-3 bg-white bg-opacity-50 rounded border border-light">
+                  <PasswordRuleChecklist password={newPassword} />
+                </div>
+              </div>
 
-            <div className="mb-4">
-              <label htmlFor="confirmPasswordInput" className="form-label text-muted small fw-medium mb-1">Confirm New Password</label>
-              <input
-                type="password"
-                className={`form-control bg-light border-0 ${confirmPassword && !isMatch ? 'is-invalid' : ''}`}
-                id="confirmPasswordInput"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              {confirmPassword && !isMatch && (
-                <div className="invalid-feedback small mt-1">Passwords do not match</div>
-              )}
-            </div>
+              <div className="mb-4">
+                <label htmlFor="confirmPasswordInput" className="form-label text-muted small fw-medium mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  className={`form-control bg-light border-0 ${confirmPassword && !isMatch ? 'is-invalid' : ''}`}
+                  id="confirmPasswordInput"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
+                {confirmPassword && !isMatch && (
+                  <div className="invalid-feedback small mt-1">Passwords do not match</div>
+                )}
+              </div>
 
             <button 
               type="submit" 
@@ -114,6 +118,7 @@ export default function ChangePassword() {
                 "Update Password"
               )}
             </button>
+            </fieldset>
           </form>
         </div>
       </div>
