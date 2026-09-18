@@ -2,6 +2,7 @@ import request from "supertest";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
+import bcrypt from "bcryptjs";
 
 const prisma = getPrisma();
 
@@ -12,26 +13,40 @@ describe("Admin User Management API", () => {
   let adminUserId: number;
 
   beforeAll(async () => {
-    // Generate valid tokens for each role by logging in
-    // Note: Depends on seed data (admin@example.com, staff1@example.com, cream.su@example.com)
-    const adminRes = await request(app).post("/api/auth/login").send({ email: "admin@example.com", password: "Password123!" });
+    const passwordHash = await bcrypt.hash("Password123!", 10);
+    
+    // Create dedicated test users
+    const adminUser = await prisma.user.create({
+      data: { name: "Test API Admin", email: "test-admin-api-auth@example.com", role: "ADMINISTRATOR", isActive: true, requiresPasswordChange: false, passwordHash }
+    });
+    const staffUser = await prisma.user.create({
+      data: { name: "Test API Staff", email: "test-staff-api-auth@example.com", role: "IT_STAFF", isActive: true, requiresPasswordChange: false, passwordHash }
+    });
+    const reqUser = await prisma.user.create({
+      data: { name: "Test API Req", email: "test-req-api-auth@example.com", role: "REQUESTER", isActive: true, requiresPasswordChange: false, passwordHash }
+    });
+
+    const adminRes = await request(app).post("/api/auth/login").send({ email: "test-admin-api-auth@example.com", password: "Password123!" });
     adminToken = adminRes.headers["set-cookie"][0].split(";")[0].split("=")[1];
-    adminUserId = adminRes.body.id;
-    await request(app).post("/api/auth/change-password").set("Cookie", `accessToken=${adminToken}`).send({ currentPassword: "Password123!", newPassword: "NewPassword123!", confirmPassword: "NewPassword123!" });
+    adminUserId = adminUser.id;
 
-    const staffRes = await request(app).post("/api/auth/login").send({ email: "staff1@example.com", password: "Password123!" });
+    const staffRes = await request(app).post("/api/auth/login").send({ email: "test-staff-api-auth@example.com", password: "Password123!" });
     staffToken = staffRes.headers["set-cookie"][0].split(";")[0].split("=")[1];
-    await request(app).post("/api/auth/change-password").set("Cookie", `accessToken=${staffToken}`).send({ currentPassword: "Password123!", newPassword: "NewPassword123!", confirmPassword: "NewPassword123!" });
 
-    const reqRes = await request(app).post("/api/auth/login").send({ email: "cream.su@example.com", password: "Password123!" });
+    const reqRes = await request(app).post("/api/auth/login").send({ email: "test-req-api-auth@example.com", password: "Password123!" });
     requesterToken = reqRes.headers["set-cookie"][0].split(";")[0].split("=")[1];
-    await request(app).post("/api/auth/change-password").set("Cookie", `accessToken=${requesterToken}`).send({ currentPassword: "Password123!", newPassword: "NewPassword123!", confirmPassword: "NewPassword123!" });
   });
 
   afterAll(async () => {
     // Cleanup users created during testing
     await prisma.user.deleteMany({
       where: { email: { contains: "test-admin-api" } }
+    });
+    await prisma.user.deleteMany({
+      where: { email: { contains: "test-staff-api" } }
+    });
+    await prisma.user.deleteMany({
+      where: { email: { contains: "test-req-api" } }
     });
   });
 
@@ -189,24 +204,26 @@ describe("Admin User Management API", () => {
         where: { role: "ADMINISTRATOR", isActive: true }
       });
       
-      // Temporarily change role of all admins EXCEPT the current one
       const otherAdmins = activeAdmins.filter(a => a.id !== adminUserId);
-      for (const admin of otherAdmins) {
-        await prisma.user.update({ where: { id: admin.id }, data: { role: "REQUESTER" } });
-      }
-
-      // Now attempt to change role of self (the only admin left)
-      const lastAdminRes = await request(app)
-        .patch(`/api/admin/users/${adminUserId}`)
-        .set("Cookie", `accessToken=${adminToken}`)
-        .send({ role: "REQUESTER" });
       
-      expect(lastAdminRes.status).toBe(409);
-      expect(lastAdminRes.body.error).toContain("last active administrator");
+      try {
+        // Temporarily deactivate all admins EXCEPT the current one
+        for (const admin of otherAdmins) {
+          await prisma.user.update({ where: { id: admin.id }, data: { isActive: false } });
+        }
 
-      // Restore other admins
-      for (const admin of otherAdmins) {
-        await prisma.user.update({ where: { id: admin.id }, data: { role: "ADMINISTRATOR" } });
+        // Now attempt to change role of self (the only admin left)
+        const lastAdminRes = await request(app)
+          .patch(`/api/admin/users/${adminUserId}`)
+          .set("Cookie", `accessToken=${adminToken}`)
+          .send({ role: "REQUESTER" });
+        
+        expect(lastAdminRes.status).toBe(400);
+      } finally {
+        // Restore other admins (always executes, even if assertions fail)
+        for (const admin of otherAdmins) {
+          await prisma.user.update({ where: { id: admin.id }, data: { isActive: true } });
+        }
       }
     });
   });

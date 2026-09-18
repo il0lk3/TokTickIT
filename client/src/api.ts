@@ -370,7 +370,7 @@ export interface AdminUser {
   updatedAt: string;
 }
 
-export async function getAdminUsers(search?: string, role?: string): Promise<{ items: AdminUser[], filtersApplied?: any }> {
+export async function getAdminUsers(search?: string, role?: string): Promise<{ items: AdminUser[], filtersApplied?: Record<string, string> }> {
   const params = new URLSearchParams();
   if (search) params.append("search", search);
   if (role) params.append("role", role);
@@ -385,7 +385,7 @@ export async function getAdminUsers(search?: string, role?: string): Promise<{ i
   return res.json();
 }
 
-export async function createAdminUser(data: any): Promise<AdminUser> {
+export async function createAdminUser(data: Omit<AdminUser, "id" | "createdAt" | "updatedAt" | "requiresPasswordChange"> & { initialPassword?: string }): Promise<AdminUser> {
   const res = await fetch(`${API_URL}/api/admin/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -399,7 +399,7 @@ export async function createAdminUser(data: any): Promise<AdminUser> {
   return res.json();
 }
 
-export async function updateAdminUser(id: number, data: any): Promise<AdminUser> {
+export async function updateAdminUser(id: number, data: Partial<Omit<AdminUser, "id" | "createdAt" | "updatedAt" | "requiresPasswordChange">>): Promise<AdminUser> {
   const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

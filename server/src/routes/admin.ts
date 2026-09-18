@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { getPrisma } from "../prisma.js";
+import { Prisma } from "@prisma/client";
 import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 const adminRouter = Router();
@@ -24,7 +25,7 @@ function validatePassword(password: string): boolean {
 adminRouter.get("/users", async (req: Request, res: Response) => {
   const { search, role } = req.query;
 
-  const where: any = {};
+  const where: Prisma.UserWhereInput = {};
   if (search && typeof search === 'string') {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
@@ -32,8 +33,11 @@ adminRouter.get("/users", async (req: Request, res: Response) => {
     ];
   }
   
-  if (role && typeof role === 'string') {
-    where.role = role;
+  if (role) {
+    if (!["REQUESTER", "IT_STAFF", "ADMINISTRATOR"].includes(role as string)) {
+      return res.status(400).json({ error: "Invalid role filter" });
+    }
+    where.role = role as string;
   }
 
   try {
@@ -137,7 +141,7 @@ adminRouter.patch("/users/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
     if (name && typeof name === 'string' && name.trim() !== '') {
       updateData.name = name.trim();
     }
@@ -154,6 +158,9 @@ adminRouter.patch("/users/:id", async (req: Request, res: Response) => {
     }
 
     if (role && ["REQUESTER", "IT_STAFF", "ADMINISTRATOR"].includes(role)) {
+      if (userId === currentAdminId && role !== targetUser.role) {
+        return res.status(400).json({ error: "Cannot change your own role" });
+      }
       updateData.role = role;
     }
 

@@ -34,8 +34,6 @@ test.describe('User Administration', () => {
       page.getByRole('button', { name: 'Create User', exact: true }).click()
     ]);
     
-    console.log("Create User API Response:", response.status(), await response.text());
-
     // Verify success message
     await expect(page.getByText('User created successfully')).toBeVisible();
 
