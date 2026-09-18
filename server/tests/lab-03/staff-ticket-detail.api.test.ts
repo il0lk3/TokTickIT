@@ -124,4 +124,29 @@ describe("IT Staff Ticket Detail API", () => {
     expect(res.status).toBe(200);
     expect(res.body.currentStatus).toBe("Cancelled");
   });
+
+  it("should fetch staff ticket detail (GET /api/staff/tickets/:id)", async () => {
+    const res = await request(app)
+      .get(`/api/staff/tickets/${ticketId}`)
+      .set("Cookie", staffCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.ticketNumber).toBeDefined();
+    expect(res.body.internalNotes).toBeDefined();
+  });
+
+  it("should claim ticket via POST /api/staff/tickets/:id/claim", async () => {
+    const res = await request(app)
+      .post(`/api/staff/tickets/${ticketId}/claim`)
+      .set("Cookie", staffCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.ownerId).toBe(staffId);
+  });
+
+  it("should fail to post notes to cancelled ticket", async () => {
+    const res = await request(app)
+      .post(`/api/staff/tickets/${ticketId}/notes`)
+      .set("Cookie", staffCookie)
+      .send({ content: "This is a note on a cancelled ticket" });
+    expect(res.status).toBe(400);
+  });
 });

@@ -42,17 +42,21 @@ const mockTicket = {
 
 describe('TicketDetail for IT Staff', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
+    vi.stubGlobal('fetch', vi.fn((url: string, options?: any) => {
+      const reqMethod = options?.method || 'GET';
       if (url.includes('/api/auth/me')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(mockStaffUser) });
       }
       if (url.includes('/api/it-staff')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve([mockStaffUser]) });
       }
+      if (url.includes('/api/staff/tickets/1') && reqMethod === 'GET') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockTicket) });
+      }
       if (url.includes('/api/tickets/1') && !url.includes('staff')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(mockTicket) });
       }
-      if (url.includes('/api/staff/tickets/1')) {
+      if (url.includes('/api/staff/tickets/1') && reqMethod !== 'GET') {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ ...mockTicket, currentStatus: 'InProgress' }) });
       }
       return Promise.resolve({ ok: false });

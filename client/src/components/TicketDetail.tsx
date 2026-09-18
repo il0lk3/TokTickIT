@@ -26,7 +26,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     async function load() {
       if (!user) return;
       try {
-        const detail = await getTicketDetail(ticketId);
+        const isStaffUser = user.role === "IT_STAFF" || user.role === "ADMINISTRATOR";
+        const detail = await getTicketDetail(ticketId, isStaffUser);
         setTicket(detail);
         if (user.role === "IT_STAFF") {
           const staff = await getItStaff();
@@ -168,7 +169,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     setUpdating(true);
     try {
       await updateTicket(ticketId, updates);
-      const detail = await getTicketDetail(ticketId);
+      const isStaffUser = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
+      const detail = await getTicketDetail(ticketId, isStaffUser);
       setTicket(detail);
     } catch (err: any) {
       alert(err.message || "Failed to update ticket");

@@ -249,8 +249,9 @@ export interface TicketDetailResponse extends TicketResponse {
   resolutionSummary?: string;
 }
 
-export async function getTicketDetail(id: number): Promise<TicketDetailResponse> {
-  const res = await fetch(`${API_URL}/api/tickets/${id}`, {
+export async function getTicketDetail(id: number, isStaff?: boolean): Promise<TicketDetailResponse> {
+  const url = isStaff ? `${API_URL}/api/staff/tickets/${id}` : `${API_URL}/api/tickets/${id}`;
+  const res = await fetch(url, {
     credentials: "include"
   });
   if (!res.ok) {
@@ -313,7 +314,7 @@ export async function postComment(ticketId: number, content: string): Promise<Pu
 }
 
 export async function postNote(ticketId: number, content: string): Promise<InternalNote> {
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/notes`, {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${ticketId}/notes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content }),

@@ -223,4 +223,100 @@ router.patch("/tickets/:id", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/staff/tickets/:id
+router.get("/tickets/:id", async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.id, 10);
+    if (isNaN(ticketId)) {
+      return res.status(400).json({ error: "Invalid ticket ID" });
+    }
+
+    const ticket = await getPrisma().ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        category: true,
+        relatedSystem: true,
+        requester: true,
+        attachments: true,
+        publicComments: { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } },
+        internalNotes: { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } }
+      }
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    res.json(ticket);
+  } catch (error) {
+    console.error("Error fetching staff ticket detail:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/staff/tickets/:id/notes
+router.post("/tickets/:id/notes", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const ticketId = parseInt(req.params.id, 10);
+  const { content } = req.body;
+
+  try {
+    const trimmedContent = typeof content === 'string' ? content.trim() : "";
+    if (trimmedContent.length === 0 || trimmedContent.length > 1000) {
+      return res.status(400).json({ error: "Note must be between 1 and 1000 characters" });
+    }
+
+    const ticket = await getPrisma().ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Cannot add notes to a closed or resolved ticket" });
+    }
+
+    const note = await getPrisma().internalNote.create({
+      data: {
+        content: trimmedContent,
+        authorId: userId,
+        ticketId
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(note);
+  } catch (error) {
+    console.error("Error posting internal note:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/staff/tickets/:id/claim
+router.post("/tickets/:id/claim", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const ticketId = parseInt(req.params.id, 10);
+
+  try {
+    const ticket = await getPrisma().ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const updatedTicket = await getPrisma().ticket.update({
+      where: { id: ticketId },
+      data: { ownerId: userId },
+      include: {
+        requester: { select: { id: true, name: true, email: true } },
+        owner: { select: { id: true, name: true, email: true } }
+      }
+    });
+
+    res.json(updatedTicket);
+  } catch (error) {
+    console.error("Error claiming ticket:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
