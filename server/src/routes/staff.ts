@@ -51,7 +51,7 @@ router.get("/tickets", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid status parameter" });
     }
 
-    const validPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+    const validPriorities = ["LOW", "MEDIUM", "HIGH"];
     if (requestedPriority && !validPriorities.includes(requestedPriority as string)) {
       return res.status(400).json({ error: "Invalid requestedPriority parameter" });
     }

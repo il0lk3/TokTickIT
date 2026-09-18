@@ -119,6 +119,9 @@ describe("IT Staff Ticket Queue API", () => {
     const res2 = await request(app).get("/api/staff/tickets?requestedPriority=XXX").set("Cookie", staffCookie);
     expect(res2.status).toBe(400);
     
+    const res2b = await request(app).get("/api/staff/tickets?itPriority=CRITICAL").set("Cookie", staffCookie);
+    expect(res2b.status).toBe(400);
+    
     const res3 = await request(app).get("/api/staff/tickets?categoryId=invalid").set("Cookie", staffCookie);
     expect(res3.status).toBe(400);
   });
