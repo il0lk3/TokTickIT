@@ -112,6 +112,7 @@ export interface TicketResponse {
   summary: string;
   description: string;
   currentStatus: string;
+  appearsResolved: boolean;
   requestedPriority: string;
   createdAt: string;
 }
@@ -276,6 +277,19 @@ export async function postNote(ticketId: number, content: string): Promise<Inter
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || "Failed to post note");
+  }
+  return res.json();
+}
+
+export async function markAppearsResolved(ticketId: number): Promise<{ ticket: TicketDetailResponse, comment: PublicComment }> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/appears-resolved`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to mark as resolved");
   }
   return res.json();
 }

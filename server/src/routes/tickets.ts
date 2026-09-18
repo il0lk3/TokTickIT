@@ -415,6 +415,11 @@ router.post("/:id/comments", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Ticket not found" }); 
     }
 
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Cannot add comments to a closed or resolved ticket" });
+    }
+
     const comment = await prisma.publicComment.create({
       data: {
         content: trimmedContent,
@@ -453,6 +458,11 @@ router.post("/:id/notes", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Cannot add notes to a closed or resolved ticket" });
+    }
+
     const note = await prisma.internalNote.create({
       data: {
         content: trimmedContent,
@@ -466,6 +476,54 @@ router.post("/:id/notes", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to post note" });
+  }
+});
+
+// PATCH /api/tickets/:id/appears-resolved - Mark ticket as appears resolved
+router.patch("/:id/appears-resolved", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+
+  try {
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    if (userRole !== "REQUESTER" || ticket.requesterId !== userId) {
+      return res.status(403).json({ error: "Only the requester of this ticket can mark it as resolved" });
+    }
+
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Ticket is already closed or resolved" });
+    }
+
+    if (ticket.appearsResolved) {
+      return res.status(400).json({ error: "Ticket is already marked as appears resolved" });
+    }
+
+    // Update ticket and add a comment in a single transaction
+    const [updatedTicket, comment] = await prisma.$transaction([
+      prisma.ticket.update({
+        where: { id: ticketId },
+        data: { appearsResolved: true }
+      }),
+      prisma.publicComment.create({
+        data: {
+          content: "The problem appears to be resolved.",
+          authorId: userId,
+          ticketId
+        },
+        include: { author: { select: { name: true, role: true } } }
+      })
+    ]);
+
+    res.json({ ticket: updatedTicket, comment });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to mark ticket as appears resolved" });
   }
 });
 

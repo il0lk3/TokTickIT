@@ -145,4 +145,65 @@ describe("API-07, API-08, API-19: Comments & Notes", () => {
       expect(res.status).toBe(400);
     });
   });
+
+  describe("Terminal Status Guards & Appears Resolved", () => {
+    it("Requester can mark ticket as appears resolved", async () => {
+      const res = await request(app)
+        .patch(`/api/tickets/${ticketId}/appears-resolved`)
+        .set("Cookie", req1Token)
+        .send();
+      expect(res.status).toBe(200);
+      expect(res.body.ticket.appearsResolved).toBe(true);
+      expect(res.body.comment.content).toBe("The problem appears to be resolved.");
+    });
+
+    it("Rejects repeated marking of appears resolved", async () => {
+      const res = await request(app)
+        .patch(`/api/tickets/${ticketId}/appears-resolved`)
+        .set("Cookie", req1Token)
+        .send();
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Ticket is already marked as appears resolved");
+    });
+
+    it("Sets ticket to Resolved manually (by IT staff) to test terminal guards", async () => {
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { currentStatus: "Resolved" }
+      });
+    });
+
+    it("Rejects posting comments on Resolved tickets", async () => {
+      const res = await request(app)
+        .post(`/api/tickets/${ticketId}/comments`)
+        .set("Cookie", req1Token)
+        .send({ content: "Too late" });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Cannot add comments to a closed or resolved ticket");
+    });
+
+    it("Rejects posting notes on Resolved tickets", async () => {
+      const res = await request(app)
+        .post(`/api/tickets/${ticketId}/notes`)
+        .set("Cookie", staffToken)
+        .send({ content: "Too late note" });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Cannot add notes to a closed or resolved ticket");
+    });
+
+    it("Rejects appears-resolved on Resolved tickets", async () => {
+      // First unmark appearsResolved so we can test the terminal status guard
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { appearsResolved: false }
+      });
+
+      const res = await request(app)
+        .patch(`/api/tickets/${ticketId}/appears-resolved`)
+        .set("Cookie", req1Token)
+        .send();
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Ticket is already closed or resolved");
+    });
+  });
 });
