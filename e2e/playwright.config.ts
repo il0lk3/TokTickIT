@@ -3,6 +3,7 @@ import path from 'path';
 
 export default defineConfig({
   testDir: './',
+  globalSetup: require.resolve('./global-setup'),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

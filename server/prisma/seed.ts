@@ -41,29 +41,32 @@ async function main() {
 
   const users = [
     // Requesters (existing ones from Lab 2)
-    { email: "cream.su@example.com", name: "Cream Su", role: Role.REQUESTER, isActive: true },
-    { email: "bew.su@example.com", name: "Bew Su", role: Role.REQUESTER, isActive: true },
-    { email: "kanta.su@example.com", name: "Kanta Su", role: Role.REQUESTER, isActive: true },
-    { email: "je.su@example.com", name: "Je Su", role: Role.REQUESTER, isActive: true },
-    { email: "bewnoi.su@example.com", name: "Bewnoi Su", role: Role.REQUESTER, isActive: true },
-    { email: "grace.su@example.com", name: "Grace Su", role: Role.REQUESTER, isActive: true },
-    { email: "phrao.su@example.com", name: "Phrao Su", role: Role.REQUESTER, isActive: true },
-    { email: "pueng.su@example.com", name: "Pueng Su", role: Role.REQUESTER, isActive: true },
-    { email: "inactive.user@example.com", name: "Inactive TestUser", role: Role.REQUESTER, isActive: false },
+    { email: "cream.su@example.com", name: "Cream Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "bew.su@example.com", name: "Bew Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "kanta.su@example.com", name: "Kanta Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "je.su@example.com", name: "Je Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "bewnoi.su@example.com", name: "Bewnoi Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "grace.su@example.com", name: "Grace Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "phrao.su@example.com", name: "Phrao Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "pueng.su@example.com", name: "Pueng Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "inactive.user@example.com", name: "Inactive TestUser", role: Role.REQUESTER, isActive: false, requiresPasswordChange: true },
+    // E2E Fixture Users
+    { email: "e2e.requester@example.com", name: "E2E Requester", role: Role.REQUESTER, isActive: true, requiresPasswordChange: false },
     // IT Staff
-    { email: "staff1@example.com", name: "IT Staff 1", role: Role.IT_STAFF, isActive: true },
-    { email: "staff2@example.com", name: "IT Staff 2", role: Role.IT_STAFF, isActive: true },
-    { email: "staff3@example.com", name: "IT Staff 3", role: Role.IT_STAFF, isActive: true },
-    { email: "inactive.staff@example.com", name: "Inactive Staff", role: Role.IT_STAFF, isActive: false },
+    { email: "staff1@example.com", name: "IT Staff 1", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: true },
+    { email: "staff2@example.com", name: "IT Staff 2", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: true },
+    { email: "staff3@example.com", name: "IT Staff 3", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: true },
+    { email: "inactive.staff@example.com", name: "Inactive Staff", role: Role.IT_STAFF, isActive: false, requiresPasswordChange: true },
     // Administrator
-    { email: "admin@example.com", name: "System Admin", role: Role.ADMINISTRATOR, isActive: true },
+    { email: "admin@example.com", name: "System Admin", role: Role.ADMINISTRATOR, isActive: true, requiresPasswordChange: true },
   ];
 
   for (const u of users) {
+    const { requiresPasswordChange, ...rest } = u;
     await prisma.user.upsert({
       where: { email: u.email },
-      update: { name: u.name, role: u.role, isActive: u.isActive },
-      create: { ...u, passwordHash, requiresPasswordChange: true },
+      update: { name: u.name, role: u.role, isActive: u.isActive, requiresPasswordChange, passwordHash },
+      create: { ...rest, passwordHash, requiresPasswordChange },
     });
   }
 

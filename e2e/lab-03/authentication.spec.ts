@@ -1,16 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('E2E-03: Authentication and Identity Flow', () => {
-
-  test.beforeAll(() => {
-    // Reset database to known state before tests run
-    // Assuming backend is accessible and we can run prisma commands
-    try {
-      require('child_process').execSync('npx prisma db seed', { cwd: '../server', stdio: 'ignore' });
-    } catch (e) {
-      console.log('Failed to run seed, tests might depend on prior state');
-    }
-  });
+  // Mutating tests should only run on a single viewport to avoid data corruption
+  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Mutating auth flow only needs to be verified once');
 
   test('should login and navigate to app shell after mandatory password change', async ({ page }) => {
     await page.goto('/');
@@ -64,6 +56,9 @@ test.describe('E2E-03: Authentication and Identity Flow', () => {
 
     // Should redirect to change password UI
     await expect(page.getByRole('heading', { name: 'Update Password' })).toBeVisible();
+
+    // Fill current password so the form becomes valid later
+    await page.fill('input[id="currentPasswordInput"]', 'Password123!');
     
     // Validate live checklist interactions
     await page.fill('input[id="newPasswordInput"]', 'weak');

@@ -112,6 +112,7 @@ export interface TicketResponse {
   summary: string;
   description: string;
   currentStatus: string;
+  appearsResolved: boolean;
   requestedPriority: string;
   createdAt: string;
 }
@@ -171,12 +172,34 @@ export interface Attachment {
   createdAt: string;
 }
 
+export interface PublicComment {
+  id: number;
+  content: string;
+  createdAt: string;
+  author: {
+    name: string;
+    role: string;
+  };
+}
+
+export interface InternalNote {
+  id: number;
+  content: string;
+  createdAt: string;
+  author: {
+    name: string;
+    role: string;
+  };
+}
+
 export interface TicketDetailResponse extends TicketResponse {
   description: string;
   category: Category;
   relatedSystem: RelatedSystem;
   requester: Requester;
   attachments: Attachment[];
+  publicComments: PublicComment[];
+  internalNotes?: InternalNote[]; // Only if Staff
   ownerName?: string;
   resolutionSummary?: string;
 }
@@ -228,4 +251,45 @@ export async function downloadAttachmentBlob(ticketId: number, attachmentId: num
   });
   if (!res.ok) throw new Error("Failed to download attachment");
   return res.blob();
+}
+
+export async function postComment(ticketId: number, content: string): Promise<PublicComment> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to post comment");
+  }
+  return res.json();
+}
+
+export async function postNote(ticketId: number, content: string): Promise<InternalNote> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/notes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to post note");
+  }
+  return res.json();
+}
+
+export async function markAppearsResolved(ticketId: number): Promise<{ ticket: TicketDetailResponse, comment: PublicComment }> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/appears-resolved`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to mark as resolved");
+  }
+  return res.json();
 }
