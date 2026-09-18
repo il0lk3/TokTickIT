@@ -114,7 +114,11 @@ async function main() {
     // Ticket 2: New, unassigned
     await prisma.ticket.upsert({
       where: { ticketNumber: "TKT-2026-000002" },
-      update: {},
+      update: {
+        currentStatus: TicketStatus.New,
+        ownerId: null,
+        itPriority: TicketPriority.LOW,
+      },
       create: {
         ticketNumber: "TKT-2026-000002",
         summary: "Email sync issue",

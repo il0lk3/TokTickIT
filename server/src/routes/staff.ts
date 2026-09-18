@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
 import { authenticateToken, requireRole } from "../middleware/auth.js";
 
@@ -153,20 +153,28 @@ router.patch("/tickets/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
-    const dataToUpdate: Prisma.TicketUpdateInput = {};
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    const dataToUpdate: Prisma.TicketUncheckedUpdateInput = {};
+    let isClaiming = false;
 
     // 1. Validate and set ownerId
     if (ownerId !== undefined) {
       if (ownerId === null) {
-        dataToUpdate.owner = { disconnect: true };
+        dataToUpdate.ownerId = null;
       } else {
         const targetOwner = await getPrisma().user.findUnique({
           where: { id: ownerId }
         });
-        if (!targetOwner || !targetOwner.isActive || (targetOwner.role !== "IT_STAFF" && targetOwner.role !== "ADMINISTRATOR")) {
-          return res.status(400).json({ error: "Invalid ownerId. Must be an active IT Staff or Administrator." });
+        if (!targetOwner || !targetOwner.isActive || targetOwner.role !== "IT_STAFF") {
+          return res.status(400).json({ error: "Invalid ownerId. Must be an active IT Staff." });
         }
+        
+        if (terminalStatuses.includes(ticket.currentStatus)) {
+          return res.status(400).json({ error: "Cannot assign/claim a terminal ticket." });
+        }
+
         dataToUpdate.ownerId = ownerId;
+        isClaiming = true;
       }
     }
 
@@ -180,7 +188,12 @@ router.patch("/tickets/:id", async (req: Request, res: Response) => {
     }
 
     // 3. Validate and set status (enforce transition matrix)
-    if (status !== undefined && status !== ticket.currentStatus) {
+    let nextStatus = status;
+    if (isClaiming && ticket.currentStatus === "New" && status === undefined) {
+      nextStatus = "Open";
+    }
+
+    if (nextStatus !== undefined && nextStatus !== ticket.currentStatus) {
       const current = ticket.currentStatus;
       
       const validTransitions: Record<string, string[]> = {
@@ -196,11 +209,11 @@ router.patch("/tickets/:id", async (req: Request, res: Response) => {
 
       // BR-09: Any -> Cancelled is allowed
       const allowedNext = validTransitions[current] || [];
-      if (!allowedNext.includes(status) && status !== "Cancelled") {
-        return res.status(400).json({ error: `Invalid status transition from ${current} to ${status}` });
+      if (!allowedNext.includes(nextStatus) && nextStatus !== "Cancelled") {
+        return res.status(400).json({ error: `Invalid status transition from ${current} to ${nextStatus}` });
       }
 
-      dataToUpdate.currentStatus = status;
+      dataToUpdate.currentStatus = nextStatus;
     }
 
     if (Object.keys(dataToUpdate).length === 0) {
@@ -237,6 +250,7 @@ router.get("/tickets/:id", async (req: Request, res: Response) => {
         category: true,
         relatedSystem: true,
         requester: true,
+        owner: { select: { id: true, name: true, email: true } },
         attachments: true,
         publicComments: { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } },
         internalNotes: { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } }
@@ -303,9 +317,19 @@ router.post("/tickets/:id/claim", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Cannot claim a terminal ticket." });
+    }
+
+    const dataToUpdate: Prisma.TicketUncheckedUpdateInput = { ownerId: userId };
+    if (ticket.currentStatus === "New") {
+      dataToUpdate.currentStatus = "Open";
+    }
+
     const updatedTicket = await getPrisma().ticket.update({
       where: { id: ticketId },
-      data: { ownerId: userId },
+      data: dataToUpdate,
       include: {
         requester: { select: { id: true, name: true, email: true } },
         owner: { select: { id: true, name: true, email: true } }

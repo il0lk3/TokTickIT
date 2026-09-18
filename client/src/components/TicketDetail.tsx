@@ -168,8 +168,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     if (!ticket) return;
     setUpdating(true);
     try {
-      await updateTicket(ticketId, updates);
       const isStaffUser = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
+      await updateTicket(ticketId, updates, isStaffUser);
       const detail = await getTicketDetail(ticketId, isStaffUser);
       setTicket(detail);
     } catch (err: any) {
@@ -345,7 +345,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                 <div className="d-flex flex-column gap-2">
                   <select 
                     className="form-select bg-white"
-                    value={ticket.ownerName ? itStaffList.find(s => s.name === ticket.ownerName)?.id || "" : ""}
+                    value={ticket.owner?.id || ticket.ownerId || ""}
                     onChange={(e) => requestUpdate({ ownerId: e.target.value ? parseInt(e.target.value, 10) : null })}
                   >
                     <option value="">-- Unassigned --</option>
@@ -353,14 +353,14 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                       <option key={staff.id} value={staff.id}>{staff.name}</option>
                     ))}
                   </select>
-                  {(!ticket.ownerName || ticket.ownerName !== user.name) && (
+                  {((ticket.owner?.id || ticket.ownerId) !== user.id) && (
                     <button className="btn btn-sm btn-outline-primary" onClick={() => requestUpdate({ ownerId: user.id })}>
                       Claim Ticket
                     </button>
                   )}
                 </div>
               ) : (
-                <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.ownerName || '-'} />
+                <input type="text" className="form-control bg-light text-muted" readOnly value={ticket.owner?.name || ticket.ownerName || '-'} />
               )}
             </div>
             <div className="col-md-9">

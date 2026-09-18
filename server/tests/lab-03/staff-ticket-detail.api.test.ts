@@ -12,6 +12,7 @@ describe("IT Staff Ticket Detail API", () => {
   let ticketId: number;
   let requesterId: number;
   let staffId: number;
+  let adminId: number;
 
   beforeAll(async () => {
     const prisma = getPrisma();
@@ -32,6 +33,7 @@ describe("IT Staff Ticket Detail API", () => {
     const adminUser = await prisma.user.create({
       data: { name: "Admin", email: `admin-${Date.now()}@example.com`, passwordHash: pwd, role: "ADMINISTRATOR", isActive: true, requiresPasswordChange: false }
     });
+    adminId = adminUser.id;
 
     const jwtSecret = process.env.JWT_SECRET || "your-secret-key";
     
@@ -44,8 +46,8 @@ describe("IT Staff Ticket Detail API", () => {
     const adminToken = jwt.sign({ id: adminUser.id }, jwtSecret, { expiresIn: '1h' });
     adminCookie = `accessToken=${adminToken}`;
 
-    const cat = await prisma.category.findFirst() || await prisma.category.create({ data: { name: "Hardware", description: "Hardware" }});
-    const sys = await prisma.relatedSystem.findFirst() || await prisma.relatedSystem.create({ data: { name: "PC", description: "PC" }});
+    const cat = await prisma.category.findFirst() || await prisma.category.create({ data: { name: "Hardware" }});
+    const sys = await prisma.relatedSystem.findFirst() || await prisma.relatedSystem.create({ data: { name: "PC" }});
 
     const ticket = await prisma.ticket.create({
       data: {
@@ -88,41 +90,23 @@ describe("IT Staff Ticket Detail API", () => {
     expect(res.body.error).toContain("Must be an active IT Staff");
   });
 
-  it("should successfully set ownerId", async () => {
+  it("should reject assignment to an administrator", async () => {
+    const res = await request(app)
+      .patch(`/api/staff/tickets/${ticketId}`)
+      .set("Cookie", staffCookie)
+      .send({ ownerId: adminId });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("Must be an active IT Staff");
+  });
+
+  it("should successfully set ownerId and transition New -> Open if New", async () => {
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", staffCookie)
       .send({ ownerId: staffId });
     expect(res.status).toBe(200);
     expect(res.body.ownerId).toBe(staffId);
-  });
-
-  it("should reject invalid status transition", async () => {
-    // Current is New, try to go straight to Closed
-    const res = await request(app)
-      .patch(`/api/staff/tickets/${ticketId}`)
-      .set("Cookie", staffCookie)
-      .send({ status: "Closed" });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toContain("Invalid status transition");
-  });
-
-  it("should successfully transition status", async () => {
-    const res = await request(app)
-      .patch(`/api/staff/tickets/${ticketId}`)
-      .set("Cookie", staffCookie)
-      .send({ status: "Open" });
-    expect(res.status).toBe(200);
     expect(res.body.currentStatus).toBe("Open");
-  });
-
-  it("should allow any state to Cancelled", async () => {
-    const res = await request(app)
-      .patch(`/api/staff/tickets/${ticketId}`)
-      .set("Cookie", staffCookie)
-      .send({ status: "Cancelled" });
-    expect(res.status).toBe(200);
-    expect(res.body.currentStatus).toBe("Cancelled");
   });
 
   it("should fetch staff ticket detail (GET /api/staff/tickets/:id)", async () => {
@@ -135,11 +119,38 @@ describe("IT Staff Ticket Detail API", () => {
   });
 
   it("should claim ticket via POST /api/staff/tickets/:id/claim", async () => {
+    // Ticket is currently Open, claiming it again shouldn't change status but should set owner
     const res = await request(app)
       .post(`/api/staff/tickets/${ticketId}/claim`)
       .set("Cookie", staffCookie);
     expect(res.status).toBe(200);
     expect(res.body.ownerId).toBe(staffId);
+  });
+
+  it("should reject invalid status transition", async () => {
+    const res = await request(app)
+      .patch(`/api/staff/tickets/${ticketId}`)
+      .set("Cookie", staffCookie)
+      .send({ status: "Closed" });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("Invalid status transition");
+  });
+
+  it("should allow any state to Cancelled", async () => {
+    const res = await request(app)
+      .patch(`/api/staff/tickets/${ticketId}`)
+      .set("Cookie", staffCookie)
+      .send({ status: "Cancelled" });
+    expect(res.status).toBe(200);
+    expect(res.body.currentStatus).toBe("Cancelled");
+  });
+
+  it("should reject claiming a cancelled ticket", async () => {
+    const res = await request(app)
+      .post(`/api/staff/tickets/${ticketId}/claim`)
+      .set("Cookie", staffCookie);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("Cannot claim a terminal ticket");
   });
 
   it("should fail to post notes to cancelled ticket", async () => {
