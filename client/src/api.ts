@@ -89,9 +89,22 @@ export interface RelatedSystem {
   name: string;
 }
 
+export interface UserResponse {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export async function getSystems(): Promise<RelatedSystem[]> {
   const res = await fetch(`${API_URL}/api/systems`, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch systems");
+  return res.json();
+}
+
+export async function getItStaff(): Promise<UserResponse[]> {
+  const res = await fetch(`${API_URL}/api/it-staff`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to fetch IT staff");
   return res.json();
 }
 
@@ -158,6 +171,38 @@ export async function getTickets(
     credentials: "include"
   });
   if (!res.ok) throw new Error("Failed to fetch tickets");
+  return res.json();
+}
+
+// Fetch tickets for IT Staff queue
+export async function getStaffTickets(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  requestedPriority?: string;
+  itPriority?: string;
+  categoryId?: number | string;
+  ownerId?: string | number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}): Promise<TicketListResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.append("page", params.page.toString());
+  if (params.limit) query.append("limit", params.limit.toString());
+  if (params.search) query.append("search", params.search);
+  if (params.status) query.append("status", params.status);
+  if (params.requestedPriority) query.append("requestedPriority", params.requestedPriority);
+  if (params.itPriority) query.append("itPriority", params.itPriority);
+  if (params.categoryId) query.append("categoryId", params.categoryId.toString());
+  if (params.ownerId) query.append("ownerId", params.ownerId.toString());
+  if (params.sortBy) query.append("sortBy", params.sortBy);
+  if (params.sortOrder) query.append("sortOrder", params.sortOrder);
+
+  const res = await fetch(`${API_URL}/api/staff/tickets?${query.toString()}`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error(`Failed to fetch staff tickets: ${res.status}`);
   return res.json();
 }
 

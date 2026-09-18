@@ -134,15 +134,19 @@ All Requester operations from Lab 2 must continue to work securely using the aut
 
 ### 4.1. Get Queue
 - **Endpoint**: `GET /api/staff/tickets`
-- **Authorization**: `IT Staff`.
+- **Authorization**: `IT Staff`. (Administrators and Requesters must receive 403 Forbidden).
 - **Query Parameters**:
-  - `search` (string): Matches ticketNumber or summary.
+  - `search` (string): Matches case-insensitively against `ticketNumber` or `summary` (substring match).
   - `status` (string): Filter by status (e.g., 'Open').
-  - `ownerId` (number): Filter by assignee ID, or 'unassigned'.
-  - `page` (number): For pagination (default 1).
-  - `limit` (number): For pagination (default 10).
-  - `sortBy` (string): Field to sort by (e.g., `lastUpdated`).
+  - `requestedPriority` (string): Filter by requested priority.
+  - `itPriority` (string): Filter by IT priority.
+  - `categoryId` (number): Filter by category ID.
+  - `ownerId` (string): Filter by assignee ID, or 'unassigned' for tickets with no owner.
+  - `page` (number): For pagination (default 1). Must be >= 1.
+  - `limit` (number): For pagination (default 10, max 50).
+  - `sortBy` (string): Field to sort by: `createdAt`, `updatedAt`, `ticketNumber`, `requestedPriority`, `itPriority`, `status`. (default `createdAt`).
   - `sortOrder` (string): `asc` or `desc` (default `desc`).
+- **Error Behavior**: Invalid query parameters (e.g., negative page, invalid sortBy column, limit > 50) return `400 Bad Request`.
 - **Default Ordering**: By `createdAt` descending if no sort params are provided.
 - **Response (200 OK)**:
   ```json
