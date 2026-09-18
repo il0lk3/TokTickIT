@@ -39,10 +39,10 @@ This document details the new and updated user interfaces required for Lab 3, co
 
 ## 4. IT Staff Ticket Queue
 - **Layout**: Data table or grid (responsive cards on mobile).
-- **Columns**: Ticket Number, Created Date, Summary, Category, Requested Priority, IT Priority, Status, Owner, Last Updated. *(Justification: This set of columns avoids a mega-grid by keeping data to a single line per row on desktop, while providing all essential information for triage and sorting, particularly Last Updated for prioritizing stale tickets).*
+- **Columns**: Ticket Number, Created Date, Summary, Category, Requested Priority, IT Priority, Status, Owner. *(Justification: This set of 8 columns matches the requested mockup and avoids a mega-grid by keeping data to a single line per row on desktop).*
 - **Controls**:
   - Search bar (by Ticket Number or Summary).
-  - Filters (Dropdowns for Status, Priority).
+  - Filters (Dropdowns for Status, Requested Priority, IT Priority, Owner/Unassigned).
   - Sorting (Clickable column headers to toggle sort direction).
   - Pagination controls (Previous/Next, Page numbers).
 - **Empty State**: Clear message when no tickets match the filters.

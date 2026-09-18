@@ -20,6 +20,9 @@ app.use("/api/auth", authRouter);
 import ticketsRouter from "./routes/tickets.js";
 app.use("/api/tickets", ticketsRouter);
 
+import staffRouter from "./routes/staff.js";
+app.use("/api/staff", staffRouter);
+
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
 // Make the test in tests/lab-01/health.test.ts pass.
@@ -61,6 +64,20 @@ app.get("/api/requesters", async (_req: Request, res: Response) => {
     res.status(200).json(requesters);
   } catch (error) {
     console.error("Failed to fetch requesters:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/it-staff", async (_req: Request, res: Response) => {
+  try {
+    const staff = await getPrisma().user.findMany({
+      where: { isActive: true, role: 'IT_STAFF' },
+      select: { id: true, name: true, email: true, role: true },
+      orderBy: { name: 'asc' },
+    });
+    res.status(200).json(staff);
+  } catch (error) {
+    console.error("Failed to fetch IT staff:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

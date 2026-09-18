@@ -5,6 +5,7 @@ import Login from "./components/auth/Login";
 import ChangePassword from "./components/auth/ChangePassword";
 import CreateTicket from "./components/CreateTicket";
 import { MyTickets } from "./components/MyTickets";
+import { TicketQueue } from "./components/TicketQueue";
 import { TicketDetail } from "./components/TicketDetail";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -180,9 +181,11 @@ function AppShell() {
                 )
               )}
               {user.role === "IT_STAFF" && (
-                <div className="text-center py-5 mt-5">
-                  <h4 className="text-muted">Ticket Queue (Coming soon)</h4>
-                </div>
+                selectedTicketId ? (
+                  <TicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />
+                ) : (
+                  <TicketQueue categories={categories} onSelectTicket={setSelectedTicketId} />
+                )
               )}
               {user.role === "ADMINISTRATOR" && (
                 <div className="text-center py-5 mt-5">

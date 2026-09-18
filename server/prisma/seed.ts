@@ -56,6 +56,7 @@ async function main() {
     { email: "staff1@example.com", name: "IT Staff 1", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: true },
     { email: "staff2@example.com", name: "IT Staff 2", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: true },
     { email: "staff3@example.com", name: "IT Staff 3", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: true },
+    { email: "e2e.staff@example.com", name: "E2E Staff", role: Role.IT_STAFF, isActive: true, requiresPasswordChange: false },
     { email: "inactive.staff@example.com", name: "Inactive Staff", role: Role.IT_STAFF, isActive: false, requiresPasswordChange: true },
     // Administrator
     { email: "admin@example.com", name: "System Admin", role: Role.ADMINISTRATOR, isActive: true, requiresPasswordChange: true },
