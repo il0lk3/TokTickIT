@@ -102,14 +102,8 @@ export async function getSystems(): Promise<RelatedSystem[]> {
   return res.json();
 }
 
-export async function getRequesters(): Promise<UserResponse[]> {
-  const res = await fetch(`${API_URL}/api/requesters`);
-  if (!res.ok) throw new Error("Failed to fetch requesters");
-  return res.json();
-}
-
 export async function getItStaff(): Promise<UserResponse[]> {
-  const res = await fetch(`${API_URL}/api/it-staff`);
+  const res = await fetch(`${API_URL}/api/it-staff`, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch IT staff");
   return res.json();
 }

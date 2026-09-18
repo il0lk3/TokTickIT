@@ -204,7 +204,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
               />
             </div>
           </div>
-          <div className="col-6 col-md-2">
+          <div className="col-4 col-md-2">
             <select className="form-select" value={status} onChange={handleFilterChange(setStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
@@ -214,6 +214,12 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
               <option value="Resolved">Resolved</option>
               <option value="Closed">Closed</option>
               <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div className="col-4 col-md-2">
+            <select className="form-select" value={categoryId} onChange={handleFilterChange(setCategoryId)}>
+              <option value="">Category</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">

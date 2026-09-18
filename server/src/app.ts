@@ -68,7 +68,9 @@ app.get("/api/requesters", async (_req: Request, res: Response) => {
   }
 });
 
-app.get("/api/it-staff", async (_req: Request, res: Response) => {
+import { authenticateToken, requireRole } from "./middleware/auth.js";
+
+app.get("/api/it-staff", authenticateToken, requireRole(["IT_STAFF"]), async (_req: Request, res: Response) => {
   try {
     const staff = await getPrisma().user.findMany({
       where: { isActive: true, role: 'IT_STAFF' },

@@ -33,8 +33,10 @@ describe("IT Staff Ticket Queue API", () => {
     const cat = await prisma.category.findFirst() || await prisma.category.create({ data: { name: "QueueTest" } });
     const sys = await prisma.relatedSystem.findFirst() || await prisma.relatedSystem.create({ data: { name: "QueueTestSys" } });
     
-    await prisma.ticket.create({ data: { ticketNumber: `T-1`, summary: "S1", description: "D1", currentStatus: "New", requestedPriority: "LOW", itPriority: "LOW", requesterId, categoryId: cat.id, relatedSystemId: sys.id } });
-    await prisma.ticket.create({ data: { ticketNumber: `T-2`, summary: "S2", description: "D2", currentStatus: "Open", requestedPriority: "HIGH", itPriority: "HIGH", ownerId: staffId, requesterId, categoryId: cat.id, relatedSystemId: sys.id } });
+    const t1Id = `T-${Date.now()}-1`;
+    const t2Id = `T-${Date.now()}-2`;
+    await prisma.ticket.create({ data: { ticketNumber: t1Id, summary: "S1", description: "D1", currentStatus: "New", requestedPriority: "LOW", itPriority: "LOW", requesterId, categoryId: cat.id, relatedSystemId: sys.id } });
+    await prisma.ticket.create({ data: { ticketNumber: t2Id, summary: "S2", description: "D2", currentStatus: "Open", requestedPriority: "HIGH", itPriority: "HIGH", ownerId: staffId, requesterId, categoryId: cat.id, relatedSystemId: sys.id } });
   });
 
   afterAll(async () => {
@@ -54,10 +56,17 @@ describe("IT Staff Ticket Queue API", () => {
     expect(res.status).toBe(403);
   });
 
-  it("should return 403 Forbidden for Administrator", async () => {
+  it("should return 403 Forbidden for Administrator on /api/staff/tickets", async () => {
     const res = await request(app)
       .get("/api/staff/tickets")
       .set("Cookie", adminCookie);
+    expect(res.status).toBe(403);
+  });
+
+  it("should return 403 Forbidden for Requester on /api/it-staff", async () => {
+    const res = await request(app)
+      .get("/api/it-staff")
+      .set("Cookie", requesterCookie);
     expect(res.status).toBe(403);
   });
 
@@ -101,5 +110,16 @@ describe("IT Staff Ticket Queue API", () => {
       .set("Cookie", staffCookie);
     
     expect(res.status).toBe(400);
+  });
+
+  it("should reject invalid enum filters with 400", async () => {
+    const res1 = await request(app).get("/api/staff/tickets?status=Unicorn").set("Cookie", staffCookie);
+    expect(res1.status).toBe(400);
+    
+    const res2 = await request(app).get("/api/staff/tickets?requestedPriority=XXX").set("Cookie", staffCookie);
+    expect(res2.status).toBe(400);
+    
+    const res3 = await request(app).get("/api/staff/tickets?categoryId=invalid").set("Cookie", staffCookie);
+    expect(res3.status).toBe(400);
   });
 });

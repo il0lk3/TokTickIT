@@ -136,7 +136,7 @@ All Requester operations from Lab 2 must continue to work securely using the aut
 - **Endpoint**: `GET /api/staff/tickets`
 - **Authorization**: `IT Staff`. (Administrators and Requesters must receive 403 Forbidden).
 - **Query Parameters**:
-  - `search` (string): Matches exactly against `ticketNumber` or `summary`.
+  - `search` (string): Matches case-insensitively against `ticketNumber` or `summary` (substring match).
   - `status` (string): Filter by status (e.g., 'Open').
   - `requestedPriority` (string): Filter by requested priority.
   - `itPriority` (string): Filter by IT priority.

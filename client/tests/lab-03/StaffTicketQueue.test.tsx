@@ -19,12 +19,11 @@ describe("TicketQueue Component", () => {
     vi.resetAllMocks();
     
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
-      console.log("FETCH MOCK CALLED WITH URL", url);
       if (url.includes("/api/auth/me") || url.includes("/api/auth/session")) {
         return {
           ok: true,
           json: async () => ({
-            user: { id: 1, name: "Test User", email: "test@example.com", role: "IT_STAFF", isActive: true, requiresPasswordChange: false }
+            id: 1, name: "Test User", email: "test@example.com", role: "IT_STAFF", isActive: true, requiresPasswordChange: false
           })
         };
       }
@@ -89,7 +88,7 @@ describe("TicketQueue Component", () => {
   it("should show Access Denied when 403 Forbidden is returned", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       if (url.includes("/api/auth/me") || url.includes("/api/auth/session")) {
-        return { ok: true, json: async () => ({ user: { id: 1, role: "IT_STAFF", isActive: true } }) };
+        return { ok: true, json: async () => ({ id: 1, role: "IT_STAFF", isActive: true }) };
       }
       if (url.includes("/api/it-staff")) {
         return { ok: true, json: async () => ([]) };
@@ -110,9 +109,14 @@ describe("TicketQueue Component", () => {
 
   it("should trigger getStaffTickets with updated page when clicking next", async () => {
     let callCount = 0;
+    vi.clearAllMocks();
+
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
-      if (url.includes("/api/auth/me") || url.includes("/api/auth/session")) {
-        return { ok: true, json: async () => ({ user: { id: 1, role: "IT_STAFF", isActive: true } }) };
+      if (url.includes("/api/auth/me")) {
+        return {
+          ok: true,
+          json: async () => ({ id: 1, name: "Staff", role: "IT_STAFF" })
+        };
       }
       if (url.includes("/api/it-staff")) {
         return { ok: true, json: async () => ([]) };

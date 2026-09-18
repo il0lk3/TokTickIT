@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
-import { authenticateToken, requireRole } from "../middleware/auth";
+import { getPrisma } from "../prisma.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 // Role guard: Only IT_STAFF can access this router
@@ -45,23 +45,41 @@ router.get("/tickets", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid sortOrder parameter (must be 'asc' or 'desc')" });
     }
 
+    // Validate enum filters
+    const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
+    if (status && !validStatuses.includes(status as string)) {
+      return res.status(400).json({ error: "Invalid status parameter" });
+    }
+
+    const validPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+    if (requestedPriority && !validPriorities.includes(requestedPriority as string)) {
+      return res.status(400).json({ error: "Invalid requestedPriority parameter" });
+    }
+    if (itPriority && !validPriorities.includes(itPriority as string)) {
+      return res.status(400).json({ error: "Invalid itPriority parameter" });
+    }
+
     // Build Prisma Where Clause
     const where: Prisma.TicketWhereInput = {};
 
     if (search) {
       const searchStr = search as string;
       where.OR = [
-        { ticketNumber: { contains: searchStr } },
-        { summary: { contains: searchStr } }
+        { ticketNumber: { contains: searchStr, mode: 'insensitive' } },
+        { summary: { contains: searchStr, mode: 'insensitive' } }
       ];
     }
 
     if (status) where.currentStatus = status as string;
     if (requestedPriority) where.requestedPriority = requestedPriority as string;
     if (itPriority) where.itPriority = itPriority as string;
+    
     if (categoryId) {
       const catId = parseInt(categoryId as string, 10);
-      if (!isNaN(catId)) where.categoryId = catId;
+      if (isNaN(catId)) {
+        return res.status(400).json({ error: "Invalid categoryId parameter" });
+      }
+      where.categoryId = catId;
     }
     
     if (ownerId) {
@@ -85,7 +103,7 @@ router.get("/tickets", async (req: Request, res: Response) => {
 
     // Fetch data and count
     const [tickets, total] = await Promise.all([
-      prisma.ticket.findMany({
+      getPrisma().ticket.findMany({
         where,
         orderBy: { [prismaSortField as string]: sortOrder },
         skip,
@@ -95,7 +113,7 @@ router.get("/tickets", async (req: Request, res: Response) => {
           owner: { select: { id: true, name: true, email: true } }
         }
       }),
-      prisma.ticket.count({ where })
+      getPrisma().ticket.count({ where })
     ]);
 
     const totalPages = Math.ceil(total / limitNum);
