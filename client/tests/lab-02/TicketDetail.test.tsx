@@ -45,6 +45,7 @@ describe("TicketDetail Component", () => {
       summary: "My broken laptop",
       description: "It just won't turn on.",
       requestedPriority: "HIGH",
+      itPriority: "HIGH",
       currentStatus: "New",
       category: { name: "Hardware" },
       relatedSystem: { name: "Corporate Laptop" },
@@ -70,6 +71,6 @@ describe("TicketDetail Component", () => {
     expect(screen.getByDisplayValue("My broken laptop")).toBeInTheDocument();
     expect(screen.getByDisplayValue("It just won't turn on.")).toBeInTheDocument();
     expect(screen.getByText("error.png")).toBeInTheDocument();
-    expect(api.getTicketDetail).toHaveBeenCalledWith(1);
+    expect(api.getTicketDetail).toHaveBeenCalledWith(1, false);
   });
 });

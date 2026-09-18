@@ -7,6 +7,7 @@ import CreateTicket from "./components/CreateTicket";
 import { MyTickets } from "./components/MyTickets";
 import { TicketQueue } from "./components/TicketQueue";
 import { TicketDetail } from "./components/TicketDetail";
+import { UserManagement } from "./components/UserManagement";
 
 type UiState = "idle" | "loading" | "success" | "error";
 type Tab = "create" | "list" | "queue" | "users";
@@ -188,9 +189,7 @@ function AppShell() {
                 )
               )}
               {user.role === "ADMINISTRATOR" && (
-                <div className="text-center py-5 mt-5">
-                  <h4 className="text-muted">User Management (Coming soon)</h4>
-                </div>
+                <UserManagement />
               )}
             </div>
           )}

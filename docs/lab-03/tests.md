@@ -14,11 +14,11 @@ This document maps Acceptance Criteria (AC) from `specification.md` to planned a
 | API-08 | API | AC-04 | Requester requests Internal Notes | Forbidden; no note data returned | `server/tests/lab-03/comments-notes.api.test.ts` | TBD |
 | API-09 | API | AC-05 | IT Staff Ticket Queue with search/filter/sort | Returns filtered/sorted/paginated tickets | `server/tests/lab-03/staff-queue.api.test.ts` | TBD |
 | API-10 | API | BR-08, BR-09 | IT Staff update ticket operational fields | 200 OK; fields updated successfully | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | TBD |
-| API-11 | API | BR-06 | Admin deactivates self | 400 Bad Request / 403 Forbidden | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
-| API-12 | API | BR-07 | Admin creates duplicate email | 409 Conflict | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
-| API-13 | API | AC-08, AC-09 | Admin creates user, edits, assigns role, new password | 200/201 OK; returns correct data and sets flag | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
-| API-14 | API | AC-10 | Admin attempts to deactivate last active Admin | 403 Forbidden / 400 Bad Request | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
-| API-15 | API | AC-15 | Non-Admin access to User Management API | 403 Forbidden | `server/tests/lab-03/users-admin.api.test.ts` | TBD |
+| API-11 | API | BR-06 | Admin deactivates self | 400 Bad Request / 403 Forbidden | `server/tests/lab-03/users-admin.api.test.ts` | Done |
+| API-12 | API | BR-07 | Admin creates duplicate email | 409 Conflict | `server/tests/lab-03/users-admin.api.test.ts` | Done |
+| API-13 | API | AC-08, AC-09 | Admin creates user, edits, assigns role, new password | 200/201 OK; returns correct data and sets flag | `server/tests/lab-03/users-admin.api.test.ts` | Done |
+| API-14 | API | AC-10 | Admin attempts to deactivate last active Admin | 403 Forbidden / 400 Bad Request | `server/tests/lab-03/users-admin.api.test.ts` | Done |
+| API-15 | API | AC-15 | Non-Admin access to User Management API | 403 Forbidden | `server/tests/lab-03/users-admin.api.test.ts` | Done |
 | API-16 | API | AC-14 | Requester Lab 2 API continuation (Auth Identity) | 200/201 OK; operations succeed for own data | `server/tests/lab-03/requester-regression.api.test.ts` | TBD |
 | API-17 | API | AC-11 | Logout invalidates session token | 401 Unauthorized on subsequent requests | `server/tests/lab-03/auth.api.test.ts` | TBD |
 | API-18 | API | AC-12 | IT Staff attempts invalid status transition | 400 Bad Request | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | TBD |
@@ -33,5 +33,5 @@ This document maps Acceptance Criteria (AC) from `specification.md` to planned a
 | E2E-01 | E2E | FR-01 | Full login/logout flow | Navigates to app, logout clears session | `e2e/lab-03/authentication.spec.ts` | Done |
 | E2E-02 | E2E | AC-02 | Initial password login and change | Normal app opens only after valid change | `e2e/lab-03/authentication.spec.ts` | Done |
 | E2E-03 | E2E | FR-04, FR-05| IT Staff queue to detail flow | Search queue, click ticket, update status | `e2e/lab-03/staff-ticket-flow.spec.ts` | TBD |
-| E2E-04 | E2E | FR-06 | Admin creates user flow | Creates user, logs in as new user | `e2e/lab-03/user-administration.spec.ts` | TBD |
+| E2E-04 | E2E | FR-06 | Admin creates user flow | Creates user, logs in as new user | `e2e/lab-03/user-administration.spec.ts` | Done |
 | E2E-05 | E2E | AC-14, BR-05| Requester Ticket flow | Create ticket, add comment, mark Appears Resolved | `e2e/lab-03/requester-flow.spec.ts` | Done |
