@@ -338,3 +338,20 @@ export async function markAppearsResolved(ticketId: number): Promise<{ ticket: T
   }
   return res.json();
 }
+
+export async function updateTicket(
+  ticketId: number, 
+  data: { ownerId?: number | null; itPriority?: string; status?: string }
+): Promise<TicketDetailResponse> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${ticketId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to update ticket");
+  }
+  return res.json();
+}

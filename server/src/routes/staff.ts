@@ -134,4 +134,93 @@ router.get("/tickets", async (req: Request, res: Response) => {
   }
 });
 
+// PATCH /api/staff/tickets/:id
+router.patch("/tickets/:id", async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.id, 10);
+    if (isNaN(ticketId)) {
+      return res.status(400).json({ error: "Invalid ticket ID" });
+    }
+
+    const { ownerId, itPriority, status } = req.body;
+    
+    // Fetch current ticket
+    const ticket = await getPrisma().ticket.findUnique({
+      where: { id: ticketId }
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const dataToUpdate: Prisma.TicketUpdateInput = {};
+
+    // 1. Validate and set ownerId
+    if (ownerId !== undefined) {
+      if (ownerId === null) {
+        dataToUpdate.owner = { disconnect: true };
+      } else {
+        const targetOwner = await getPrisma().user.findUnique({
+          where: { id: ownerId }
+        });
+        if (!targetOwner || !targetOwner.isActive || (targetOwner.role !== "IT_STAFF" && targetOwner.role !== "ADMINISTRATOR")) {
+          return res.status(400).json({ error: "Invalid ownerId. Must be an active IT Staff or Administrator." });
+        }
+        dataToUpdate.ownerId = ownerId;
+      }
+    }
+
+    // 2. Validate and set itPriority
+    if (itPriority !== undefined) {
+      const validPriorities = ["LOW", "MEDIUM", "HIGH"];
+      if (!validPriorities.includes(itPriority)) {
+        return res.status(400).json({ error: "Invalid itPriority" });
+      }
+      dataToUpdate.itPriority = itPriority as "LOW" | "MEDIUM" | "HIGH";
+    }
+
+    // 3. Validate and set status (enforce transition matrix)
+    if (status !== undefined && status !== ticket.currentStatus) {
+      const current = ticket.currentStatus;
+      
+      const validTransitions: Record<string, string[]> = {
+        "New": ["Open", "Cancelled"],
+        "Open": ["InProgress", "Resolved", "Cancelled"],
+        "InProgress": ["WaitingForRequester", "Resolved", "Cancelled"],
+        "WaitingForRequester": ["InProgress", "Cancelled"],
+        "Resolved": ["Closed", "Reopened", "Cancelled"],
+        "Closed": ["Cancelled"],
+        "Reopened": ["InProgress", "Resolved", "Cancelled"],
+        "Cancelled": []
+      };
+
+      // BR-09: Any -> Cancelled is allowed
+      const allowedNext = validTransitions[current] || [];
+      if (!allowedNext.includes(status) && status !== "Cancelled") {
+        return res.status(400).json({ error: `Invalid status transition from ${current} to ${status}` });
+      }
+
+      dataToUpdate.currentStatus = status;
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const updatedTicket = await getPrisma().ticket.update({
+      where: { id: ticketId },
+      data: dataToUpdate,
+      include: {
+        requester: { select: { id: true, name: true, email: true } },
+        owner: { select: { id: true, name: true, email: true } }
+      }
+    });
+
+    res.json(updatedTicket);
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
