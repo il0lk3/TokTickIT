@@ -144,6 +144,21 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
   return res.json();
 }
 
+export async function updateTicket(ticketId: number, updates: any, isStaff?: boolean): Promise<TicketResponse> {
+  const url = isStaff ? `${API_URL}/api/staff/tickets/${ticketId}` : `${API_URL}/api/tickets/${ticketId}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to update ticket");
+  }
+  return res.json();
+}
+
 export interface TicketListResponse {
   data: TicketResponse[];
   meta: {
@@ -242,6 +257,8 @@ export interface TicketDetailResponse extends TicketResponse {
   category: Category;
   relatedSystem: RelatedSystem;
   requester: Requester;
+  owner?: { id: number, name: string, email: string } | null;
+  ownerId?: number | null;
   attachments: Attachment[];
   publicComments: PublicComment[];
   internalNotes?: InternalNote[]; // Only if Staff
@@ -249,8 +266,9 @@ export interface TicketDetailResponse extends TicketResponse {
   resolutionSummary?: string;
 }
 
-export async function getTicketDetail(id: number): Promise<TicketDetailResponse> {
-  const res = await fetch(`${API_URL}/api/tickets/${id}`, {
+export async function getTicketDetail(id: number, isStaff?: boolean): Promise<TicketDetailResponse> {
+  const url = isStaff ? `${API_URL}/api/staff/tickets/${id}` : `${API_URL}/api/tickets/${id}`;
+  const res = await fetch(url, {
     credentials: "include"
   });
   if (!res.ok) {
@@ -313,7 +331,7 @@ export async function postComment(ticketId: number, content: string): Promise<Pu
 }
 
 export async function postNote(ticketId: number, content: string): Promise<InternalNote> {
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/notes`, {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${ticketId}/notes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -338,3 +356,4 @@ export async function markAppearsResolved(ticketId: number): Promise<{ ticket: T
   }
   return res.json();
 }
+
