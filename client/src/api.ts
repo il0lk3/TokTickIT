@@ -129,8 +129,6 @@ export interface TicketResponse {
   requestedPriority: string;
   itPriority: string;
   createdAt: string;
-  ownerId?: number | null;
-  owner?: { id: number; name: string } | null;
 }
 
 export async function createTicket(payload: CreateTicketPayload): Promise<TicketResponse> {

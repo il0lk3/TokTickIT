@@ -33,7 +33,7 @@ This document details the new and updated user interfaces required for Lab 3, co
 ## 3. Requester Ticket Detail (Update)
 - **New Section**: "Comments".
 - **View**: Renders a list of Public Comments chronologically.
-- **Input**: A text area to add a new Public Comment.
+- **Input**: A text area to add a new Public Comment (placeholder must be exactly `"Type a public comment..."`).
 - **Action**: "Post Comment".
 - **Action**: "Problem Appears Resolved" button. (This does not formally change the status to Resolved, but flags it for IT Staff).
 
