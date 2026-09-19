@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { getPrisma } from "../prisma.js";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 const adminRouter = Router();
@@ -37,7 +37,7 @@ adminRouter.get("/users", async (req: Request, res: Response) => {
     if (!["REQUESTER", "IT_STAFF", "ADMINISTRATOR"].includes(role as string)) {
       return res.status(400).json({ error: "Invalid role filter" });
     }
-    where.role = role as string;
+    where.role = role as Role;
   }
 
   try {
