@@ -357,3 +357,72 @@ export async function markAppearsResolved(ticketId: number): Promise<{ ticket: T
   return res.json();
 }
 
+// --- ADMIN USER MANAGEMENT API ---
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  requiresPasswordChange: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAdminUsers(search?: string, role?: string): Promise<{ items: AdminUser[], filtersApplied?: Record<string, string> }> {
+  const params = new URLSearchParams();
+  if (search) params.append("search", search);
+  if (role) params.append("role", role);
+  
+  const res = await fetch(`${API_URL}/api/admin/users?${params.toString()}`, {
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch users");
+  }
+  return res.json();
+}
+
+export async function createAdminUser(data: Omit<AdminUser, "id" | "createdAt" | "updatedAt" | "requiresPasswordChange"> & { initialPassword?: string }): Promise<AdminUser> {
+  const res = await fetch(`${API_URL}/api/admin/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create user");
+  }
+  return res.json();
+}
+
+export async function updateAdminUser(id: number, data: Partial<Omit<AdminUser, "id" | "createdAt" | "updatedAt" | "requiresPasswordChange">>): Promise<AdminUser> {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to update user");
+  }
+  return res.json();
+}
+
+export async function setInitialPassword(id: number, newInitialPassword: string): Promise<{ user: Partial<AdminUser> }> {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}/initial-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newInitialPassword }),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to set initial password");
+  }
+  return res.json();
+}

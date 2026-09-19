@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { Prisma } from "@prisma/client";
+import { Prisma, TicketStatus, TicketPriority } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
 import { authenticateToken, requireRole } from "../middleware/auth.js";
 
@@ -70,9 +70,9 @@ router.get("/tickets", async (req: Request, res: Response) => {
       ];
     }
 
-    if (status) where.currentStatus = status as string;
-    if (requestedPriority) where.requestedPriority = requestedPriority as string;
-    if (itPriority) where.itPriority = itPriority as string;
+    if (status) where.currentStatus = status as TicketStatus;
+    if (requestedPriority) where.requestedPriority = requestedPriority as TicketPriority;
+    if (itPriority) where.itPriority = itPriority as TicketPriority;
     
     if (categoryId) {
       const catId = parseInt(categoryId as string, 10);

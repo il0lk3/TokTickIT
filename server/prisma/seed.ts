@@ -60,6 +60,8 @@ async function main() {
     { email: "inactive.staff@example.com", name: "Inactive Staff", role: Role.IT_STAFF, isActive: false, requiresPasswordChange: true },
     // Administrator
     { email: "admin@example.com", name: "System Admin", role: Role.ADMINISTRATOR, isActive: true, requiresPasswordChange: true },
+    // E2E User
+    { email: "e2e.admin@example.com", name: "E2E Admin", role: Role.ADMINISTRATOR, isActive: true, requiresPasswordChange: false },
   ];
 
   for (const u of users) {

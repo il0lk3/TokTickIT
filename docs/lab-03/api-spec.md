@@ -181,23 +181,33 @@ All Requester operations from Lab 2 must continue to work securely using the aut
   {
     "name": "New User",
     "email": "newuser@example.com",
-    "role": "IT Staff",
+    "role": "IT_STAFF",
     "initialPassword": "TempPassword1!",
-    "isActive": true
+    "active": true
   }
   ```
 
 ### 5.3. Update User
-- **Endpoint**: `PUT /api/admin/users/:id`
+- **Endpoint**: `PATCH /api/admin/users/:id`
 - **Authorization**: `Admin`.
 - **Request Body**:
   ```json
   {
     "name": "Updated Name",
     "email": "updated@example.com",
-    "role": "IT Staff",
-    "isActive": false,
-    "resetInitialPassword": "NewTempPassword2!" // Optional
+    "role": "IT_STAFF",
+    "active": false
   }
   ```
-- **Note**: Backend must prevent an Admin from setting their own `isActive` to false.
+- **Note**: Backend must prevent an Admin from setting their own `active` to false, changing their own role, or removing the last active administrator.
+
+### 5.4. Set Initial Password
+- **Endpoint**: `POST /api/admin/users/:id/initial-password`
+- **Authorization**: `Admin`.
+- **Request Body**:
+  ```json
+  {
+    "newInitialPassword": "NewTempPassword2!"
+  }
+  ```
+- **Note**: Sets a new initial password and forces the user to change it on their next login.

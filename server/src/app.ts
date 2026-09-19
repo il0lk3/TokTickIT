@@ -23,6 +23,9 @@ app.use("/api/tickets", ticketsRouter);
 import staffRouter from "./routes/staff.js";
 app.use("/api/staff", staffRouter);
 
+import adminRouter from "./routes/admin.js";
+app.use("/api/admin", adminRouter);
+
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
 // Make the test in tests/lab-01/health.test.ts pass.
