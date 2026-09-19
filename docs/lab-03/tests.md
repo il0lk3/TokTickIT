@@ -34,4 +34,4 @@ This document maps Acceptance Criteria (AC) from `specification.md` to planned a
 | E2E-02 | E2E | AC-02 | Initial password login and change | Normal app opens only after valid change | `e2e/lab-03/authentication.spec.ts` | Done |
 | E2E-03 | E2E | FR-04, FR-05| IT Staff queue to detail flow | Search queue, click ticket, update status | `e2e/lab-03/staff-ticket-flow.spec.ts` | TBD |
 | E2E-04 | E2E | FR-06 | Admin creates user flow | Creates user, logs in as new user | `e2e/lab-03/user-administration.spec.ts` | Done |
-| E2E-05 | E2E | AC-14, BR-05| Requester Ticket flow | Create ticket, add comment, mark Appears Resolved | `e2e/lab-03/requester-flow.spec.ts` | Done |
+| E2E-05 | E2E | AC-14, BR-05| Requester Ticket flow | Create ticket, add comment (using `"Type a public comment..."` locator), mark Appears Resolved | `e2e/lab-03/requester-flow.spec.ts` | Done |

@@ -1,12 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { getPrisma } from "../prisma.js";
+import { Ticket, Prisma } from "@prisma/client";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
 
 const router = Router();
 const prisma = getPrisma();
-import { authenticateToken } from "../middleware/auth.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 // Setup Multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -41,7 +42,7 @@ router.use(authenticateToken, (req: Request, res: Response, next: NextFunction) 
 });
 
 // POST /api/tickets - Create a new ticket
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
   try {
     const { categoryId, relatedSystemId, requestedPriority, summary, description } = req.body;
     const requesterId = res.locals.requesterId as number;
@@ -101,7 +102,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     // Generate Ticket Number with retry
-    let ticket: any = null;
+    let ticket: Ticket | null = null;
     let attempts = 0;
     while (!ticket && attempts < 3) {
       attempts++;
@@ -126,8 +127,8 @@ router.post("/", async (req: Request, res: Response) => {
             relatedSystemId: sysId
           }
         });
-      } catch (e: any) {
-        if (e.code === 'P2002') { // Unique constraint violation
+      } catch (e: unknown) {
+        if (e && typeof e === 'object' && 'code' in e && e.code === 'P2002') { // Unique constraint violation
           continue; // retry
         }
         throw e;
@@ -311,9 +312,9 @@ router.delete("/:id/attachments/:attachmentId", async (req: Request, res: Respon
 });
 
 // GET /api/tickets - List tickets with search, filter, pagination
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
   try {
-    const requesterId = res.locals.requesterId as number;
+    const requesterId = res.locals.user.id;
     const { 
       search, 
       categoryId, 
@@ -330,7 +331,7 @@ router.get("/", async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Build the where clause
-    const where: any = { requesterId };
+    const where: Prisma.TicketWhereInput = { requesterId };
 
     if (search && typeof search === 'string' && search.trim() !== '') {
       where.OR = [
@@ -344,11 +345,19 @@ router.get("/", async (req: Request, res: Response) => {
     }
     
     if (requestedPriority) {
-      where.requestedPriority = String(requestedPriority);
+      const validPriorities = ["LOW", "MEDIUM", "HIGH"];
+      if (!validPriorities.includes(String(requestedPriority))) {
+        return res.status(400).json({ error: "Invalid requestedPriority parameter" });
+      }
+      where.requestedPriority = String(requestedPriority) as import("@prisma/client").TicketPriority;
     }
     
     if (status) {
-      where.currentStatus = String(status);
+      const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
+      if (!validStatuses.includes(String(status))) {
+        return res.status(400).json({ error: "Invalid status parameter" });
+      }
+      where.currentStatus = String(status) as import("@prisma/client").TicketStatus;
     }
 
     // Ensure valid sort fields

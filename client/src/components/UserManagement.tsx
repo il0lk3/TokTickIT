@@ -113,7 +113,7 @@ export const UserManagement: React.FC = () => {
         name: formData.name,
         email: formData.email,
         role: formData.role,
-        active: formData.active,
+        isActive: formData.active,
         initialPassword: formData.initialPassword
       });
       setIsCreateModalOpen(false);
@@ -143,7 +143,7 @@ export const UserManagement: React.FC = () => {
         name: formData.name,
         email: formData.email,
         role: formData.role,
-        active: formData.active
+        isActive: formData.active
       });
       setIsEditModalOpen(false);
       showSuccess("User updated successfully");
