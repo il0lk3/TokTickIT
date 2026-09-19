@@ -20,7 +20,7 @@ const { mockUser } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../src/contexts/AuthContext", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import("../../src/contexts/AuthContext")>();
   return {
     ...actual,
     useAuth: () => ({

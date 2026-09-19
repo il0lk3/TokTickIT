@@ -61,8 +61,7 @@ test.describe('E2E-05: Requester Flow (Lab 3)', () => {
     await expect(page.locator('text=Ticket Details').first()).toBeVisible();
     await expect(page.locator(`input[value="${summaryText}"]`)).toBeVisible();
 
-    // 5. Add a comment
-    const commentInput = page.locator('textarea[placeholder="Type a comment..."]');
+    const commentInput = page.locator('textarea[placeholder="Type a public comment..."]');
     await commentInput.fill('This is a test public comment.');
     await page.click('button:has-text("Post Comment")');
 

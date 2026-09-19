@@ -18,6 +18,7 @@ vi.mock("../../src/api", async (importOriginal) => {
 describe("ChangePassword Component", () => {
   it("renders password inputs and checklist", async () => {
     render(<AuthProvider><ChangePassword /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     
     expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^new password/i)).toBeInTheDocument();
@@ -31,6 +32,7 @@ describe("ChangePassword Component", () => {
 
   it("updates password rule checklist correctly", async () => {
     render(<AuthProvider><ChangePassword /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     const newPasswordInput = screen.getByLabelText(/^new password/i);
 
     // Initial state: not checked
@@ -55,6 +57,7 @@ describe("ChangePassword Component", () => {
 
   it("blocks submission if passwords do not match", async () => {
     render(<AuthProvider><ChangePassword /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     fireEvent.change(screen.getByLabelText(/current password/i), { target: { value: "Password123!" } });
     fireEvent.change(screen.getByLabelText(/^new password/i), { target: { value: "NewValid1!" } });
     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: "NewValid2!" } });
@@ -66,6 +69,7 @@ describe("ChangePassword Component", () => {
   it("allows submission when rules are met and calls api", async () => {
     vi.mocked(api.changePassword).mockResolvedValueOnce(undefined);
     render(<AuthProvider><ChangePassword /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     
     fireEvent.change(screen.getByLabelText(/current password/i), { target: { value: "Password123!" } });
     fireEvent.change(screen.getByLabelText(/^new password/i), { target: { value: "NewValid1!" } });

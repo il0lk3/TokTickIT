@@ -1,12 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { getPrisma } from "../prisma.js";
+import { Ticket, Prisma } from "@prisma/client";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
 
 const router = Router();
 const prisma = getPrisma();
-import { authenticateToken } from "../middleware/auth.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 // Setup Multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -41,7 +42,7 @@ router.use(authenticateToken, (req: Request, res: Response, next: NextFunction) 
 });
 
 // POST /api/tickets - Create a new ticket
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
   try {
     const { categoryId, relatedSystemId, requestedPriority, summary, description } = req.body;
     const requesterId = res.locals.requesterId as number;
@@ -101,7 +102,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     // Generate Ticket Number with retry
-    let ticket: any = null;
+    let ticket: Ticket | null = null;
     let attempts = 0;
     while (!ticket && attempts < 3) {
       attempts++;
@@ -126,8 +127,8 @@ router.post("/", async (req: Request, res: Response) => {
             relatedSystemId: sysId
           }
         });
-      } catch (e: any) {
-        if (e.code === 'P2002') { // Unique constraint violation
+      } catch (e: unknown) {
+        if (e && typeof e === 'object' && 'code' in e && e.code === 'P2002') { // Unique constraint violation
           continue; // retry
         }
         throw e;
@@ -143,6 +144,89 @@ router.post("/", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error creating ticket:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/tickets/:id - Update ticket (Requester only)
+router.patch("/:id", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+
+  try {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId }
+    });
+
+    if (!ticket || ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    if (ticket.currentStatus !== "New") {
+      return res.status(400).json({ error: "Can only update tickets with status 'New'" });
+    }
+
+    const { categoryId, relatedSystemId, requestedPriority, summary, description } = req.body;
+    const updateData: Prisma.TicketUncheckedUpdateInput = {};
+
+    if (categoryId !== undefined) {
+      const catId = parseInt(categoryId, 10);
+      if (isNaN(catId)) {
+        return res.status(400).json({ error: "Invalid categoryId" });
+      }
+      const category = await prisma.category.findUnique({ where: { id: catId } });
+      if (!category) {
+        return res.status(400).json({ error: "Category does not exist" });
+      }
+      updateData.categoryId = catId;
+    }
+
+    if (relatedSystemId !== undefined) {
+      const sysId = parseInt(relatedSystemId, 10);
+      if (isNaN(sysId)) {
+        return res.status(400).json({ error: "Invalid relatedSystemId" });
+      }
+      const system = await prisma.relatedSystem.findUnique({ where: { id: sysId } });
+      if (!system) {
+        return res.status(400).json({ error: "Related System does not exist" });
+      }
+      updateData.relatedSystemId = sysId;
+    }
+
+    if (summary !== undefined) {
+      const trimmedSummary = String(summary).trim();
+      if (trimmedSummary.length === 0 || trimmedSummary.length > 150) {
+        return res.status(400).json({ error: "Summary must be between 1 and 150 characters" });
+      }
+      updateData.summary = trimmedSummary;
+    }
+
+    if (description !== undefined) {
+      const trimmedDesc = String(description).trim();
+      if (trimmedDesc.length === 0 || trimmedDesc.length > 1000) {
+        return res.status(400).json({ error: "Description must be between 1 and 1000 characters" });
+      }
+      updateData.description = trimmedDesc;
+    }
+
+    if (requestedPriority !== undefined) {
+      const validPriorities = ["LOW", "MEDIUM", "HIGH"];
+      if (!validPriorities.includes(requestedPriority)) {
+        return res.status(400).json({ error: "Invalid requestedPriority" });
+      }
+      updateData.requestedPriority = requestedPriority;
+      updateData.itPriority = requestedPriority;
+    }
+
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: ticketId },
+      data: updateData
+    });
+
+    res.json(updatedTicket);
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    res.status(500).json({ error: "Failed to update ticket" });
   }
 });
 
@@ -311,9 +395,9 @@ router.delete("/:id/attachments/:attachmentId", async (req: Request, res: Respon
 });
 
 // GET /api/tickets - List tickets with search, filter, pagination
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
   try {
-    const requesterId = res.locals.requesterId as number;
+    const requesterId = res.locals.user.id;
     const { 
       search, 
       categoryId, 
@@ -330,7 +414,7 @@ router.get("/", async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Build the where clause
-    const where: any = { requesterId };
+    const where: Prisma.TicketWhereInput = { requesterId };
 
     if (search && typeof search === 'string' && search.trim() !== '') {
       where.OR = [
@@ -344,11 +428,11 @@ router.get("/", async (req: Request, res: Response) => {
     }
     
     if (requestedPriority) {
-      where.requestedPriority = String(requestedPriority);
+      where.requestedPriority = String(requestedPriority) as import("@prisma/client").TicketPriority;
     }
     
     if (status) {
-      where.currentStatus = String(status);
+      where.currentStatus = String(status) as import("@prisma/client").TicketStatus;
     }
 
     // Ensure valid sort fields

@@ -9,25 +9,29 @@ vi.mock("../../src/api", async (importOriginal) => {
   return {
     ...actual,
     login: vi.fn(),
+    getMe: vi.fn().mockRejectedValue(new Error("Not logged in")),
   };
 });
 
 describe("Login Component", () => {
-  it("renders email and password inputs", () => {
+  it("renders email and password inputs", async () => {
     render(<AuthProvider><Login /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it("has a 'Forgot your password?' link placeholder", () => {
+  it("has a 'Forgot your password?' link placeholder", async () => {
     render(<AuthProvider><Login /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     expect(screen.getByText(/forgot your password\?/i)).toBeInTheDocument();
   });
 
   it("shows generic error on login failure (invalid credentials or inactive)", async () => {
     vi.mocked(api.login).mockRejectedValueOnce(new Error("Invalid email or password"));
     render(<AuthProvider><Login /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "wrong" } });
@@ -38,8 +42,9 @@ describe("Login Component", () => {
     });
   });
 
-  it("disables button when fields are empty", () => {
+  it("disables button when fields are empty", async () => {
     render(<AuthProvider><Login /></AuthProvider>);
+    await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     const submitBtn = screen.getByRole("button", { name: /sign in/i });
     
     // Initial state empty

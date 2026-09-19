@@ -317,7 +317,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
                 </tr>
               </thead>
               <tbody className="border-top-0">
-                {tickets.map((t: any) => (
+                {tickets.map((t: TicketResponse) => (
                   <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
                     <td className="ps-4 py-3 text-nowrap">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
@@ -391,7 +391,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
             </div>
 
             <div className="p-3 bg-light d-flex flex-column gap-3">
-              {tickets.map((t: any) => (
+              {tickets.map((t: TicketResponse) => (
                 <div key={t.id} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
                   <div className="card-body p-4">
                     <div className="d-flex justify-content-between align-items-start mb-3">
