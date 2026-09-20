@@ -42,11 +42,11 @@ test.describe('User Administration', () => {
     await page.getByRole('button', { name: 'Search' }).click();
 
     // Verify user is in the table
-    const row = page.locator('tr').filter({ hasText: testUserName });
+    const row = page.locator('tr, div.card').filter({ hasText: testUserName }).first();
     await expect(row).toBeVisible();
-    await expect(row.locator('td').nth(1)).toHaveText(testUserEmail);
-    await expect(row.locator('td').nth(2)).toContainText('Requester');
-    await expect(row.locator('td').nth(3)).toContainText('Active');
+    await expect(row).toContainText(testUserEmail);
+    await expect(row).toContainText('Requester');
+    await expect(row).toContainText('Active');
 
     // 3. Edit User
     await row.getByRole('button', { name: 'Edit' }).click();
@@ -60,7 +60,7 @@ test.describe('User Administration', () => {
     await expect(page.getByText('User updated successfully')).toBeVisible();
 
     // Re-search to confirm role change (if needed, though React state might already update it)
-    await expect(row.locator('td').nth(2)).toContainText('IT Staff');
+    await expect(row).toContainText('IT Staff');
 
     // 4. Set Initial Password
     await row.getByRole('button', { name: 'Edit' }).click();
@@ -79,7 +79,7 @@ test.describe('User Administration', () => {
     await page.fill('input[placeholder="Search by name or email"]', 'e2e.admin@example.com');
     await page.getByRole('button', { name: 'Search' }).click();
 
-    const row = page.locator('tr').filter({ hasText: 'e2e.admin@example.com' });
+    const row = page.locator('tr, div.card').filter({ hasText: 'e2e.admin@example.com' }).first();
     await expect(row).toBeVisible();
 
     // Open Edit Modal for self
@@ -92,7 +92,7 @@ test.describe('User Administration', () => {
     await expect(page.getByText('You cannot change your own role.')).toBeVisible();
 
     // Verify Active switch is disabled
-    const activeSwitch = page.locator('.modal input[type="checkbox"]');
+    const activeSwitch = page.getByRole('button', { name: 'Deactivate User' });
     await expect(activeSwitch).toBeDisabled();
     await expect(page.getByText('You cannot deactivate your own account.')).toBeVisible();
   });

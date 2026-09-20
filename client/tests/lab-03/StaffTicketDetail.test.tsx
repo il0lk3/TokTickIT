@@ -83,8 +83,8 @@ describe('TicketDetail for IT Staff', () => {
     expect(statusSelect).toBeInTheDocument();
 
     // Tabs for Comments/Notes
-    expect(screen.getByText('Public Comments')).toBeInTheDocument();
-    expect(screen.getByText('Internal Notes')).toBeInTheDocument();
+    expect(screen.getByText(/Public Comments/i)).toBeInTheDocument();
+    expect(screen.getByText(/Internal Notes/i)).toBeInTheDocument();
   });
 
   it('shows confirmation modal for terminal status', async () => {
@@ -100,7 +100,7 @@ describe('TicketDetail for IT Staff', () => {
 
     // Find the status dropdown
     const combos = screen.getAllByRole('combobox');
-    const statusSelect = combos[1]; // priority, status, owner
+    const statusSelect = combos[1]; // status is now the second combobox in the layout
     
     fireEvent.change(statusSelect, { target: { value: 'Resolved' } });
 

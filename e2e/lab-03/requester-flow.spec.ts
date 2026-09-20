@@ -55,7 +55,13 @@ test.describe('E2E-05: Requester Flow (Lab 3)', () => {
     await page.fill('input[placeholder="Search tickets..."]', summaryText);
     
     // Click on the ticket to view details
-    await page.getByText(summaryText).filter({ state: 'visible' }).first().click();
+    // Check viewport to explicitly target the correct element container
+    const isMobile = await page.evaluate(() => window.innerWidth < 768);
+    if (isMobile) {
+      await page.locator('.card', { hasText: summaryText }).first().click();
+    } else {
+      await page.locator('tr', { hasText: summaryText }).first().click();
+    }
 
     // 4. View Detail
     await expect(page.locator('text=Ticket Details').first()).toBeVisible();

@@ -32,7 +32,7 @@ test.describe('IT Staff Ticket Detail', () => {
 
     // Claim Ticket
     const claimPromise = page.waitForResponse(res => res.url().includes('/api/staff/tickets/') && res.request().method() === 'PATCH');
-    await page.click('button:has-text("Claim Ticket")');
+    await page.click('button:has-text("Claim")');
     await claimPromise;
     await page.waitForLoadState('networkidle'); // Wait for subsequent GET request
 
@@ -65,7 +65,7 @@ test.describe('IT Staff Ticket Detail', () => {
     await page.waitForLoadState('networkidle');
 
     // Change IT Priority
-    const prioritySelectFixed = page.locator('select').nth(0);
+    const prioritySelectFixed = page.locator('select').nth(2);
     const priorityPromise = page.waitForResponse(res => res.url().includes('/api/staff/tickets/') && res.request().method() === 'PATCH');
     await prioritySelectFixed.selectOption('HIGH');
     await priorityPromise;
@@ -84,7 +84,7 @@ test.describe('IT Staff Ticket Detail', () => {
     await reloadedTicketRow.click();
     await expect(page.locator('text=Ticket Details')).toBeVisible();
 
-    await expect(page.locator('select').nth(0)).toHaveValue('HIGH');
-    await expect(page.locator('select').nth(1)).toHaveValue('InProgress');
+    await expect(page.locator('select').nth(2)).toHaveValue('HIGH'); // IT Priority
+    await expect(page.locator('select').nth(1)).toHaveValue('InProgress'); // Status
   });
 });
