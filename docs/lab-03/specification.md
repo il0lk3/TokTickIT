@@ -46,10 +46,12 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
   - `Waiting for Requester` -> `In Progress` (IT Staff resumes work after Requester replies)
   - `In Progress` / `Open` -> `Resolved` (IT Staff marks resolved)
   - `Resolved` -> `Closed` (IT Staff closes after confirmation)
-  - `Resolved` -> `Reopened` (IT Staff reopens if issue persists)
+  - `Resolved` / `Closed` -> `Reopened` (IT Staff reopens if issue persists)
+  - `Reopened` -> `In Progress` (IT Staff resumes work)
   - `Any` -> `Cancelled` (IT Staff cancels ticket)
 - **BR-10**: Both Public Comments and Internal Notes are append-only. Editing, deletion, or whitespace-only content is not permitted.
-- **BR-11**: Passwords must meet complexity requirements and JWT sessions must securely expire.
+- **BR-11**: Passwords must meet complexity requirements (e.g., length, mixed case, symbols).
+- **BR-11b**: JWT sessions must securely expire and be managed via HttpOnly cookies.
 - **BR-12**: Logout must fully invalidate the session/token.
 - **BR-13**: A user can only be assigned exactly one role.
 - **BR-14**: A Ticket can have zero or one primary Ticket Owner, who must be an active IT Staff user.
@@ -58,12 +60,14 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 ### 5.1. Authorization Matrix
 | Operation | Requester | IT Staff | Administrator |
 |---|---|---|---|
-| View own tickets | Yes | Yes | No |
+| View own tickets | Yes | No | No |
 | Create ticket | Yes | No | No |
 | View Ticket Queue | No | Yes | No |
 | Change Ticket Owner | No | Yes | No |
 | Change IT Priority | No | Yes | No |
 | Change Status | No | Yes | No |
+| View Public Comment | Yes (own ticket) | Yes | No |
+| View Internal Note | No | Yes | No |
 | Post Public Comment | Yes (own ticket) | Yes | No |
 | Post Internal Note | No | Yes | No |
 | Manage Users | No | No | Yes |
@@ -96,18 +100,21 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 - `GET /api/auth/me`: Retrieve current user.
 - `POST /api/auth/change-password`: Update initial password.
 - `GET /api/staff/tickets`: IT Staff queue retrieval.
-- `PATCH /api/staff/tickets/:id`: Update ticket operational fields.
+- `PATCH /api/staff/tickets/:id/status`: Update ticket status.
+- `PATCH /api/staff/tickets/:id/priority`: Update ticket IT priority.
+- `PATCH /api/staff/tickets/:id/owner`: Claim or reassign ticket owner.
 - `POST /api/tickets/:id/comments`: Add public comment.
 - `POST /api/tickets/:id/notes`: Add internal note (restricted).
 - `GET /api/admin/users`: List users.
 - `POST /api/admin/users`: Create user.
-- `PUT /api/admin/users/:id`: Edit user.
+- `PATCH /api/admin/users/:id`: Edit user properties and activation state.
+- `POST /api/admin/users/:id/initial-password`: Set new initial password for user.
 
 ## 9. Acceptance Criteria
 - **AC-01**: Given an active user with valid credentials, when the user logs in, then the backend establishes authenticated access and returns the permitted user identity and role.
 - **AC-02**: Given a user who must change the initial password, when login succeeds, then normal application screens remain unavailable until a valid new password is saved.
 - **AC-03**: Given an authenticated Requester, when the client supplies another requesterId, then the backend still applies the authenticated identity and does not return another Requester's data.
-- **AC-04**: Given a Requester account, when an Internal Note endpoint is requested, then the operation is rejected (403 Forbidden).
+- **AC-04**: Given a Requester account, when an Internal Note endpoint is requested, then the operation is rejected without exposing note content (403 Forbidden).
 - **AC-05**: Given an IT Staff user, when viewing the Queue, then tickets are filterable, sortable, and paginated correctly.
 - **AC-06**: Given an Admin user, when attempting to deactivate their own account, then the system rejects the operation.
 - **AC-07**: Given an inactive user, when attempting to log in, then the system returns a safe generic failure without exposing exact account status.
@@ -132,6 +139,8 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 - **Zen Green UI and Responsive Evidence**: Rendered `ui-spec.md` plus desktop, tablet, and mobile screenshots for all major Lab 3 screens.
 
 ## 11. Assumptions and Decisions
+- **Duty Segregation**: Administrators are strictly isolated from operational ticket workflows (excluded from Ticket Queue, Ticket Owner, and viewing Comments/Notes). Their sole responsibility is User Management. This deliberate deviation from the handout examples ensures a clear boundary of concerns and prevents privilege escalation.
+- **JWT Secret Security**: The system will fail-fast and refuse to start if the `JWT_SECRET` environment variable is missing. There is no hardcoded fallback secret, eliminating a critical security vulnerability.
 - **Authentication**: We will use JWT stored in `HttpOnly` and `SameSite=Strict` cookies for secure session management without complex session stores. The JWT token lifetime will be set to 2 hours. Logout will invalidate the session by clearing the cookie.
 - **CSRF Mitigation**: CSRF risks are mitigated by using JWTs stored in `HttpOnly` and `SameSite=Strict` cookies, preventing cross-site requests from automatically attaching the token. The `Secure` flag is enabled in production.
 - **Login Attempts**: No progressive lockout or rate limiting for login attempts is implemented for this scope; failed logins (bad credentials or inactive account) simply yield a generic 401 error.
