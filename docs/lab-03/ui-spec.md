@@ -32,11 +32,12 @@ This document details the new and updated user interfaces required for Lab 3, co
 
 ## 3. Requester Ticket Detail (Update)
 - **Top Section (Grid)**: Displays ticket information. Fields like Current Status, Ticket Owner, and Requested Priority are rendered as read-only badges to visually distinguish them from editable fields.
-- **Action**: "Problem Appears Resolved" button. (This does not formally change the status to Resolved, but flags it for IT Staff). It is positioned near the Current Status field for high visibility.
+- **Action**: "Problem Appears Resolved" button. (This does not formally change the status to Resolved, but flags it for IT Staff). It is positioned near the Current Status field for high visibility. Once pressed, the button must be hidden or disabled to prevent duplicate submissions.
+- **Indicators**: An `appearsResolved` badge or visual indicator must appear near the Current Status when this flag is active.
 - **Bottom Section (Tabbed Interface)**:
   - **Tabs**: 💬 Public Comments (count) · 📎 Attachments (count).
   - **View**: Renders a list of items for the active tab.
-  - **Input**: A text area to add a new Public Comment (placeholder must be exactly `"Type a comment..."`).
+  - **Input**: A text area to add a new Public Comment (placeholder must be exactly `"Type a comment..."`). When the ticket is in a terminal status (Resolved, Closed, Cancelled), the input is replaced with a disabled state message: "This ticket is closed and no longer accepts new comments".
   - **Action**: "Post Comment".
 
 ## 4. IT Staff Ticket Queue
@@ -47,15 +48,26 @@ This document details the new and updated user interfaces required for Lab 3, co
   - Filters (Dropdowns for Status, Requested Priority, IT Priority, Owner/Unassigned).
   - Sorting (Clickable column headers to toggle sort direction).
   - Pagination controls (Previous/Next, Page numbers).
-- **Empty State**: Clear message when no tickets match the filters.
+- **Empty State**: Clear message when no tickets match the filters. Unassigned tickets should visually differentiate the Owner field (e.g., using an italicized, muted *"Unassigned"* text).
 - **Actions**: Clicking a row opens the IT Staff Ticket Detail screen.
+- **Feedback States**: 
+  - **Loading**: Displays a spinner or skeleton loader while fetching the queue.
+  - **No-results**: Distinct from a completely empty system, this shows when search/filters yield zero rows.
+  - **Forbidden**: If a non-staff user attempts to view this, show a 403 Forbidden message.
+  - **Failure**: Friendly error message if the API fails to load the queue.
 
 ## 5. IT Staff Ticket Detail
 - **Top Section (Grid)**: Operational controls and ticket details organized in a card.
+- **Indicators**: IT Staff must also see the `appearsResolved` badge if the Requester has flagged it, serving as a cue to review and formally close the ticket.
 - **Editable Fields** (must have white background and visible border to distinguish from read-only fields):
   - **Ticket Owner**: Dropdown to assign to self ("Claim Ticket" button adjacent) or reassign to another IT Staff.
   - **IT Priority**: Dropdown to override the requested priority.
   - **Current Status**: Dropdown to change the status (e.g., Open -> In Progress -> Resolved).
+  - **Required Confirmations**: Transitions to terminal statuses (`Resolved`, `Closed`, `Cancelled`) must prompt a confirmation dialog before applying the change.
+- **Feedback States**:
+  - **Loading**: Spinner while fetching the ticket details.
+  - **Saving**: Spinner or inline indicator while applying status/priority/owner updates.
+  - **Failure**: Alert message if an update fails (e.g., invalid transition).
 - **Bottom Section (Tabbed Interface)**:
   - **Tabs**: 💬 Public Comments (count) · 🔒 Internal Notes (count, staff-only) · 📎 Attachments (count).
   - *Note*: "Service Actions" tab is explicitly excluded as it maps to "Actions Taken", which is deferred to Lab 4 (per handout §4.2).
@@ -82,8 +94,14 @@ This document details the new and updated user interfaces required for Lab 3, co
   - Cannot deactivate the last active Admin.
   - Cannot deactivate self.
   - Changing the initial password automatically sets `requiresPasswordChange = true` for the user.
+- **Feedback States**:
+  - **Loading / Saving**: Display spinners during data fetch and form submission.
+  - **Success**: Notification toast or alert upon successful user creation/edit.
+  - **Validation / Failure**: Inline errors for duplicate emails or attempting to deactivate the last Admin.
+  - **Forbidden**: Non-admin users must see a 403 access denied message if they attempt to load the route.
 
 ## 7. Responsive & Accessibility Rules (Same as Lab 2)
+- **ARIA Tabs Pattern**: The new tabbed interfaces (Public Comments, Internal Notes) must implement proper ARIA roles (`role="tablist"`, `role="tab"`, `role="tabpanel"`) and state attributes (`aria-selected="true"`) to ensure screen-reader accessibility.
 - All tables must switch to stacked cards or scroll horizontally on mobile.
 - Forms must use `form-label` and correct input types (e.g., `type="email"`, `type="password"`).
 - All buttons and links must be keyboard accessible and have visible focus states.
