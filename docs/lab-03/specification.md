@@ -46,7 +46,7 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
   - `Waiting for Requester` -> `In Progress` (IT Staff resumes work after Requester replies)
   - `In Progress` / `Open` -> `Resolved` (IT Staff marks resolved)
   - `Resolved` -> `Closed` (IT Staff closes after confirmation)
-  - `Resolved` / `Closed` -> `Reopened` (IT Staff reopens if issue persists)
+  - `Resolved` -> `Reopened` (IT Staff reopens if issue persists)
   - `Reopened` -> `In Progress` (IT Staff resumes work)
   - `Any` -> `Cancelled` (IT Staff cancels ticket)
 - **BR-10**: Both Public Comments and Internal Notes are append-only. Editing, deletion, or whitespace-only content is not permitted.
