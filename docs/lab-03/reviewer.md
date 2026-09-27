@@ -30,15 +30,17 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|---|---|
 | [#41](https://github.com/il0lk3/TokTickIT/pull/41) | 1 — Lab 3 Sprint Specification and Test Plan | `docs(lab3)` | Approved (after 1 revision) |
 | [#42](https://github.com/il0lk3/TokTickIT/pull/42) | 2 — User model, DB migration, and seed data | `feature/lab3` | Approved (after 1 revision) |
-| [#43](https://github.com/il0lk3/TokTickIT/pull/43) | 3 — Implement Authentication API and Session | `feature/lab3` | Approved |
+| [#43](https://github.com/il0lk3/TokTickIT/pull/43) | 3 — Implement Authentication API and Session | `feature/lab3` | Approved (after 1 revision) |
 | [#45](https://github.com/il0lk3/TokTickIT/pull/45) | 4 — Login & Change-Password UI + App Shell | `feature/lab3` | Approved (after 1 revision) |
-| [#46](https://github.com/il0lk3/TokTickIT/pull/46) | 5 — Complete Requester Ticket Detail & Regression Tests | `feature/lab3` | Approved |
-| [#47](https://github.com/il0lk3/TokTickIT/pull/47) | 6 — IT Staff Ticket Queue | `feature/lab3` | Approved |
-| [#48](https://github.com/il0lk3/TokTickIT/pull/48) | 7 — IT Staff Ticket Detail | `feature/lab3` | Approved |
+| [#46](https://github.com/il0lk3/TokTickIT/pull/46) | 5 — Complete Requester Ticket Detail & Regression Tests | `feature/lab3` | Approved (after 1 revision) |
+| [#47](https://github.com/il0lk3/TokTickIT/pull/47) | 6 — IT Staff Ticket Queue | `feature/lab3` | Approved (after 1 revision) |
+| [#48](https://github.com/il0lk3/TokTickIT/pull/48) | 7 — IT Staff Ticket Detail | `feature/lab3` | Approved (after 2 revisions) |
 | [#49](https://github.com/il0lk3/TokTickIT/pull/49) | 8 — Administrator User Management | `feature/lab3` | Approved (after 1 revision) |
 | [#52](https://github.com/il0lk3/TokTickIT/pull/52) | 9 — End-to-End Testing, Authorization Hardening | `feature/lab3` | Approved (after 1 revision) |
 | [#53](https://github.com/il0lk3/TokTickIT/pull/53) | 10 — UI Polish & Zen Green Consistency Pass | `feature/lab3` | Approved (after 1 revision) |
 | TBD | 11 — Release Evidence (Docs, Screenshots) | `feature/lab3-release-evidence` | *Pending* |
+
+> *Note: PR #44 was opened against the wrong base branch and closed without merging; work was redone in #45.*
 
 <br>
 
@@ -72,9 +74,9 @@ A living document tracking the code review process. Reviews run in both directio
 |-------|--------|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/43](https://github.com/il0lk3/TokTickIT/pull/43) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
-| **Review Comment** | Verified locally on the PR head. Test evidence: Ran the full server suite against a live Postgres. Results: 33/33 passing, 6 files. Spec compliance: Identity derived from session, generic 401s, HttpOnly cookies, and requiresPasswordChange blocks. No blockers found. Approved. |
-| **My Response** | Thank you for the thorough verification! |
-| **Outcome** | Approved and merged |
+| **Review Comment** | ## Requested changes — Reviewed against Issue 3 plan<br><br>The JWT token logic has a major security flaw: it uses a fallback secret (`process.env.JWT_SECRET || 'fallback'`) if `JWT_SECRET` is missing. This exposes the application to token forgery. Please ensure the server fails fast (e.g., `process.exit(1)`) if the secret is missing, with no fallback. Other than that, everything looks solid with identity derived from session, generic 401s, HttpOnly cookies, and requiresPasswordChange blocks. |
+| **My Response** | Removed the fallback secret entirely. Added a strict check in `index.ts` that calls `process.exit(1)` if `JWT_SECRET` is missing. Thanks for catching that critical security issue! |
+| **Outcome** | Approved and merged (after 1 revision) |
 
 ---
 
@@ -87,6 +89,42 @@ A living document tracking the code review process. Reviews run in both directio
 | **Review Comment** | ## Review: Request Changes<br><br>Thanks for the work — the Login / Change-Password screens and role-based App Shell are a solid start. Below are blocking issues: 1. E2E tests reference users/passwords that don't exist in the seed. 2. E2E "login success" flow contradicts the seed's `requiresPasswordChange: true`. 3. Attachment removal reason regression. 4. Stale session state in AppShell after logout. |
 | **My Response** | Fixed the E2E user seeds, ensured `AppShell` state is fully flushed upon logout, and restored the attachment removal reason prompt to preserve Lab 2 functionality. |
 | **Outcome** | Approved and merged |
+
+---
+
+### PR #46 — Issue 5: Complete Requester Ticket Detail & Regression Tests
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/46](https://github.com/il0lk3/TokTickIT/pull/46) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Comment** | ## Review: Request Changes<br><br>Nice coverage of the auth-identity regression and the comments/notes API. A few items need to be resolved before this ships.<br><br>**Blocking:**<br>1. "Problem Appears Resolved" is not actually tracked (no `appearsResolved` boolean on the ticket).<br>2. Dynamic-import hack with `@ts-ignore` in the handlers (`TicketDetail.tsx`).<br>3. Debug leftovers in `e2e/lab-03/requester-flow.spec.ts` (`page.waitForTimeout` and `screenshot`).<br>4. E2E data isolation isn't deterministic between suites.<br><br>**Should fix:**<br>5. Seed hack `u as any` + unconditional flag reset forces `requiresPasswordChange:true` on all users.<br>6. Comments can be posted on terminal tickets.<br>7. Coverage gap: there's no test for the appears-resolved behavior. |
+| **My Response** | Added `appearsResolved` boolean + auto system comment, guarded both terminal-status and already-marked cases; replaced dynamic import with static import; added global E2E setup for seed isolation; blocked comments/notes on terminal tickets server-side; fixed seed hacks; added API + E2E test coverage. |
+| **Outcome** | Approved and merged (after 1 revision) |
+
+---
+
+### PR #47 — Issue 6: IT Staff Ticket Queue
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/47](https://github.com/il0lk3/TokTickIT/pull/47) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Comment** | ## Review: Request Changes<br><br>Solid implementation of the queue UI and `/api/staff/tickets`. A few important items to address first:<br><br>**Blocking:**<br>1. `GET /api/it-staff` (owner-filter source) is not secured and sends no credentials.<br>2. Documented 400 behavior isn't implemented for enum filters (e.g. `status=Unicorn` causes 500 Prisma error instead of 400).<br>3. Test reliability issues: `staff-queue.api.test.ts` uses fixed unique `ticketNumber` which crashes on parallel runs. `/api/auth/me` fetch mock leaks a debug log.<br><br>**Should fix:**<br>4. Base branch is `main` instead of `lab3-staging`.<br>5. Ownership consistency: `staff.ts` uses `new PrismaClient()` directly. Queue search is case-sensitive `contains`.<br>6. Minor UX: `TicketQueue` categoryId filter state has no category dropdown (dead control). |
+| **My Response** | Secured `/api/it-staff` with `authenticateToken` + `requireRole(["IT_STAFF"])`; validated enums returning 400; fixed test uniqueness by using dynamic ticket numbers; removed debug log in mock; changed base branch to `lab3-staging`; standardized on `getPrisma()` and added a category dropdown. |
+| **Outcome** | Approved and merged (after 1 revision) |
+
+---
+
+### PR #48 — Issue 7: IT Staff Ticket Detail
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/48](https://github.com/il0lk3/TokTickIT/pull/48) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Comment** | ## Request changes<br><br>Endpoints and UI scope look right. A few items need fixing before merge:<br><br>**Blocking:**<br>1. Claim does not perform the BR-09 `New -> Open` transition. Claim/assign must move `New -> Open`, and must be rejected on terminal tickets.<br>2. Owner must be an active IT Staff user (BR-14) - currently accepts Admin.<br>3. Invalid Prisma usage: `dataToUpdate.ownerId = ownerId` breaks `tsc` (`Prisma.TicketUpdateInput` has no scalar `ownerId`).<br><br>**Should-fix:**<br>4. Owner dropdown matches by name instead of `owner.id`.<br>5. E2E test does not assert persistence (uses timeout instead of reload+assert).<br><br>**Follow-up Review:** Docs rewrite contradicts implementation (`tok_session` cookie vs `accessToken`, X-CSRF-Protected, error format). Please revert docs to align with actual implementation. |
+| **My Response** | Fixed `New -> Open` transition; restricted owner to active `IT_STAFF`; fixed Prisma typing with `TicketUncheckedUpdateInput`; bound owner dropdown to `owner.id`; improved E2E tests. Also reverted the speculative docs rewrite so it accurately matches our actual `accessToken` cookie and `400` error formats. |
+| **Outcome** | Approved and merged (after 2 revisions) |
 
 ---
 
