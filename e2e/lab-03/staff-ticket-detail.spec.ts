@@ -32,7 +32,7 @@ test.describe('IT Staff Ticket Detail', () => {
 
     // Claim Ticket
     const claimPromise = page.waitForResponse(res => res.url().includes('/api/staff/tickets/') && res.request().method() === 'PATCH');
-    await page.click('button:has-text("Claim")');
+    await page.click('button:has-text("Claim Ticket")');
     await claimPromise;
     await page.waitForLoadState('networkidle'); // Wait for subsequent GET request
 

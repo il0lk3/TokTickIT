@@ -128,8 +128,8 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
       case "New": return "badge-zen-info";
       case "InProgress": return "badge-zen-warning";
       case "WaitingForRequester": return "badge-zen-warning";
-      case "Resolved":
-      case "Closed": return "badge-zen-success";
+      case "Resolved": return "badge-zen-success";
+      case "Closed": return "badge-zen-secondary";
       default: return "badge-zen-secondary";
     }
   };

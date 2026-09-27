@@ -236,8 +236,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
       case "New": return "badge-zen-info";
       case "InProgress": return "badge-zen-warning";
       case "WaitingForRequester": return "badge-zen-warning";
-      case "Resolved":
-      case "Closed": return "badge-zen-success";
+      case "Resolved": return "badge-zen-success";
+      case "Closed": return "badge-zen-secondary";
       default: return "badge-zen-secondary";
     }
   };
@@ -306,7 +306,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                   </select>
                   {((ticket.owner?.id || ticket.ownerId) !== user.id) && (
                     <button className="btn btn-outline-primary text-nowrap px-2 py-1 small" onClick={() => requestUpdate({ ownerId: user.id })}>
-                      Claim
+                      Claim Ticket
                     </button>
                   )}
                 </div>
@@ -420,7 +420,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
             <div className="col-12 mt-4 pt-3 border-top">
               <div className="zen-tabs">
                 <button 
-                  role="tab"
+
                   className={`zen-tab-btn ${activeTab === 'public' ? 'active' : ''}`}
                   onClick={() => setActiveTab('public')}
                 >
@@ -429,7 +429,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                 </button>
                 {isStaff && (
                   <button 
-                    role="tab"
+
                     className={`zen-tab-btn internal-notes-tab ${activeTab === 'internal' ? 'active' : ''}`}
                     onClick={() => setActiveTab('internal')}
                   >
@@ -438,7 +438,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                   </button>
                 )}
                 <button 
-                  role="tab"
+
                   className={`zen-tab-btn ${activeTab === 'attachments' ? 'active' : ''}`}
                   onClick={() => setActiveTab('attachments')}
                 >
@@ -480,7 +480,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                         <textarea 
                           className="form-control border-0 bg-light mb-2 small shadow-sm" 
                           rows={3} 
-                          placeholder="Type a public comment..." 
+                          placeholder="Type a comment..." 
                           style={{ resize: 'none' }}
                           value={commentText}
                           onChange={e => setCommentText(e.target.value)}

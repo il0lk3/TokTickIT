@@ -40,7 +40,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .bg-zen-pale { background-color: var(--zen-pale) !important; }
 
 /* Zen Badges */
-.badge {
+[class*="badge-zen-"] {
   font-weight: 500 !important;
   letter-spacing: 0.02em;
 }
@@ -249,7 +249,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   outline-offset: -2px;
 }
 
-.custom-table th:hover {
+.custom-table th[style*="cursor: pointer"]:hover {
   background-color: #f1f3f5;
   color: #212529;
 }
