@@ -34,7 +34,7 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 - **BR-01**: Only an active user with valid credentials may authenticate.
 - **BR-02**: A user marked as requiring a password change cannot enter the normal application until a new valid password is saved.
 - **BR-03**: The authenticated user identity, not a requesterId supplied by the client, determines ownership of Requester operations.
-- **BR-04**: Public Comments are visible to the Requester and IT Staff. Internal Notes are visible only to IT Staff.
+- **BR-04**: Public Comments are visible to the Requester and IT Staff. Internal Notes are visible only to IT Staff. Administrators do not access ticket-level comments or notes in Lab 3 (see Section 11 — Duty Segregation).
 - **BR-05**: A Requester may indicate that the problem appears resolved, but cannot formally set the Ticket to Resolved or Closed.
 - **BR-06**: An Administrator cannot deactivate their own account or remove the last active Administrator.
 - **BR-07**: Duplicate email addresses are prevented during user creation or updates.
@@ -54,7 +54,7 @@ The stakeholder needs to replace the temporary mock-user selector with a secure 
 - **BR-11b**: JWT sessions must securely expire and be managed via HttpOnly cookies.
 - **BR-12**: Logout must fully invalidate the session/token.
 - **BR-13**: A user can only be assigned exactly one role.
-- **BR-14**: A Ticket can have zero or one primary Ticket Owner, who must be an active IT Staff user.
+- **BR-14**: A Ticket can have zero or one primary Ticket Owner, who must be an active IT Staff user. Administrators are not eligible Ticket Owners in Lab 3 (see Section 11 — Duty Segregation).
 - **BR-15**: Public Comments and Internal Notes must have justified length limits (e.g., maximum 1000 characters) and cannot be empty.
 
 ### 5.1. Authorization Matrix
@@ -100,9 +100,7 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 - `GET /api/auth/me`: Retrieve current user.
 - `POST /api/auth/change-password`: Update initial password.
 - `GET /api/staff/tickets`: IT Staff queue retrieval.
-- `PATCH /api/staff/tickets/:id/status`: Update ticket status.
-- `PATCH /api/staff/tickets/:id/priority`: Update ticket IT priority.
-- `PATCH /api/staff/tickets/:id/owner`: Claim or reassign ticket owner.
+- `PATCH /api/staff/tickets/:id`: Update ticket operational fields (owner, priority, status).
 - `POST /api/tickets/:id/comments`: Add public comment.
 - `POST /api/tickets/:id/notes`: Add internal note (restricted).
 - `GET /api/admin/users`: List users.

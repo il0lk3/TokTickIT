@@ -13,18 +13,21 @@ test.describe('3. Staff Queue Screenshots', () => {
   test('Capture Queue states', async ({ page }) => {
     // 10. queue-forbidden.png
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'user@example.com'); // Requester
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.requester@example.com'); // Requester
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     await page.goto('/queue');
     await snap(page, 'staff-queue', 'queue-forbidden.png');
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
 
     // Login as Staff
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'staff@example.com');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.staff@example.com');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     await page.goto('/queue');
     await page.waitForLoadState('networkidle');
 
@@ -42,7 +45,7 @@ test.describe('3. Staff Queue Screenshots', () => {
     // 2. queue-loading.png
     await page.route('**/api/staff/tickets*', async route => {
       await new Promise(r => setTimeout(r, 1000));
-      await route.continue();
+      await route.fallback();
     });
     const reloadPromise = page.reload();
     await snap(page, 'staff-queue', 'queue-loading.png');

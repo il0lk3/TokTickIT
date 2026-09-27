@@ -10,34 +10,22 @@ const snap = async (page: Page, folder: string, name: string) => {
 };
 
 test.describe('4. Staff Ticket Detail Screenshots', () => {
-  test('Capture Ticket Detail states', async ({ page, request }) => {
-    // We need some tickets to work with.
-    // 1. Unassigned ticket
-    // 2. Assigned ticket (to self)
-    // 3. Resolved ticket (by self) -> then Requester clicks "Appears Resolved"
-    // 4. Closed ticket (terminal block)
-    
-    // Login as Admin to create a user and login
-    const loginRes = await request.post('/api/auth/login', { data: { email: 'admin@example.com', password: 'TokTickIT!2024' } });
-    const authHeaders = { cookie: loginRes.headers()['set-cookie'] };
-    
-    // Actually, Staff can just look at existing seeded tickets! 
-    // Or we create them to be safe.
+  test('Capture Ticket Detail states', async ({ page }) => {
     
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'staff@example.com');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.staff@example.com');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
-    await page.goto('/queue');
     await page.waitForLoadState('networkidle');
 
     // Find an unassigned ticket
-    await page.selectOption('select:has(option[value="unassigned"])', 'unassigned');
+    await page.locator('select').nth(4).selectOption('unassigned');
     await page.waitForTimeout(1000);
-    const unassignedTicketUrl = await page.locator('tbody tr').first().locator('a').first().getAttribute('href');
     
-    if (unassignedTicketUrl) {
-      await page.goto(unassignedTicketUrl);
+    // Click the first unassigned ticket
+    const ticketLocator = page.locator('tbody tr, .card');
+    if (await ticketLocator.first().isVisible()) {
+      await ticketLocator.first().click();
       await page.waitForLoadState('networkidle');
       
       // 2. ticket-detail-unassigned.png
@@ -51,16 +39,13 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     }
     
     // Find an assigned ticket (owned by me)
-    await page.goto('/queue');
-    await page.selectOption('select:has(option[value="me"])', 'me');
-    await page.waitForTimeout(1000);
-    let myTicketUrl = await page.locator('tbody tr').first().locator('a').first().getAttribute('href');
-    if (!myTicketUrl) {
-      // Just use the unassigned one we just claimed
-      myTicketUrl = unassignedTicketUrl;
-    }
+    await page.goto('/'); // resets state
+    await page.waitForLoadState('networkidle');
     
-    await page.goto(myTicketUrl!);
+    // In Staff view, queue is default
+    await page.locator('select').nth(4).selectOption({ label: 'E2E Staff' });
+    await page.waitForTimeout(1000);
+    await ticketLocator.first().click();
     await page.waitForLoadState('networkidle');
 
     // 1. ticket-detail-default.png / desktop / tablet / mobile
@@ -83,8 +68,6 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForTimeout(1000);
 
     // 6. ticket-detail-invalid-transition.png
-    // In progress -> Closed is usually invalid in many systems, or New -> Closed
-    // If we have an invalid transition error we can snap it, else simulate:
     await page.route('**/api/staff/tickets/*/status', async route => {
       await route.fulfill({ status: 400, json: { error: 'Invalid transition' } });
     });
@@ -92,7 +75,12 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForTimeout(1000);
     await snap(page, 'staff-ticket-detail', 'ticket-detail-invalid-transition.png');
     await page.unroute('**/api/staff/tickets/*/status');
-    await page.reload();
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.locator('select').nth(4).selectOption({ label: 'E2E Staff' });
+    await page.waitForTimeout(1000);
+    await ticketLocator.first().click();
+    await page.waitForLoadState('networkidle');
 
     // 7. ticket-detail-public-comments.png
     await page.click('button:has-text("Public Comments")');
@@ -116,16 +104,21 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.selectOption('select[aria-label="Status"]', 'Resolved');
     await page.waitForTimeout(1000);
 
+    // Get the ticket summary so we can find it as requester
+    const summaryText = await page.locator('h3').first().innerText();
+
     // Login as Requester to mark Appears Resolved
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'user@example.com');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.requester@example.com');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     
-    // Go to my ticket (requester URL is /tickets/ID)
-    const reqUrl = myTicketUrl!.replace('/staff/tickets/', '/tickets/');
-    await page.goto(reqUrl);
+    // Click the ticket in My Tickets list
+    await page.locator('tbody tr, .card').filter({ hasText: summaryText }).first().click();
+    await page.waitForLoadState('networkidle');
     
     // Post comment as requester to trigger "Problem Appears Resolved" badge
     await page.fill('textarea[placeholder="Type a comment..."]', 'Thank you! It works now.');
@@ -133,12 +126,18 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForTimeout(1000);
     
     // Log back as Staff
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'staff@example.com');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.staff@example.com');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
-    await page.goto(myTicketUrl!);
+    await page.waitForLoadState('networkidle');
+    
+    await page.locator('select').nth(4).selectOption({ label: 'E2E Staff' });
+    await page.waitForTimeout(1000);
+    await page.locator('tbody tr, .card').filter({ hasText: summaryText }).first().click();
+    await page.waitForLoadState('networkidle');
     
     // 10. ticket-detail-appears-resolved-badge.png
     await snap(page, 'staff-ticket-detail', 'ticket-detail-appears-resolved-badge.png');

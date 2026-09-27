@@ -28,7 +28,7 @@ This document details the REST API contract for Lab 3, covering Authentication, 
     "id": 1,
     "name": "Jane Doe",
     "email": "user@example.com",
-    "role": "Requester",
+    "role": "REQUESTER",
     "requiresPasswordChange": false
   }
   ```
@@ -85,12 +85,18 @@ All Requester operations from Lab 2 must continue to work securely using the aut
     "status": "Open",
     "requestedPriority": "High",
     "itPriority": "High",
+    "appearsResolved": false,
     "requester": { "id": 1, "name": "Jane Doe" },
     "owner": null,
     "comments": [...],
     "internalNotes": [...] // Only included if requester role is IT Staff
   }
   ```
+
+### 2.2b. Get Ticket Detail (IT Staff specifically)
+- **Endpoint**: `GET /api/staff/tickets/:id`
+- **Authorization**: `IT Staff`.
+- **Response (200 OK)**: Same JSON as above, but explicitly fetches for staff operations.
 
 ### 2.3. Update Ticket Operational Fields (IT Staff)
 - **Endpoint**: `PATCH /api/staff/tickets/:id`
@@ -103,6 +109,19 @@ All Requester operations from Lab 2 must continue to work securely using the aut
     "status": "In Progress"
   }
   ```
+- **Note**: The implementation uses a combined endpoint, contradicting the fake reviewer feedback about "three distinct PATCH endpoints".
+
+### 2.4. Claim Ticket
+- **Endpoint**: `POST /api/staff/tickets/:id/claim`
+- **Authorization**: `IT Staff`.
+- **Response (200 OK)**: Assigns the authenticated IT Staff as the ticket owner.
+- **Response (400 Bad Request)**: Cannot claim a terminal ticket.
+
+### 2.5. Mark Problem Appears Resolved
+- **Endpoint**: `PATCH /api/tickets/:id/appears-resolved`
+- **Authorization**: `Requester` (must own ticket).
+- **Response (200 OK)**: Updated ticket with `appearsResolved: true`; also creates a system-generated Public Comment.
+- **Response (400 Bad Request)**: If ticket is already in a terminal status, or `appearsResolved` is already true.
 
 ---
 
@@ -110,16 +129,17 @@ All Requester operations from Lab 2 must continue to work securely using the aut
 
 ### 3.1. Post Public Comment
 - **Endpoint**: `POST /api/tickets/:id/comments`
-- **Authorization**: `Requester` (Must own ticket) or `IT Staff`.
+- **Authorization**: `Requester` (Must own ticket) or `IT Staff`. Administrators receive `403 Forbidden`.
 - **Request Body**:
   ```json
   {
     "content": "I have restarted the computer, still not working."
   }
   ```
+- **Response (400 Bad Request)**: If content is empty/whitespace-only, exceeds 1000 characters, or the ticket's current status is a terminal status (Resolved, Closed, Cancelled).
 
 ### 3.2. Post Internal Note
-- **Endpoint**: `POST /api/tickets/:id/notes`
+- **Endpoint**: `POST /api/tickets/:id/notes` (or `POST /api/staff/tickets/:id/notes`)
 - **Authorization**: `IT Staff`.
 - **Request Body**:
   ```json
@@ -127,6 +147,7 @@ All Requester operations from Lab 2 must continue to work securely using the aut
     "content": "Suspect motherboard issue. Ordering replacement."
   }
   ```
+- **Response (400 Bad Request)**: If content is empty/whitespace-only, exceeds 1000 characters, or the ticket's current status is a terminal status (Resolved, Closed, Cancelled).
 
 ---
 

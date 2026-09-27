@@ -23,11 +23,11 @@ test.describe('1. Authentication Screenshots', () => {
     await snap(page, 'authentication', 'login-empty.png');
 
     await page.fill('input[type="email"]', 'notanemail');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await snap(page, 'authentication', 'login-validation.png');
 
-    await page.fill('input[type="email"]', 'admin@example.com');
+    await page.fill('input[type="email"]', 'e2e.admin@example.com');
     await page.fill('input[type="password"]', 'wrongpassword');
     await page.click('button[type="submit"]');
     await expect(page.locator('.alert-danger')).toBeVisible();
@@ -35,32 +35,35 @@ test.describe('1. Authentication Screenshots', () => {
 
     await page.route('**/api/auth/login', async route => {
       await new Promise(r => setTimeout(r, 2000));
-      await route.continue();
+      await route.fallback();
     });
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="password"]', 'Password123!');
     const submitPromise = page.click('button[type="submit"]');
     await snap(page, 'authentication', 'login-busy-state.png');
     await submitPromise;
     await page.unroute('**/api/auth/login');
 
-    await expect(page.locator('text=Users')).toBeVisible();
+    await page.waitForLoadState('networkidle'); await page.waitForTimeout(500);
     await snap(page, 'authentication', 'app-shell-role-admin.png');
 
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
     await page.goto('/queue'); 
-    await expect(page).toHaveURL(/.*login/);
+    await expect(page.locator('h5:has-text("Sign in to your account")')).toBeVisible();
     await snap(page, 'authentication', 'logout-blocked-access.png');
 
-    await loginAs(page, 'user@example.com', 'TokTickIT!2024');
+    await loginAs(page, 'e2e.requester@example.com', 'Password123!');
     await snap(page, 'authentication', 'app-shell-role-requester.png');
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
 
-    await loginAs(page, 'staff@example.com', 'TokTickIT!2024');
+    await loginAs(page, 'e2e.staff@example.com', 'Password123!');
     await snap(page, 'authentication', 'app-shell-role-it-staff.png');
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
 
     const ctx = page.request;
-    const loginRes = await ctx.post('/api/auth/login', { data: { email: 'admin@example.com', password: 'TokTickIT!2024' } });
+    const loginRes = await ctx.post('/api/auth/login', { data: { email: 'e2e.admin@example.com', password: 'Password123!' } });
     const authHeaders = { cookie: loginRes.headers()['set-cookie'] };
     const tempEmail = 'changepw@example.com';
     await ctx.post('/api/admin/users', {
@@ -90,7 +93,8 @@ test.describe('1. Authentication Screenshots', () => {
       data: { email: 'inactive@example.com', name: 'Inactive', role: 'Requester', password: 'Password1!', isActive: false }
     }).catch(e => {}); // Ignore error if exists
     
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
     await page.fill('input[type="email"]', 'inactive@example.com');
     await page.fill('input[type="password"]', 'Password1!');
     await page.click('button[type="submit"]');

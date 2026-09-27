@@ -202,7 +202,7 @@ router.patch("/tickets/:id", async (req: Request, res: Response) => {
         "InProgress": ["WaitingForRequester", "Resolved", "Cancelled"],
         "WaitingForRequester": ["InProgress", "Cancelled"],
         "Resolved": ["Closed", "Reopened", "Cancelled"],
-        "Closed": ["Cancelled"],
+        "Closed": ["Reopened", "Cancelled"],
         "Reopened": ["InProgress", "Resolved", "Cancelled"],
         "Cancelled": []
       };

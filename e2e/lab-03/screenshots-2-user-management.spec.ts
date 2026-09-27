@@ -13,18 +13,21 @@ test.describe('2. User Management Screenshots', () => {
   test('Capture User Management states', async ({ page }) => {
     // 14. non-admin-forbidden.png
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'staff@example.com');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.staff@example.com');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     await page.goto('/admin/users');
     await snap(page, 'user-management', 'non-admin-forbidden.png');
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
 
     // Login as admin
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'admin@example.com');
-    await page.fill('input[type="password"]', 'TokTickIT!2024');
+    await page.fill('input[type="email"]', 'e2e.admin@example.com');
+    await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     await page.goto('/admin/users');
     await page.waitForLoadState('networkidle');
 
@@ -68,32 +71,32 @@ test.describe('2. User Management Screenshots', () => {
 
     // 7. create-user-duplicate-email.png
     await page.fill('input[name="name"]', 'Duplicate');
-    await page.fill('input[name="email"]', 'staff@example.com');
-    await page.fill('input[name="password"]', 'TokTickIT!2024');
+    await page.fill('input[name="email"]', 'e2e.staff@example.com');
+    await page.fill('input[name="password"]', 'Password123!');
     await page.click('button:has-text("Save User")');
     await expect(page.locator('.alert-danger')).toBeVisible();
     await snap(page, 'user-management', 'create-user-duplicate-email.png');
 
     // 8. create-user-success.png
-    await page.fill('input[name="email"]', 'newuser@example.com');
+    await page.fill('input[name="email"]', 'newe2e.requester@example.com');
     await page.click('button:has-text("Save User")');
     await expect(page.locator('.modal-content')).not.toBeVisible();
     await snap(page, 'user-management', 'create-user-success.png');
 
     // 9. edit-user-form.png
-    // Click edit on newuser@example.com
-    await page.click('tr:has-text("newuser@example.com") button:has-text("Edit")');
+    // Click edit on newe2e.requester@example.com
+    await page.click('tr:has-text("newe2e.requester@example.com") button:has-text("Edit")');
     await expect(page.locator('.modal-content')).toBeVisible();
     await snap(page, 'user-management', 'edit-user-form.png');
 
     // 10. edit-user-reset-password.png
     await page.click('text=Set initial password');
-    await page.fill('input[name="password"]', 'TokTickIT!2024');
+    await page.fill('input[name="password"]', 'Password123!');
     await snap(page, 'user-management', 'edit-user-reset-password.png');
     await page.click('button:has-text("Cancel")');
 
     // 11. deactivate-self-blocked.png
-    await page.click('tr:has-text("admin@example.com") button:has-text("Edit")');
+    await page.click('tr:has-text("e2e.admin@example.com") button:has-text("Edit")');
     await page.click('button:has-text("Deactivate User")');
     await expect(page.locator('.alert-danger')).toBeVisible();
     await snap(page, 'user-management', 'deactivate-self-blocked.png');
@@ -106,7 +109,7 @@ test.describe('2. User Management Screenshots', () => {
     // If we have 2 admins, and we deactivate one, it succeeds.
     // Let's create a second admin.
     const ctx = page.request;
-    const loginRes = await ctx.post('/api/auth/login', { data: { email: 'admin@example.com', password: 'TokTickIT!2024' } });
+    const loginRes = await ctx.post('/api/auth/login', { data: { email: 'e2e.admin@example.com', password: 'Password123!' } });
     const authHeaders = { cookie: loginRes.headers()['set-cookie'] };
     await ctx.post('/api/admin/users', {
       headers: authHeaders,
@@ -114,28 +117,30 @@ test.describe('2. User Management Screenshots', () => {
     });
     // Refresh page
     await page.goto('/admin/users');
-    await page.click('tr:has-text("admin@example.com") button:has-text("Edit")');
+    await page.click('tr:has-text("e2e.admin@example.com") button:has-text("Edit")');
     await page.click('button:has-text("Deactivate User")'); // Admin 1 deactivated by Admin 1? No, self deactivate blocks.
     await page.click('button:has-text("Cancel")');
     
     // Login as Admin 2, deactivate Admin 2 -> self block.
     // Deactivate Admin 1 -> Success! (deactivate-user-success.png)
-    await page.click('button:has-text("Logout")');
+    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
+    await page.click('button:has-text("Logout")', { force: true });
     await page.goto('/login');
     await page.fill('input[type="email"]', 'admin2@example.com');
     await page.fill('input[type="password"]', 'Password1!');
     await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
     await page.goto('/admin/users');
     
-    // 13. deactivate-user-success.png (Deactivate newuser@example.com)
-    await page.click('tr:has-text("newuser@example.com") button:has-text("Edit")');
+    // 13. deactivate-user-success.png (Deactivate newe2e.requester@example.com)
+    await page.click('tr:has-text("newe2e.requester@example.com") button:has-text("Edit")');
     await page.click('button:has-text("Deactivate User")');
     await page.click('button:has-text("Save User")');
     await page.waitForTimeout(500);
     await snap(page, 'user-management', 'deactivate-user-success.png');
     
     // Deactivate Admin 1
-    await page.click('tr:has-text("admin@example.com") button:has-text("Edit")');
+    await page.click('tr:has-text("e2e.admin@example.com") button:has-text("Edit")');
     await page.click('button:has-text("Deactivate User")');
     await page.click('button:has-text("Save User")');
     
