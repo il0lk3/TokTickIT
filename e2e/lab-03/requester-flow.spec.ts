@@ -1,3 +1,5 @@
+import { PrismaClient } from '../../server/node_modules/@prisma/client';
+const prisma = new PrismaClient();
 import { test, expect } from '@playwright/test';
 
 test.describe('E2E-05: Requester Flow (Lab 3)', () => {
