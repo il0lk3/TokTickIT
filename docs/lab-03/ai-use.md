@@ -1,19 +1,24 @@
 # AI Usage Log (Lab 3)
 
-**LLM Model Used:** Google Antigravity (Gemini-based Agentic IDE)
+**LLM Model Used:** Google Antigravity (Agentic Integrated Development Environment)
 
-## Key Prompts Used
-1. "Set up the authentication API with cookie-based sessions, and integrate it into a React AuthContext."
-2. "Convert the existing MyTickets and CreateTicket flows to use the new authentication session instead of the mock RequesterContext."
-3. "Generate the IT Staff Queue page UI with server-side pagination, searching, and filtering. Ensure it switches to card layout on mobile."
-4. "Create a User Management dashboard for the Administrator role that allows creating, editing, and deactivating users."
-5. "Add role-based authorization middleware to the Express server to prevent unauthorized access to /api/admin and /api/staff."
-6. "Fix the E2E tests for the staff queue so that it accounts for the 'Unassigned' badge and proper sorting assertions."
-7. "Refactor the 'badge-zen-success' status logic so that 'Closed' displays as grey ('badge-zen-secondary') instead of green across all components."
-8. "Write a robust Playwright script that automatically generates screenshots for all required states in the User Management flow, including edge cases like `deactivate-self-blocked`."
+## Prompt Engineering Log
 
-## My Reflection
-Using an **Agentic AI** (like Antigravity) is a significantly different experience from using a **Spec-agent** (like ChatGPT or Claude in a web browser). 
-- **The Good:** The agent could directly search my codebase, read existing files (like `index.css` and Bootstrap classes), and apply edits directly to the relevant files. This eliminated the tedious copy-pasting required when using a web LLM. It was particularly powerful for tracking down CSS classes, refactoring E2E tests, and writing exhaustive automation scripts.
-- **The Bad / Challenges:** Because the agent has the power to edit files, giving vague instructions sometimes resulted in it changing things outside the intended scope (e.g. over-correcting accessibility attributes or causing layout jumps). I had to learn to be extremely precise with my prompts ("Change the badge color in TicketQueue.tsx ONLY") to prevent side-effects.
-- **Conclusion:** The AI is an incredibly powerful coding assistant that accelerates boilerplate generation and test writing. However, the human developer *must* remain the domain expert. I still had to thoroughly review its PRs, catch missing business rules (like the 'last admin deactivate' block), and enforce visual design consistency. AI handles the typing, but the developer handles the architecture and quality assurance.
+1. "Implement the authentication API leveraging cookie-based sessions, and integrate the corresponding logic into a React AuthContext."
+2. "Refactor the existing MyTickets and CreateTicket workflows to utilize the newly established authentication session, deprecating the legacy RequesterContext."
+3. "Develop the IT Staff Queue interface featuring server-side pagination, search capabilities, and filtering mechanisms, ensuring responsive design principles are applied for mobile viewports."
+4. "Construct a User Management dashboard tailored for the Administrator role, facilitating operations such as user creation, modification, and deactivation."
+5. "Introduce role-based authorization middleware within the Express architecture to restrict unauthorized access to administrative and staff endpoints."
+6. "Resolve the end-to-end testing discrepancies for the staff queue by incorporating assertions for the 'Unassigned' badge state and validating sorting functionalities."
+7. "Standardize the 'badge-zen-success' status logic across the application to ensure the 'Closed' status is consistently represented with a secondary thematic color."
+8. "Formulate an exhaustive Playwright automation script to generate visual verification artifacts across all User Management states, including edge cases such as self-deactivation prevention."
+
+## Developer Reflection
+
+The utilization of an Agentic Artificial Intelligence significantly alters the software development lifecycle compared to traditional prompt-and-paste paradigms. 
+
+**Advantages:** The agent's capacity to autonomously index the codebase, analyze existing configurations (such as global CSS architectures and component abstractions), and apply targeted modifications directly to the file system drastically reduces boilerplate implementation time. This capability proved exceptionally advantageous during the execution of widespread refactoring tasks, the normalization of end-to-end test locators, and the generation of exhaustive visual automation scripts. The agent demonstrated a strong adherence to predefined structural patterns when provided with adequate context.
+
+**Challenges:** The inherent autonomy of the agent introduces a risk of over-correction. Ambiguous instructions occasionally resulted in modifications beyond the intended scope, such as excessive adjustments to accessibility attributes or inadvertent layout regressions. This necessitates highly precise, constrained prompting (e.g., explicitly delineating the boundaries of a refactoring operation) to mitigate unintended side-effects.
+
+**Conclusion:** Agentic AI serves as a formidable accelerator for software engineering, particularly in generating foundational structures and test coverage. However, the human developer remains the critical domain expert. Comprehensive peer review, architectural oversight, and strict validation against business requirements (e.g., verifying the prevention of the last active administrator deactivation) remain indispensable. The AI accelerates the mechanical aspects of coding, while the developer is ultimately responsible for systemic integrity and architectural coherence.
