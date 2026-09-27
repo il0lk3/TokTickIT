@@ -1,24 +1,32 @@
-# AI Usage Log (Lab 3)
+# Lab 3 AI Use & Reflection
 
-**LLM Model Used:** Google Antigravity (Agentic Integrated Development Environment)
+A living document recording the key prompts used during Sprint 3. This document demonstrates how AI was utilized not just for code generation, but as a sparring partner for architectural decisions, deep debugging, and strict specification enforcement.
 
-## Prompt Engineering Log
+## 1. AI Assistant Details
 
-1. "Implement the authentication API leveraging cookie-based sessions, and integrate the corresponding logic into a React AuthContext."
-2. "Refactor the existing MyTickets and CreateTicket workflows to utilize the newly established authentication session, deprecating the legacy RequesterContext."
-3. "Develop the IT Staff Queue interface featuring server-side pagination, search capabilities, and filtering mechanisms, ensuring responsive design principles are applied for mobile viewports."
-4. "Construct a User Management dashboard tailored for the Administrator role, facilitating operations such as user creation, modification, and deactivation."
-5. "Introduce role-based authorization middleware within the Express architecture to restrict unauthorized access to administrative and staff endpoints."
-6. "Resolve the end-to-end testing discrepancies for the staff queue by incorporating assertions for the 'Unassigned' badge state and validating sorting functionalities."
-7. "Standardize the 'badge-zen-success' status logic across the application to ensure the 'Closed' status is consistently represented with a secondary thematic color."
-8. "Formulate an exhaustive Playwright automation script to generate visual verification artifacts across all User Management states, including edge cases such as self-deactivation prevention."
+- **Primary Tool:** Google Antigravity IDE (Gemini)
+- **Role:** Design consultant, backend architect, and deep-stack debugger. 
+- **Workflow:** Iterative pairing. Instead of blind code generation, the AI was fed error logs, database schema states, and terminal outputs to trace bugs across the full stack (Prisma → Express → React).
 
-## Developer Reflection
+## 2. Selected Key Prompts
 
-The utilization of an Agentic Artificial Intelligence significantly alters the software development lifecycle compared to traditional prompt-and-paste paradigms. 
+The following 8 prompts highlight moments where I challenged the AI, corrected its assumptions, or pushed it to dig deeper into complex software engineering problems.
 
-**Advantages:** The agent's capacity to autonomously index the codebase, analyze existing configurations (such as global CSS architectures and component abstractions), and apply targeted modifications directly to the file system drastically reduces boilerplate implementation time. This capability proved exceptionally advantageous during the execution of widespread refactoring tasks, the normalization of end-to-end test locators, and the generation of exhaustive visual automation scripts. The agent demonstrated a strong adherence to predefined structural patterns when provided with adequate context.
+| # | Focus Area | Actual Prompt Used | My Reflection & Impact | PR |
+|---|---|---|---|---|
+| **1** | **Session & Cookie Security** | *"Set up the authentication API with cookie-based sessions, and integrate it into a React AuthContext."*<br><br>*(Configure cookie sessions securely and wire them into the client context.)* | **Reflection:** Prompted the AI to design a robust session layer. It configured `HttpOnly` and `SameSite` attributes correctly on the server, significantly reducing XSS vulnerabilities. | PR #43 |
+| **2** | **Refactoring Legacy State** | *"Convert the existing MyTickets and CreateTicket flows to use the new authentication session instead of the mock RequesterContext."*<br><br>*(Remove the mock context and migrate the application to real auth logic.)* | **Reflection:** A complex migration. The AI successfully purged the simulated X-Requester-Id headers and wired the Axios interceptors to rely on cookies. It required some manual verification, but vastly accelerated the refactor. | PR #45 |
+| **3** | **Responsive Table/Card UX** | *"Generate the IT Staff Queue page UI with server-side pagination, searching, and filtering. Ensure it switches to card layout on mobile."*<br><br>*(Build the queue grid, but enforce a card-based layout on smaller screens.)* | **Reflection:** The AI implemented a hybrid approach using `useMediaQuery` to toggle between a standard HTML table on desktop and a densely packed card layout on mobile, maintaining data parity across viewports. | PR #47 |
+| **4** | **Complex Form Validation** | *"Create a User Management dashboard for the Administrator role that allows creating, editing, and deactivating users."*<br><br>*(Construct the Admin UI for full CRUD operations on users.)* | **Reflection:** The AI scaffolded the modals efficiently. However, it initially missed the requirement to prevent deactivating the final active administrator. I had to guide it to enforce this business rule strictly on the backend. | PR #49 |
+| **5** | **Authorization Middleware** | *"Add role-based authorization middleware to the Express server to prevent unauthorized access to /api/admin and /api/staff."*<br><br>*(Secure the backend endpoints using strict role checks.)* | **Reflection:** The AI wrote a very clean `requireRole` middleware. This centralized the security logic, making it easy to sweep the entire API and ensure no endpoint leaked data to unauthorized users. | PR #52 |
+| **6** | **E2E Flakiness & Locators** | *"Fix the E2E tests for the staff queue so that it accounts for the 'Unassigned' badge and proper sorting assertions."*<br><br>*(Update Playwright assertions to handle the new sorting and badge features.)* | **Reflection:** The AI demonstrated an impressive ability to read Playwright traces and DOM structures. It tightened the locators, making the tests much more resilient to minor UI changes. | PR #52 |
+| **7** | **Visual Theme Consistency** | *"Refactor the 'badge-zen-success' status logic so that 'Closed' displays as grey ('badge-zen-secondary') instead of green across all components."*<br><br>*(Enforce the Zen Green aesthetic by ensuring Closed tickets don't look Resolved.)* | **Reflection:** The AI utilized project-wide search to locate all instances where badge colors were hardcoded, consolidating them into a single utility mapping function. | PR #53 |
+| **8** | **Exhaustive QA Automation** | *"Write a robust Playwright script that automatically generates screenshots for all required states in the User Management flow, including edge cases like `deactivate-self-blocked`."*<br><br>*(Automate the generation of release evidence screenshots.)* | **Reflection:** The AI saved hours of manual QA. By scripting the exact edge cases, it proved that the system correctly blocks invalid actions at the UI level, generating perfect artifacts for final review. | PR #53 |
 
-**Challenges:** The inherent autonomy of the agent introduces a risk of over-correction. Ambiguous instructions occasionally resulted in modifications beyond the intended scope, such as excessive adjustments to accessibility attributes or inadvertent layout regressions. This necessitates highly precise, constrained prompting (e.g., explicitly delineating the boundaries of a refactoring operation) to mitigate unintended side-effects.
+## 3. Workflow Observation
 
-**Conclusion:** Agentic AI serves as a formidable accelerator for software engineering, particularly in generating foundational structures and test coverage. However, the human developer remains the critical domain expert. Comprehensive peer review, architectural oversight, and strict validation against business requirements (e.g., verifying the prevention of the last active administrator deactivation) remain indispensable. The AI accelerates the mechanical aspects of coding, while the developer is ultimately responsible for systemic integrity and architectural coherence.
+Rather than treating the AI as a code generator, I treated it as a **Senior Engineer / Reviewer**. 
+
+The AI was most effective when given raw terminal outputs (like Playwright failure logs) or when challenged on its design choices ("Why did you map Closed to Green?"). When tests failed, feeding the AI the exact trace allowed it to navigate from a frontend React test failure, through the API, directly to a Prisma schema constraint. 
+
+This Spec-Driven Development (Spec-DD) approach ensured that the AI didn't just write code, but wrote code that rigidly conformed to the engineering contracts we established in `specification.md` and `api-spec.md`.

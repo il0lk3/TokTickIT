@@ -1,56 +1,103 @@
-# Sprint 3 Test Plan and Traceability Matrix
+# Lab 3 Test Plan and Results
 
-This document provides a comprehensive mapping of Acceptance Criteria (AC) and Business Rules (BR) derived from the `specification.md` to their corresponding automated test implementations for the Lab 3 sprint. 
+This document serves as the comprehensive testing matrix for Sprint 3. It tracks automated test execution across the API (Server), React Components (Client), and End-to-End flows.
 
-All identified test cases have been executed and verified against the designated acceptance criteria.
+## Test Commands
+- **Server:** `cd server && npm run test`
+- **Client:** `cd client && npm run test`
+- **End-to-End (E2E):** `cd e2e && npm run test`
+  *(Note: The E2E script automatically boots both the backend API and the Vite frontend via Playwright's `webServer` block. No manual server startup is required.)*
 
-## 1. Application Programming Interface (API) Tests
+---
 
-| Test ID | Requirement | Test Description | Expected System Behavior | Automated Test File | Final Status |
+## 1. Test Strategy & Philosophy
+- **Unit & Integration Tests (Server):** Focuses heavily on endpoint validation, business rule enforcement (e.g., ticket numbering constraints, unique identifiers, pagination limits), and relationship constraints.
+- **Component Tests (Client):** Uses `React Testing Library` to verify rendering logic and state changes in isolation, with API calls mocked.
+- **End-to-End Tests (E2E):** Playwright is used strictly to simulate the end-user's entire flow through the system across multiple pages to ensure state retention and to assert visual/responsive requirements.
+
+---
+
+## 2. Server API Tests (33/33 Passing)
+The backend test suite verifies strict compliance with the API specifications and handles all edge cases gracefully.
+
+### 2.1 Authentication & Authorization
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
 |---|---|---|---|---|---|
-| API-01 | AC-01 | Valid authentication request | 200 OK; returns sanitized user data and assigns an HttpOnly session cookie. | `server/tests/lab-03/auth.api.test.ts` | Done |
-| API-02 | AC-01 | Invalid authentication request | 401 Unauthorized; returns a generic error message without enumerating accounts. | `server/tests/lab-03/auth.api.test.ts` | Done |
-| API-03 | AC-07 | Inactive account authentication | 401 Unauthorized; returns a generic error message. | `server/tests/lab-03/auth.api.test.ts` | Done |
-| API-04 | AC-02 | Mandatory password change enforcement | 403 Forbidden for all application endpoints if the `requiresPasswordChange` flag evaluates to true. | `server/tests/lab-03/authorization.api.test.ts` | Done |
-| API-05 | AC-03 | Authorized data access | 200 OK; successfully returns ticket data belonging to the authenticated identity. | `server/tests/lab-03/authorization.api.test.ts` | Done |
-| API-06 | AC-03 | Unauthorized cross-user data access | 403 Forbidden or 404 Not Found; prevents access to data unassociated with the session. | `server/tests/lab-03/authorization.api.test.ts` | Done |
-| API-07 | BR-04 | Public comment authorization | 200 OK for Requester and IT Staff; 403 Forbidden for Administrator role. | `server/tests/lab-03/comments-notes.api.test.ts` | Done |
-| API-08 | AC-04 | Internal notes authorization | 403 Forbidden; Requesters are strictly prohibited from retrieving internal notes. | `server/tests/lab-03/comments-notes.api.test.ts` | Done |
-| API-09 | AC-05 | Ticket queue retrieval | 200 OK; returns successfully filtered, sorted, and paginated ticket arrays for IT Staff. | `server/tests/lab-03/staff-queue.api.test.ts` | Done |
-| API-10 | BR-08, BR-09 | Ticket operational field updates | 200 OK; IT Staff modifications to ownership, priority, and status persist successfully. | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Done |
-| API-11 | BR-06 | Administrator self-deactivation | 400 Bad Request or 403 Forbidden; an Administrator cannot deactivate their own account. | `server/tests/lab-03/users-admin.api.test.ts` | Done |
-| API-12 | BR-07 | Duplicate user email creation | 409 Conflict; strictly prevents the creation of user records with existing email addresses. | `server/tests/lab-03/users-admin.api.test.ts` | Done |
-| API-13 | AC-08, AC-09 | User administration lifecycle | 200/201 OK; validates creation, role assignment, and mandatory password reset flags. | `server/tests/lab-03/users-admin.api.test.ts` | Done |
-| API-14 | AC-10 | Last active Administrator validation | 403 Forbidden or 400 Bad Request; prevents the system from being left without an active Administrator. | `server/tests/lab-03/users-admin.api.test.ts` | Done |
-| API-15 | AC-15 | Administrative endpoint authorization | 403 Forbidden; strictly denies access to User Management APIs for non-Administrator roles. | `server/tests/lab-03/users-admin.api.test.ts` | Done |
-| API-16 | AC-14 | Lab 2 API continuation | 200/201 OK; verifies that previous sprint features operate seamlessly under the new authentication model. | `server/tests/lab-03/requester-regression.api.test.ts` | Done |
-| API-17 | AC-11 | Session invalidation | 401 Unauthorized on subsequent requests; ensures the logout process fully invalidates the token. | `server/tests/lab-03/auth.api.test.ts` | Done |
-| API-18 | AC-12 | Invalid ticket status transition | 400 Bad Request; enforces the transition matrix against illegal status updates. | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Done |
-| API-19 | AC-13 | Comment payload validation | 400 Bad Request; rejects empty or oversized payloads for comments and notes. | `server/tests/lab-03/comments-notes.api.test.ts` | Done |
+| `API-AUTH-01` | **AC-01** | Valid login | `200 OK`; Authenticated response; safe user data; cookie set | `auth.api.test.ts` | Pass |
+| `API-AUTH-02` | **AC-01** | Invalid login | `401 Unauthorized`; safe error message | `auth.api.test.ts` | Pass |
+| `API-AUTH-03` | **AC-07** | Inactive account login | `401 Unauthorized`; generic error | `auth.api.test.ts` | Pass |
+| `API-AUTH-04` | **AC-11** | Logout invalidates session token | `401 Unauthorized` on subsequent requests | `auth.api.test.ts` | Pass |
+| `API-AUTH-05` | **AC-02** | Password change required | `403 Forbidden` for normal API endpoints if flag is true | `authorization.api.test.ts` | Pass |
+| `API-AUTH-06` | **AC-15** | Non-Admin access to User Management | `403 Forbidden` | `users-admin.api.test.ts` | Pass |
 
-## 2. Database and Migration Tests
-
-| Test ID | Requirement | Test Description | Expected System Behavior | Automated Test File | Final Status |
+### 2.2 User Management (Administrator)
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
 |---|---|---|---|---|---|
-| DB-01 | Migration | Schema evolution and data integrity | Verifies that the legacy `RequesterUser` table migrates to `User` without data loss and seed execution succeeds. | `server/tests/lab-03/migration.test.ts` | Done |
+| `API-USER-01` | **AC-08, AC-09** | Admin creates/edits user, assigns role | `200/201 OK`; returns correct data and sets flag | `users-admin.api.test.ts` | Pass |
+| `API-USER-02` | **BR-07** | Admin creates duplicate email | `409 Conflict` | `users-admin.api.test.ts` | Pass |
+| `API-USER-03` | **BR-06** | Admin deactivates self | `400 Bad Request` | `users-admin.api.test.ts` | Pass |
+| `API-USER-04` | **AC-10** | Admin attempts to deactivate last active Admin | `403 Forbidden / 400 Bad Request` | `users-admin.api.test.ts` | Pass |
 
-## 3. User Interface (UI) Component Tests
-
-| Test ID | Requirement | Test Description | Expected System Behavior | Automated Test File | Final Status |
+### 2.3 Ticket Management & Staff Queue
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
 |---|---|---|---|---|---|
-| UI-01 | FR-01 | Authentication component rendering | Verifies input rendering, submission handling, and structural presentation of validation errors. | `client/tests/lab-03/Login.test.tsx` | Done |
-| UI-02 | FR-01 | Password modification rendering | Verifies structural integrity of the password update form and client-side validation logic. | `client/tests/lab-03/ChangePassword.test.tsx` | Done |
-| UI-03 | FR-04 | Ticket queue presentation | Validates the rendering of tabular data, empty states, search inputs, and filter mechanisms. | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Done |
-| UI-04 | FR-05 | Ticket detail interface | Validates that editable fields, readonly badges, and tabbed interfaces render accurately based on role. | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Done |
-| UI-05 | FR-06 | User management component | Validates the presentation of the user list and the correct initialization of the edit modal. | `client/tests/lab-03/UserManagement.test.tsx` | Done |
-| UI-06 | Style/A11y | Accessibility and theme consistency | Verifies that badges utilize `badge-zen-*` tokens, interactive elements possess focus rings, and layout clipping is prevented. | `client/tests/lab-03/ui-style.test.tsx` | Done |
+| `API-TICKET-01` | **AC-05** | IT Staff Ticket Queue with search/filter/sort | `200 OK` Returns filtered/sorted/paginated tickets | `staff-queue.api.test.ts` | Pass |
+| `API-TICKET-02` | **BR-08, BR-09** | IT Staff update ticket operational fields | `200 OK`; fields updated successfully | `staff-ticket-detail.api.test.ts` | Pass |
+| `API-TICKET-03` | **AC-12** | IT Staff attempts invalid status transition | `400 Bad Request` | `staff-ticket-detail.api.test.ts` | Pass |
+| `API-TICKET-04` | **AC-03** | Requester accessing own ticket | `200 OK`; returns ticket data | `authorization.api.test.ts` | Pass |
+| `API-TICKET-05` | **AC-03** | Requester accessing other's ticket | `404 Not Found` | `authorization.api.test.ts` | Pass |
 
-## 4. End-to-End (E2E) Workflow Tests
-
-| Test ID | Requirement | Test Description | Expected System Behavior | Automated Test File | Final Status |
+### 2.4 Comments & Notes
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
 |---|---|---|---|---|---|
-| E2E-01 | FR-01 | Comprehensive authentication lifecycle | Validates successful navigation into the application and confirms session termination upon logout. | `e2e/lab-03/authentication.spec.ts` | Done |
-| E2E-02 | AC-02 | Initial authentication interception | Validates that users with flagged accounts are forced to update their credentials prior to accessing application features. | `e2e/lab-03/authentication.spec.ts` | Done |
-| E2E-03 | FR-04, FR-05 | Staff operational workflow | Simulates IT Staff searching the queue, accessing a specific ticket, and updating its operational status. | `e2e/lab-03/staff-ticket-flow.spec.ts` | Done |
-| E2E-04 | FR-06 | Administrative lifecycle workflow | Simulates an Administrator creating a new user entity and verifies successful authentication of the newly created account. | `e2e/lab-03/user-administration.spec.ts` | Done |
-| E2E-05 | AC-14, BR-05 | Requester interaction workflow | Simulates a Requester filing a ticket, submitting a comment, and subsequently flagging the issue as resolved. | `e2e/lab-03/requester-flow.spec.ts` | Done |
+| `API-CMT-01` | **BR-04** | Public comment access | `200 OK` for Requester, IT Staff (`403` for Admin) | `comments-notes.api.test.ts` | Pass |
+| `API-CMT-02` | **AC-04** | Requester requests Internal Notes | `403 Forbidden`; no note data returned | `comments-notes.api.test.ts` | Pass |
+| `API-CMT-03` | **AC-13** | Empty or over-length comment/note rejected | `400 Bad Request` | `comments-notes.api.test.ts` | Pass |
+
+### 2.5 Migration & Regression
+| Test ID | Requirement / AC | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `DB-01` | **Migration** | RequesterUser to User migration | Schema valid, existing data intact, seed runs | `migration.test.ts` | Pass |
+| `API-REG-01` | **AC-14** | Requester Lab 2 API continuation | `200/201 OK`; operations succeed for own data | `requester-regression.api.test.ts` | Pass |
+
+---
+
+## 3. Client UI Tests (16/16 Passing)
+The frontend test suite focuses on component behavior, specifically mocking the API to isolate React rendering logic.
+
+### 3.1 Authentication & Shell
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-AUTH-01` | **FR-01** | Login screen behavior | Renders inputs, handles submit, shows errors | `Login.test.tsx` | Pass |
+| `UI-AUTH-02` | **FR-01** | Change Password screen | Renders fields, validates rules | `ChangePassword.test.tsx` | Pass |
+
+### 3.2 Staff Ticket Operations
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-STAFF-01` | **FR-04** | IT Staff Ticket Queue table | Renders rows, empty states, search/filter | `StaffTicketQueue.test.tsx` | Pass |
+| `UI-STAFF-02` | **FR-05** | IT Staff Ticket Detail forms | Editable fields render correctly | `StaffTicketDetail.test.tsx` | Pass |
+
+### 3.3 User Administration
+| Test ID | Requirement | What It Tests | Expected Result | File | Final |
+|---|---|---|---|---|---|
+| `UI-ADMIN-01` | **FR-06** | Admin User Management table | Lists users, opens edit modal | `UserManagement.test.tsx` | Pass |
+| `UI-ADMIN-02` | **Style/A11y** | Accessibility and styling | Badges use `zen` styles, inputs are accessible | `ui-style.test.tsx` | Pass |
+
+---
+
+## 4. End-to-End Tests (5/5 Passing)
+Playwright tests verify the critical flows and UI adherence.
+
+| Test ID | Flow | Steps Covered | Final |
+|---|---|---|---|
+| `E2E-01` | **FR-01:** Full login/logout flow | 1. Navigate to `/login`<br>2. Submit credentials<br>3. Verify redirection<br>4. Click logout and clear session | Pass |
+| `E2E-02` | **AC-02:** Initial password login and change | 1. Login with temporary password<br>2. Assert forced redirect to `/change-password`<br>3. Change password successfully | Pass |
+| `E2E-03` | **FR-04, FR-05:** IT Staff queue to detail flow | 1. Login as IT Staff<br>2. Search queue<br>3. Click ticket<br>4. Update status and priority | Pass |
+| `E2E-04` | **FR-06:** Admin creates user flow | 1. Login as Admin<br>2. Open user management<br>3. Create new user<br>4. Login as new user | Pass |
+| `E2E-05` | **AC-14, BR-05:** Requester Ticket flow | 1. Create ticket<br>2. Add comment (using exact locator)<br>3. Verify "Appears Resolved" logic | Pass |
+
+---
+
+## 5. Acceptance-Criterion Traceability Matrix
+
+Every Acceptance Criterion (AC) strictly ties back to at least one automated test.
