@@ -68,10 +68,10 @@ prompted to set a new password on first login.
 
 | Role | Email | Status |
 |------|-------|--------|
-| **Requester** | `cream.su@example.com`, `bew.su@example.com`, `kanta.su@example.com`, `je.su@example.com`, `bewnoi.su@example.com`, `grace.su@example.com`, `phrao.su@example.com` | Active |
-| **Requester** | `pueng.su@example.com` | Inactive |
-| **IT Staff** | `staff1@example.com`, `staff2@example.com` | Active |
-| **IT Staff** | `staff3@example.com` | Inactive |
+| **Requester** | `cream.su@example.com`, `bew.su@example.com`, `kanta.su@example.com`, `je.su@example.com`, `bewnoi.su@example.com`, `grace.su@example.com`, `phrao.su@example.com`, `pueng.su@example.com` | Active |
+| **Requester** | `inactive.user@example.com` | Inactive |
+| **IT Staff** | `staff1@example.com`, `staff2@example.com`, `staff3@example.com` | Active |
+| **IT Staff** | `inactive.staff@example.com` | Inactive |
 | **Admin** | `admin@example.com` | Active |
 
 > **Verify against `server/prisma/seed.ts` before relying on this table** — confirm which specific accounts

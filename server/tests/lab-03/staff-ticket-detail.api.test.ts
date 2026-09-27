@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 describe("IT Staff Ticket Detail API", () => {
+  const prisma = getPrisma();
   let requesterCookie: string;
   let staffCookie: string;
   let adminCookie: string;
@@ -159,5 +160,10 @@ describe("IT Staff Ticket Detail API", () => {
       .set("Cookie", staffCookie)
       .send({ content: "This is a note on a cancelled ticket" });
     expect(res.status).toBe(400);
+  });
+
+  afterAll(async () => {
+    await prisma.ticket.deleteMany({ where: { id: ticketId }});
+    await prisma.user.deleteMany({ where: { id: { in: [requesterId, staffId, adminId] } }});
   });
 });
