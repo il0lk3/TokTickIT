@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getStaffTickets, getItStaff, TicketResponse, Category, UserResponse } from "../api";
 import { useAuth } from "../contexts/AuthContext";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 interface TicketQueueProps {
   categories: Category[];
@@ -84,6 +85,8 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
     }
   }, [user, debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, page, sortBy, sortOrder]);
 
+  const isMobile = useMediaQuery('(max-width: 991.98px)');
+
   const handleSort = (field: string) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -122,19 +125,21 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "New": return "bg-info bg-opacity-10 text-dark border border-info border-opacity-50"; 
-      case "InProgress": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
-      case "Resolved": return "bg-success bg-opacity-10 text-success border border-success border-opacity-50";
-      default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
+      case "New": return "badge-zen-info";
+      case "InProgress": return "badge-zen-warning";
+      case "WaitingForRequester": return "badge-zen-warning";
+      case "Resolved": return "badge-zen-success";
+      case "Closed": return "badge-zen-secondary";
+      default: return "badge-zen-secondary";
     }
   };
 
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
-      case "HIGH": return "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25";
-      case "MEDIUM": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
-      case "LOW": return "bg-success bg-opacity-10 text-success border border-success border-opacity-25";
-      default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
+      case "HIGH": return "badge-zen-danger";
+      case "MEDIUM": return "badge-zen-warning";
+      case "LOW": return "badge-zen-success";
+      default: return "badge-zen-secondary";
     }
   };
 
@@ -259,7 +264,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
             {activeFilters.map((f, i) => (
               <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
                 {f.label}
-                <button type="button" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+                <button type="button" aria-label="Clear filter" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
               </span>
             ))}
             <button 
@@ -296,35 +301,35 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
       ) : (
         <div className="glass-panel overflow-hidden">
           {/* Desktop Table View */}
-          <div className="table-responsive d-none d-lg-block" data-testid="desktop-table">
+          {/* Desktop Table View */}
+          {!isMobile && (
+          <div className="table-responsive bg-white rounded-3 shadow-sm border-0" data-testid="desktop-table">
             <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="text-zen-primary small text-uppercase text-nowrap" style={{ borderBottom: '2px solid var(--zen-primary)' }}>
+              <thead className="text-zen-primary small text-uppercase text-nowrap">
                 <tr>
-                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>
+                  <th tabIndex={0} aria-label="Sort by Ticket Number" onKeyDown={(e) => e.key === 'Enter' && handleSort("ticketNumber")} className={`border-0 fw-bold ps-4 py-3 ${sortBy === 'ticketNumber' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>
                     <div className="d-flex align-items-center">Ticket No. <SortIcon field="ticketNumber" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
+                  <th tabIndex={0} aria-label="Sort by Date" onKeyDown={(e) => e.key === 'Enter' && handleSort("createdAt")} className={`border-0 fw-bold py-3 ${sortBy === 'createdAt' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
                     <div className="d-flex align-items-center">Date <SortIcon field="createdAt" /></div>
                   </th>
                   <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Summary</th>
                   <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Category</th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>
+                  <th tabIndex={0} aria-label="Sort by Requested Priority" onKeyDown={(e) => e.key === 'Enter' && handleSort("requestedPriority")} className={`border-0 fw-bold py-3 text-center ${sortBy === 'requestedPriority' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>
                     <div className="d-flex align-items-center justify-content-center">Req Pri <SortIcon field="requestedPriority" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("itPriority")}>
+                  <th tabIndex={0} aria-label="Sort by IT Priority" onKeyDown={(e) => e.key === 'Enter' && handleSort("itPriority")} className={`border-0 fw-bold py-3 text-center ${sortBy === 'itPriority' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("itPriority")}>
                     <div className="d-flex align-items-center justify-content-center">IT Pri <SortIcon field="itPriority" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("status")}>
+                  <th tabIndex={0} aria-label="Sort by Status" onKeyDown={(e) => e.key === 'Enter' && handleSort("status")} className={`border-0 fw-bold py-3 text-center ${sortBy === 'status' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("status")}>
                     <div className="d-flex align-items-center justify-content-center">Status <SortIcon field="status" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ letterSpacing: '0.5px' }}>
-                    Owner
-                  </th>
+                  <th className="border-0 fw-bold py-3 text-center" style={{ letterSpacing: '0.5px' }}>Owner</th>
                 </tr>
               </thead>
               <tbody className="border-top-0">
                 {tickets.map((t: QueueTicket) => (
-                  <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
+                  <tr key={t.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelectTicket(t.id)} aria-label={`View ticket ${t.ticketNumber}`} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
                     <td className="ps-4 py-3 text-nowrap">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
                     </td>
@@ -332,7 +337,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
                       <span className="small text-muted">{new Date(t.createdAt).toLocaleDateString()}</span>
                     </td>
                     <td className="py-3">
-                      <div className="fw-medium text-dark text-truncate" style={{ maxWidth: '250px' }} title={t.summary}>
+                      <div className="fw-medium text-dark text-truncate d-none d-lg-block" style={{ maxWidth: '300px' }} title={t.summary}>
                         {t.summary}
                       </div>
                     </td>
@@ -345,20 +350,24 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
                       </span>
                     </td>
                     <td className="py-3 text-center text-nowrap">
-                      <span className={`badge rounded-pill fw-medium px-3 py-2 ${getPriorityBadgeClass(t.itPriority)}`}>
-                        {t.itPriority}
-                      </span>
+                      {t.itPriority ? (
+                        <span className={`badge rounded-pill fw-medium px-3 py-2 ${getPriorityBadgeClass(t.itPriority)}`}>
+                          {t.itPriority}
+                        </span>
+                      ) : (
+                        <span className="text-muted small">-</span>
+                      )}
                     </td>
                     <td className="py-3 text-center text-nowrap">
                       <span className={`badge rounded-pill fw-medium px-3 py-2 ${getStatusBadgeClass(t.currentStatus)}`}>
                         {t.currentStatus === 'InProgress' ? 'In Progress' : t.currentStatus === 'WaitingForRequester' ? 'Waiting' : t.currentStatus}
                       </span>
                     </td>
-                    <td className="py-3 text-end pe-4 text-nowrap">
-                      {t.ownerId ? (
-                        <span className="small fw-medium text-dark">{t.owner?.name || 'Unknown'}</span>
+                    <td className="py-3 text-center text-nowrap">
+                      {t.owner ? (
+                        <span className="fw-medium text-dark">{t.owner.name}</span>
                       ) : (
-                        <span className="small text-muted fst-italic">Unassigned</span>
+                        <span className="text-muted fst-italic small">Unassigned</span>
                       )}
                     </td>
                   </tr>
@@ -366,9 +375,11 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
               </tbody>
             </table>
           </div>
+          )}
           
-          {/* Mobile/Tablet Card View */}
-          <div className="d-lg-none bg-white" data-testid="mobile-cards">
+          {/* Mobile Card View */}
+          {isMobile && (
+          <div className="bg-white" data-testid="mobile-cards">
             <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
               <span className="small fw-bold text-muted">Sort by</span>
               <div className="d-flex gap-2">
@@ -378,19 +389,18 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
                   onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
                   style={{ backgroundColor: '#F8F9FA' }}
                 >
-                  <option value="createdAt">Created Date</option>
+                  <option value="createdAt">Date</option>
                   <option value="ticketNumber">Ticket No.</option>
                   <option value="status">Status</option>
-                  <option value="itPriority">IT Priority</option>
                 </select>
                 <button 
                   className="btn btn-sm btn-light border-0 shadow-sm fw-medium d-flex align-items-center gap-1"
                   onClick={() => handleSort(sortBy)}
                 >
                   {sortOrder === "desc" ? (
-                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> Desc</>
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> Descending</>
                   ) : (
-                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg> Asc</>
+                    <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg> Ascending</>
                   )}
                 </button>
               </div>
@@ -398,7 +408,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
 
             <div className="p-3 bg-light d-flex flex-column gap-3">
               {tickets.map((t: QueueTicket) => (
-                <div key={t.id} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
+                <div key={t.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelectTicket(t.id)} aria-label={`View ticket ${t.ticketNumber}`} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
                   <div className="card-body p-4">
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
@@ -413,28 +423,39 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
                       <div className="col-5 text-muted">Category</div>
                       <div className="col-7 text-dark fw-medium text-end">{categoryMap[t.categoryId] || 'Unknown'}</div>
                       
-                      <div className="col-5 text-muted">Req / IT Priority</div>
-                      <div className="col-7 text-end d-flex gap-1 justify-content-end">
-                        <span className={`badge rounded-pill px-2 py-1 ${getPriorityBadgeClass(t.requestedPriority)}`}>{t.requestedPriority}</span>
-                        <span className={`badge rounded-pill px-2 py-1 ${getPriorityBadgeClass(t.itPriority)}`}>{t.itPriority}</span>
+                      <div className="col-5 text-muted">Requested Priority</div>
+                      <div className="col-7 text-dark fw-medium text-end">
+                        <span className={`badge rounded-pill ${getPriorityBadgeClass(t.requestedPriority)}`}>{t.requestedPriority}</span>
                       </div>
                       
+                      <div className="col-5 text-muted">IT Priority</div>
+                      <div className="col-7 text-dark fw-medium text-end">
+                        {t.itPriority ? (
+                          <span className={`badge rounded-pill ${getPriorityBadgeClass(t.itPriority)}`}>{t.itPriority}</span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </div>
+
                       <div className="col-5 text-muted">Owner</div>
-                      <div className="col-7 fw-medium text-end">
-                         {t.ownerId ? t.owner?.name : <span className="fst-italic text-muted">Unassigned</span>}
+                      <div className="col-7 text-end">
+                        {t.owner ? (
+                          <span className="fw-medium text-dark">{t.owner.name}</span>
+                        ) : (
+                          <span className="text-muted fst-italic">Unassigned</span>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="d-flex justify-content-between text-muted pt-3 border-top border-light" style={{ fontSize: '0.75rem' }}>
-                      <div>
-                        <span className="fw-bold text-dark">Created:</span> {new Date(t.createdAt).toLocaleDateString()}
-                      </div>
+                    <div className="text-muted pt-3 border-top border-light text-end" style={{ fontSize: '0.75rem' }}>
+                      <span className="fw-bold text-dark">Date:</span> {new Date(t.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+          )}
           
           {totalPages > 1 && (
             <div className="d-flex justify-content-between align-items-center p-3 border-top bg-white">

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { TicketDetail } from "../../src/components/TicketDetail.js";
 import { AuthProvider } from "../../src/contexts/AuthContext";
 import * as api from "../../src/api";
@@ -70,6 +70,9 @@ describe("TicketDetail Component", () => {
 
     expect(screen.getByDisplayValue("My broken laptop")).toBeInTheDocument();
     expect(screen.getByDisplayValue("It just won't turn on.")).toBeInTheDocument();
+    // Switch to Attachments tab
+    fireEvent.click(screen.getByText(/Attachments/));
+
     expect(screen.getByText("error.png")).toBeInTheDocument();
     expect(api.getTicketDetail).toHaveBeenCalledWith(1, false);
   });

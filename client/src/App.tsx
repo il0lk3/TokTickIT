@@ -18,6 +18,7 @@ function AppShell() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [appState, setAppState] = useState<UiState>("loading");
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -63,18 +64,18 @@ function AppShell() {
             <span style={{ fontSize: '1.25rem', letterSpacing: '-0.03em' }}>TokTickIT</span>
           </a>
           
-          <button className="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <button className="navbar-toggler border-0 text-white" type="button" onClick={() => setIsNavOpen(!isNavOpen)}>
             <span className="navbar-toggler-icon"></span>
           </button>
           
-          <div className="collapse navbar-collapse mt-3 mt-lg-0" id="navbarNav">
+          <div className={`collapse navbar-collapse ${isNavOpen ? 'show' : ''} mt-3 mt-lg-0`} id="navbarNav">
             <ul className="navbar-nav me-auto gap-3">
               {user.role === "REQUESTER" && (
                 <>
                   <li className="nav-item">
                     <button 
                       className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'list' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                      onClick={() => { setActiveTab('list'); setSelectedTicketId(null); }}
+                      onClick={() => { setActiveTab('list'); setSelectedTicketId(null); setIsNavOpen(false); }}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -89,7 +90,7 @@ function AppShell() {
                   <li className="nav-item">
                     <button 
                       className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'create' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                      onClick={() => { setActiveTab('create'); setSelectedTicketId(null); }}
+                      onClick={() => { setActiveTab('create'); setSelectedTicketId(null); setIsNavOpen(false); }}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -105,7 +106,7 @@ function AppShell() {
                 <li className="nav-item">
                   <button 
                     className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'queue' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                    onClick={() => { setActiveTab('queue'); setSelectedTicketId(null); }}
+                    onClick={() => { setActiveTab('queue'); setSelectedTicketId(null); setIsNavOpen(false); }}
                   >
                     Ticket Queue
                   </button>
@@ -115,7 +116,7 @@ function AppShell() {
                 <li className="nav-item">
                   <button 
                     className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'users' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                    onClick={() => { setActiveTab('users'); setSelectedTicketId(null); }}
+                    onClick={() => { setActiveTab('users'); setSelectedTicketId(null); setIsNavOpen(false); }}
                   >
                     User Management
                   </button>

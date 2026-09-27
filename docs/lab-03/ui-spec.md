@@ -31,11 +31,13 @@ This document details the new and updated user interfaces required for Lab 3, co
 - **State**: The user cannot bypass this screen to reach the main application until the password is successfully changed.
 
 ## 3. Requester Ticket Detail (Update)
-- **New Section**: "Comments".
-- **View**: Renders a list of Public Comments chronologically.
-- **Input**: A text area to add a new Public Comment (placeholder must be exactly `"Type a public comment..."`).
-- **Action**: "Post Comment".
-- **Action**: "Problem Appears Resolved" button. (This does not formally change the status to Resolved, but flags it for IT Staff).
+- **Top Section (Grid)**: Displays ticket information. Fields like Current Status, Ticket Owner, and Requested Priority are rendered as read-only badges to visually distinguish them from editable fields.
+- **Action**: "Problem Appears Resolved" button. (This does not formally change the status to Resolved, but flags it for IT Staff). It is positioned near the Current Status field for high visibility.
+- **Bottom Section (Tabbed Interface)**:
+  - **Tabs**: 💬 Public Comments (count) · 📎 Attachments (count).
+  - **View**: Renders a list of items for the active tab.
+  - **Input**: A text area to add a new Public Comment (placeholder must be exactly `"Type a comment..."`).
+  - **Action**: "Post Comment".
 
 ## 4. IT Staff Ticket Queue
 - **Layout**: Data table or grid (responsive cards on mobile).
@@ -49,15 +51,16 @@ This document details the new and updated user interfaces required for Lab 3, co
 - **Actions**: Clicking a row opens the IT Staff Ticket Detail screen.
 
 ## 5. IT Staff Ticket Detail
-- **Layout**: Similar to Requester Ticket Detail but with operational controls.
-- **Editable Fields**:
-  - **Ticket Owner**: Dropdown to assign to self (Claim) or reassign to another IT Staff.
+- **Top Section (Grid)**: Operational controls and ticket details organized in a card.
+- **Editable Fields** (must have white background and visible border to distinguish from read-only fields):
+  - **Ticket Owner**: Dropdown to assign to self ("Claim Ticket" button adjacent) or reassign to another IT Staff.
   - **IT Priority**: Dropdown to override the requested priority.
-  - **Status**: Dropdown to change the status (e.g., Open -> In Progress -> Resolved).
-- **Comments & Notes**:
-  - Tabbed interface or clearly separated visual sections for "Public Comments" vs "Internal Notes".
-  - Internal Notes must have a distinct background color (e.g., pale yellow/gray) to prevent accidental public posting.
-  - Inputs to post either a Public Comment or an Internal Note.
+  - **Current Status**: Dropdown to change the status (e.g., Open -> In Progress -> Resolved).
+- **Bottom Section (Tabbed Interface)**:
+  - **Tabs**: 💬 Public Comments (count) · 🔒 Internal Notes (count, staff-only) · 📎 Attachments (count).
+  - *Note*: "Service Actions" tab is explicitly excluded as it maps to "Actions Taken", which is deferred to Lab 4 (per handout §4.2).
+  - **Internal Notes Tab**: Must be conditionally rendered to ensure it does not exist in the DOM for Requesters. The content area uses a distinct background tint (e.g., light yellow/amber) to prevent accidental public posting.
+  - Inputs to post either a Public Comment or an Internal Note. When the ticket is in a terminal status (Resolved, Closed, Cancelled), the input is replaced with a disabled state message: "This ticket is closed and no longer accepts new comments".
 
 ## 6. Administrator User Management
 - **Layout**: Data table (responsive cards on mobile).

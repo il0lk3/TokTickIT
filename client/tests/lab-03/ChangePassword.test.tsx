@@ -20,14 +20,14 @@ describe("ChangePassword Component", () => {
     render(<AuthProvider><ChangePassword /></AuthProvider>);
     await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     
-    expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/current.*password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^new password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm new password/i)).toBeInTheDocument();
     
     // Checklist items
-    expect(screen.getByText(/At least 8 characters/i)).toBeInTheDocument();
-    expect(screen.getByText(/Uppercase and lowercase letters/i)).toBeInTheDocument();
-    expect(screen.getByText(/Numbers and special characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/Be at least 8 characters/i)).toBeInTheDocument();
+    expect(screen.getByText(/Include upper and lower case letters/i)).toBeInTheDocument();
+    expect(screen.getByText(/Include a number and a special character/i)).toBeInTheDocument();
   });
 
   it("updates password rule checklist correctly", async () => {
@@ -36,7 +36,7 @@ describe("ChangePassword Component", () => {
     const newPasswordInput = screen.getByLabelText(/^new password/i);
 
     // Initial state: not checked
-    const lengthRule = screen.getByText(/At least 8 characters/i);
+    const lengthRule = screen.getByText(/Be at least 8 characters/i);
     expect(lengthRule).toHaveClass("text-muted");
 
     // Type 8 characters, but no upper/lower/numbers
@@ -44,13 +44,13 @@ describe("ChangePassword Component", () => {
     expect(lengthRule).toHaveClass("text-success"); // Should be checked
 
     // Type upper/lower
-    const caseRule = screen.getByText(/Uppercase and lowercase letters/i);
+    const caseRule = screen.getByText(/Include upper and lower case letters/i);
     fireEvent.change(newPasswordInput, { target: { value: "aB" } });
     expect(caseRule).toHaveClass("text-success");
     expect(lengthRule).toHaveClass("text-muted"); // Length failed
 
     // Type number and special
-    const specialRule = screen.getByText(/Numbers and special characters/i);
+    const specialRule = screen.getByText(/Include a number and a special character/i);
     fireEvent.change(newPasswordInput, { target: { value: "1!" } });
     expect(specialRule).toHaveClass("text-success");
   });
@@ -58,11 +58,11 @@ describe("ChangePassword Component", () => {
   it("blocks submission if passwords do not match", async () => {
     render(<AuthProvider><ChangePassword /></AuthProvider>);
     await waitFor(() => expect(api.getMe).toHaveBeenCalled());
-    fireEvent.change(screen.getByLabelText(/current password/i), { target: { value: "Password123!" } });
+    fireEvent.change(screen.getByLabelText(/current.*password/i), { target: { value: "Password123!" } });
     fireEvent.change(screen.getByLabelText(/^new password/i), { target: { value: "NewValid1!" } });
     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: "NewValid2!" } });
 
-    const submitBtn = screen.getByRole("button", { name: /update password/i });
+    const submitBtn = screen.getByRole("button", { name: /continue/i });
     expect(submitBtn).toBeDisabled();
   });
 
@@ -71,11 +71,11 @@ describe("ChangePassword Component", () => {
     render(<AuthProvider><ChangePassword /></AuthProvider>);
     await waitFor(() => expect(api.getMe).toHaveBeenCalled());
     
-    fireEvent.change(screen.getByLabelText(/current password/i), { target: { value: "Password123!" } });
+    fireEvent.change(screen.getByLabelText(/current.*password/i), { target: { value: "Password123!" } });
     fireEvent.change(screen.getByLabelText(/^new password/i), { target: { value: "NewValid1!" } });
     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: "NewValid1!" } });
 
-    const submitBtn = screen.getByRole("button", { name: /update password/i });
+    const submitBtn = screen.getByRole("button", { name: /continue/i });
     expect(submitBtn).not.toBeDisabled();
     
     fireEvent.click(submitBtn);
