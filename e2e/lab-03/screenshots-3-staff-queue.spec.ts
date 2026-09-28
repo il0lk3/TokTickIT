@@ -6,7 +6,7 @@ const snap = async (page: Page, folder: string, name: string) => {
   const dir = path.join('..', 'artifacts', 'lab-03', 'screenshots', folder);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(dir, name), fullPage: true });
+  await page.screenshot({ path: path.join(dir, name), fullPage: true, style: '.sticky-top { position: static !important; } .modal-backdrop { height: 100% !important; min-height: 100vh !important; }' });
 };
 
 test.describe('3. Staff Queue Screenshots', () => {
