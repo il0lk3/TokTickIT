@@ -10,14 +10,19 @@ const snap = async (page: Page, folder: string, name: string) => {
 };
 
 test.describe('3. Staff Queue Screenshots', () => {
+  test.setTimeout(120000);
+
   test('Capture Queue states', async ({ page }) => {
     // 10. queue-forbidden.png
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.requester@example.com'); // Requester
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('text=My Tickets');
+    await page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200);
+    await page.waitForSelector('h2:has-text("My Tickets")');
+    await page.goto('/queue');
+    await page.waitForSelector('text=Forbidden', { timeout: 5000 }).catch(() => {});
+
     await snap(page, 'staff-queue', 'queue-forbidden.png');
     if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
     await page.click('button:has-text("Logout")', { force: true });
@@ -27,8 +32,8 @@ test.describe('3. Staff Queue Screenshots', () => {
     await page.fill('input[type="email"]', 'e2e.staff@example.com');
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle'); 
-    await page.waitForLoadState('networkidle');
+    await page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200);
+    await page.waitForResponse(r => r.url().includes('/api/staff/tickets') && r.status() === 200);
 
     // 1. queue-default-view.png
     await snap(page, 'staff-queue', 'queue-default-view.png');
@@ -83,11 +88,27 @@ test.describe('3. Staff Queue Screenshots', () => {
     await page.selectOption('select:has(option[value="unassigned"])', '');
     
     // 8. queue-pagination.png
-    // Generate many tickets if needed, or if pagination button exists, click it
+    await page.route('**/api/staff/tickets*', async route => {
+      const fakeTickets = Array.from({ length: 15 }).map((_, i) => ({
+        id: i + 1,
+        ticketNumber: `TKT-2026-${(i + 1).toString().padStart(6, '0')}`,
+        summary: `Mock Ticket ${i + 1}`,
+        requestedPriority: 'LOW',
+        currentStatus: 'Open',
+        createdAt: new Date().toISOString(),
+        owner: null,
+        requester: { name: 'Mock User' }
+      }));
+      await route.fulfill({ status: 200, json: { data: fakeTickets, meta: { total: 15, page: 1, limit: 10, totalPages: 2 } } });
+    });
+    await page.reload();
+    await page.waitForSelector('.glass-panel');
+    await page.waitForTimeout(1000);
     if (await page.locator('button:has-text("Next")').isVisible()) {
         await page.click('button:has-text("Next")');
         await page.waitForTimeout(1000);
         await snap(page, 'staff-queue', 'queue-pagination.png');
     }
+    await page.unroute('**/api/staff/tickets*');
   });
 });

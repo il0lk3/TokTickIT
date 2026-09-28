@@ -21,6 +21,13 @@ test.describe('1. Authentication Screenshots', () => {
   test('Capture Auth states', async ({ page }) => {
     await page.goto('/login');
     await snap(page, 'authentication', 'login-empty.png');
+    await snap(page, 'authentication', 'login-desktop.png');
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await snap(page, 'authentication', 'login-tablet.png');
+    await page.setViewportSize({ width: 375, height: 812 });
+    await snap(page, 'authentication', 'login-mobile.png');
+    await page.setViewportSize({ width: 1280, height: 800 });
+
 
     await page.fill('input[type="email"]', 'notanemail');
     await page.fill('input[type="password"]', 'Password123!');

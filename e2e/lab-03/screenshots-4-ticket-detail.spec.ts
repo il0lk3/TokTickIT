@@ -10,13 +10,18 @@ const snap = async (page: Page, folder: string, name: string) => {
 };
 
 test.describe('4. Staff Ticket Detail Screenshots', () => {
+  test.setTimeout(120000);
+
   test('Capture Ticket Detail states', async ({ page }) => {
     
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.staff@example.com');
     await page.fill('input[type="password"]', 'Password123!');
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+    await page.waitForSelector('.glass-panel'); await page.waitForTimeout(1000);
 
     // Find an unassigned ticket
     await page.locator('select:has(option[value="unassigned"])').last().selectOption('unassigned');
@@ -26,7 +31,7 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     const ticketLocator = page.locator('tbody tr, .card');
     if (await ticketLocator.first().isVisible()) {
       await ticketLocator.first().click();
-      await page.waitForLoadState('networkidle');
+      await page.waitForSelector('text="Ticket Details"');
       
       // 2. ticket-detail-unassigned.png
       await snap(page, 'staff-ticket-detail', 'ticket-detail-unassigned.png');
@@ -40,13 +45,13 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     
     // Find an assigned ticket (owned by me)
     await page.goto('/'); // resets state
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('.glass-panel'); await page.waitForTimeout(1000);
     
     // In Staff view, queue is default
     await page.locator('select:has(option[value="unassigned"])').last().selectOption({ label: 'E2E Staff' });
     await page.waitForTimeout(1000);
     await ticketLocator.first().click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text="Ticket Details"');
 
     // 1. ticket-detail-default.png / desktop / tablet / mobile
     await snap(page, 'staff-ticket-detail', 'ticket-detail-default.png');
@@ -63,7 +68,7 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForTimeout(1000);
 
     // 5. ticket-detail-status-change.png
-    await page.locator('select:has(option[value="In Progress"])').last().selectOption('In Progress');
+    await page.locator('select:has(option[value="InProgress"])').last().selectOption('InProgress');
     await snap(page, 'staff-ticket-detail', 'ticket-detail-status-change.png');
     await page.waitForTimeout(1000);
 
@@ -71,16 +76,16 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.route('**/api/staff/tickets/*/status', async route => {
       await route.fulfill({ status: 400, json: { error: 'Invalid transition' } });
     });
-    await page.locator('select:has(option[value="In Progress"])').last().selectOption('In Progress');
+    await page.locator('select:has(option[value="InProgress"])').last().selectOption('InProgress');
     await page.waitForTimeout(1000);
     await snap(page, 'staff-ticket-detail', 'ticket-detail-invalid-transition.png');
     await page.unroute('**/api/staff/tickets/*/status');
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('.glass-panel'); await page.waitForTimeout(1000);
     await page.locator('select:has(option[value="unassigned"])').last().selectOption({ label: 'E2E Staff' });
     await page.waitForTimeout(1000);
     await ticketLocator.first().click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text="Ticket Details"');
 
     // 7. ticket-detail-public-comments.png
     await page.click('button:has-text("Public Comments")');
@@ -101,23 +106,26 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     }
 
     // Resolve ticket to test "Appears Resolved" badge
-    await page.locator('select:has(option[value="In Progress"])').last().selectOption('Resolved');
+    await page.locator('select:has(option[value="InProgress"])').last().selectOption('Resolved');
     await page.waitForTimeout(1000);
 
     // Get the ticket summary so we can find it as requester
-    const summaryText = await page.locator('h3').first().innerText();
+    const summaryText = await page.locator('label:has-text("Summary") + input').inputValue();
 
     // Login as Requester to mark Appears Resolved
     await page.context().clearCookies();
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.requester@example.com');
     await page.fill('input[type="password"]', 'Password123!');
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+    await page.waitForSelector('.glass-panel'); await page.waitForTimeout(1000);
     
     // Click the ticket in My Tickets list
     await page.locator('tbody tr, .card').filter({ hasText: summaryText }).first().click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text="Ticket Details"');
     
     // Post comment as requester to trigger "Problem Appears Resolved" badge
     await page.fill('textarea[placeholder="Type a comment..."]', 'Thank you! It works now.');
@@ -129,20 +137,23 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.staff@example.com');
     await page.fill('input[type="password"]', 'Password123!');
-    await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+    await page.waitForSelector('.glass-panel'); await page.waitForTimeout(1000);
     
     await page.locator('select:has(option[value="unassigned"])').last().selectOption({ label: 'E2E Staff' });
     await page.waitForTimeout(1000);
     await page.locator('tbody tr, .card').filter({ hasText: summaryText }).first().click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text="Ticket Details"');
     
     // 10. ticket-detail-appears-resolved-badge.png
     await snap(page, 'staff-ticket-detail', 'ticket-detail-appears-resolved-badge.png');
 
     // 11. ticket-detail-terminal-blocked.png
     // Close the ticket
-    await page.locator('select:has(option[value="In Progress"])').last().selectOption('Closed');
+    await page.locator('select:has(option[value="InProgress"])').last().selectOption('Closed');
     await page.waitForTimeout(1000);
     await snap(page, 'staff-ticket-detail', 'ticket-detail-terminal-blocked.png');
   });
