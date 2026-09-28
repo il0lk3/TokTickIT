@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const snap = async (page: Page, folder: string, name: string) => {
-  const dir = path.join('artifacts', 'lab-03', 'screenshots', folder);
+  const dir = path.join('..', 'artifacts', 'lab-03', 'screenshots', folder);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(dir, name), fullPage: true });
