@@ -7,7 +7,7 @@ files.forEach(file => {
   let content = fs.readFileSync(file, 'utf8');
   content = content.replace(
     /style: '.*?'/,
-    "style: '.sticky-top { position: static !important; } .modal, .glass-overlay, .modal-backdrop { position: absolute !important; min-height: 100% !important; } html, body { height: auto !important; min-height: 100vh !important; }'"
+    "style: 'body { position: relative !important; } .modal, .glass-overlay, .modal-backdrop { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; height: auto !important; min-height: 100% !important; } .sticky-top { position: static !important; }'"
   );
   fs.writeFileSync(file, content);
 });

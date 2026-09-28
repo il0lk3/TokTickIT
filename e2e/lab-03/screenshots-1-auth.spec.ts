@@ -6,7 +6,7 @@ const snap = async (page: Page, folder: string, name: string) => {
   const dir = path.join('..', 'artifacts', 'lab-03', 'screenshots', folder);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(dir, name), fullPage: true, style: '.sticky-top { position: static !important; } .modal, .glass-overlay, .modal-backdrop { position: absolute !important; min-height: 100% !important; } html, body { height: auto !important; min-height: 100vh !important; }' });
+  await page.screenshot({ path: path.join(dir, name), fullPage: true, style: 'body { position: relative !important; } .modal, .glass-overlay, .modal-backdrop { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; height: auto !important; min-height: 100% !important; } .sticky-top { position: static !important; }' });
 };
 
 const loginAs = async (page: Page, email: string, pass: string) => {
