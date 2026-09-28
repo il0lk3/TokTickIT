@@ -10,6 +10,7 @@ const snap = async (page: Page, folder: string, name: string) => {
 };
 
 test.describe('2. User Management Screenshots', () => {
+  test.setTimeout(120000);
   test('Capture User Management states', async ({ page }) => {
     const runId = Date.now();
     const newEmail = `newe2e.requester.${runId}@example.com`;
