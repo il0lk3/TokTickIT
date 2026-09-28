@@ -11,7 +11,6 @@ const snap = async (page: Page, folder: string, name: string) => {
 
 test.describe('2. User Management Screenshots', () => {
   test('Capture User Management states', async ({ page }) => {
-    page.on('request', req => { if (req.url().includes('me') || req.url().includes('logout')) console.log('NETWORK:', req.method(), req.url()); });
     // 14. non-admin-forbidden.png
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.staff@example.com');
@@ -29,10 +28,10 @@ test.describe('2. User Management Screenshots', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await page.waitForLoadState('networkidle');
-    await page.screenshot({ path: 'artifacts/debug_login.png' }); await page.goto('/admin/users');
+    await page.goto('/admin/users');
     await page.waitForLoadState('networkidle');
 
-    console.log('BEFORE SNAP 1 HTML:', await page.content()); // 1. user-list-default.png
+    // 1. user-list-default.png
     await snap(page, 'user-management', 'user-list-default.png');
     await snap(page, 'user-management', 'user-management-desktop.png');
 
@@ -41,12 +40,10 @@ test.describe('2. User Management Screenshots', () => {
     await snap(page, 'user-management', 'user-management-tablet.png');
     await page.setViewportSize({ width: 375, height: 812 });
     await snap(page, 'user-management', 'user-management-mobile.png');
-    page.on('response', response => console.log('RESPONSE:', response.url(), response.status()));
     await page.setViewportSize({ width: 1280, height: 800 }); // back to desktop
 
     // 2. user-list-search.png
     await page.screenshot({ path: 'artifacts/debug.png', fullPage: true });
-    console.log(await page.content());
     await page.fill('input[placeholder*="Search"]', 'TokTickIT');
     await page.waitForTimeout(1000);
     await snap(page, 'user-management', 'user-list-search.png');

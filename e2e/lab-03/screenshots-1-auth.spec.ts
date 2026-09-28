@@ -67,7 +67,6 @@ test.describe('1. Authentication Screenshots', () => {
       headers: authHeaders,
       data: { name: 'Temp', email: tempEmail, role: 'REQUESTER', initialPassword: 'Password1!', isActive: true }
     });
-    console.log('Create user response:', createRes.status(), await createRes.text());
     
     await page.context().clearCookies();
     await page.goto('/login');
