@@ -8,6 +8,7 @@ This document details the new and updated user interfaces required for Lab 3, co
   - The Lab 2 "Development Requester Selector" is **removed**.
   - Replaced with a profile dropdown/menu showing the current authenticated user's name and role (e.g., `Jane Doe (IT Staff)`).
   - Includes a **Logout** button.
+  - *Note*: Mobile navigation menu toggle is controlled via React state, not Bootstrap JS.
 - **Role-Based Navigation**:
   - **Requester**: Sees "My Tickets" and "Create Ticket".
   - **IT Staff**: Sees "Ticket Queue".
