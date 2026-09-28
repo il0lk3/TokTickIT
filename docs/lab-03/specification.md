@@ -101,6 +101,7 @@ Detailed in `docs/lab-03/api-spec.md`. Key endpoints:
 - `POST /api/auth/change-password`: Update initial password.
 - `GET /api/staff/tickets`: IT Staff queue retrieval.
 - `PATCH /api/staff/tickets/:id`: Update ticket operational fields (owner, priority, status).
+- `POST /api/staff/tickets/:id/claim`: Claim a ticket.
 - `POST /api/tickets/:id/comments`: Add public comment.
 - `POST /api/tickets/:id/notes`: Add internal note (restricted).
 - `GET /api/admin/users`: List users.
