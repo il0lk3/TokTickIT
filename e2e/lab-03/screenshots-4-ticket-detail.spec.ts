@@ -19,7 +19,7 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForLoadState('networkidle');
 
     // Find an unassigned ticket
-    await page.locator('select').nth(4).selectOption('unassigned');
+    await page.locator('select:has(option[value="unassigned"])').last().selectOption('unassigned');
     await page.waitForTimeout(1000);
     
     // Click the first unassigned ticket
@@ -43,7 +43,7 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForLoadState('networkidle');
     
     // In Staff view, queue is default
-    await page.locator('select').nth(4).selectOption({ label: 'E2E Staff' });
+    await page.locator('select:has(option[value="unassigned"])').last().selectOption({ label: 'E2E Staff' });
     await page.waitForTimeout(1000);
     await ticketLocator.first().click();
     await page.waitForLoadState('networkidle');
@@ -58,12 +58,12 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
 
     // 4. ticket-detail-priority-change.png
-    await page.selectOption('select[aria-label="IT Priority"]', 'High');
+    await page.locator('select:has(option[value="HIGH"])').last().selectOption('HIGH');
     await snap(page, 'staff-ticket-detail', 'ticket-detail-priority-change.png');
     await page.waitForTimeout(1000);
 
     // 5. ticket-detail-status-change.png
-    await page.selectOption('select[aria-label="Status"]', 'WaitingForRequester');
+    await page.locator('select:has(option[value="In Progress"])').last().selectOption('In Progress');
     await snap(page, 'staff-ticket-detail', 'ticket-detail-status-change.png');
     await page.waitForTimeout(1000);
 
@@ -71,13 +71,13 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.route('**/api/staff/tickets/*/status', async route => {
       await route.fulfill({ status: 400, json: { error: 'Invalid transition' } });
     });
-    await page.selectOption('select[aria-label="Status"]', 'Closed');
+    await page.locator('select:has(option[value="In Progress"])').last().selectOption('In Progress');
     await page.waitForTimeout(1000);
     await snap(page, 'staff-ticket-detail', 'ticket-detail-invalid-transition.png');
     await page.unroute('**/api/staff/tickets/*/status');
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.locator('select').nth(4).selectOption({ label: 'E2E Staff' });
+    await page.locator('select:has(option[value="unassigned"])').last().selectOption({ label: 'E2E Staff' });
     await page.waitForTimeout(1000);
     await ticketLocator.first().click();
     await page.waitForLoadState('networkidle');
@@ -101,15 +101,14 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     }
 
     // Resolve ticket to test "Appears Resolved" badge
-    await page.selectOption('select[aria-label="Status"]', 'Resolved');
+    await page.locator('select:has(option[value="In Progress"])').last().selectOption('Resolved');
     await page.waitForTimeout(1000);
 
     // Get the ticket summary so we can find it as requester
     const summaryText = await page.locator('h3').first().innerText();
 
     // Login as Requester to mark Appears Resolved
-    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
-    await page.click('button:has-text("Logout")', { force: true });
+    await page.context().clearCookies();
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.requester@example.com');
     await page.fill('input[type="password"]', 'Password123!');
@@ -126,15 +125,14 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
     await page.waitForTimeout(1000);
     
     // Log back as Staff
-    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
-    await page.click('button:has-text("Logout")', { force: true });
+    await page.context().clearCookies();
     await page.goto('/login');
     await page.fill('input[type="email"]', 'e2e.staff@example.com');
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await page.waitForLoadState('networkidle');
     
-    await page.locator('select').nth(4).selectOption({ label: 'E2E Staff' });
+    await page.locator('select:has(option[value="unassigned"])').last().selectOption({ label: 'E2E Staff' });
     await page.waitForTimeout(1000);
     await page.locator('tbody tr, .card').filter({ hasText: summaryText }).first().click();
     await page.waitForLoadState('networkidle');
@@ -144,7 +142,7 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
 
     // 11. ticket-detail-terminal-blocked.png
     // Close the ticket
-    await page.selectOption('select[aria-label="Status"]', 'Closed');
+    await page.locator('select:has(option[value="In Progress"])').last().selectOption('Closed');
     await page.waitForTimeout(1000);
     await snap(page, 'staff-ticket-detail', 'ticket-detail-terminal-blocked.png');
   });

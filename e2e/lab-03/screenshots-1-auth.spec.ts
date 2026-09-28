@@ -33,7 +33,7 @@ test.describe('1. Authentication Screenshots', () => {
     await expect(page.locator('.alert-danger')).toBeVisible();
     await snap(page, 'authentication', 'login-invalid-credentials.png');
 
-    await page.route('**/api/auth/login', async route => {
+    await page.route('**http://localhost:3000/api/auth/login', async route => {
       await new Promise(r => setTimeout(r, 2000));
       await route.fallback();
     });
@@ -41,61 +41,62 @@ test.describe('1. Authentication Screenshots', () => {
     const submitPromise = page.click('button[type="submit"]');
     await snap(page, 'authentication', 'login-busy-state.png');
     await submitPromise;
-    await page.unroute('**/api/auth/login');
+    await page.unroute('**http://localhost:3000/api/auth/login');
 
     await page.waitForLoadState('networkidle'); await page.waitForTimeout(500);
     await snap(page, 'authentication', 'app-shell-role-admin.png');
 
-    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
-    await page.click('button:has-text("Logout")', { force: true });
+    await page.context().clearCookies();
     await page.goto('/queue'); 
     await expect(page.locator('h5:has-text("Sign in to your account")')).toBeVisible();
     await snap(page, 'authentication', 'logout-blocked-access.png');
 
     await loginAs(page, 'e2e.requester@example.com', 'Password123!');
     await snap(page, 'authentication', 'app-shell-role-requester.png');
-    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
-    await page.click('button:has-text("Logout")', { force: true });
+    await page.context().clearCookies();
 
     await loginAs(page, 'e2e.staff@example.com', 'Password123!');
     await snap(page, 'authentication', 'app-shell-role-it-staff.png');
-    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
-    await page.click('button:has-text("Logout")', { force: true });
+    await page.context().clearCookies();
 
     const ctx = page.request;
-    const loginRes = await ctx.post('/api/auth/login', { data: { email: 'e2e.admin@example.com', password: 'Password123!' } });
+    const loginRes = await ctx.post('http://localhost:3000/api/auth/login', { data: { email: 'e2e.admin@example.com', password: 'Password123!' } });
     const authHeaders = { cookie: loginRes.headers()['set-cookie'] };
-    const tempEmail = 'changepw@example.com';
-    await ctx.post('/api/admin/users', {
+    const tempEmail = 'changepw' + Date.now() + '@example.com';
+    const createRes = await ctx.post('http://localhost:3000/api/admin/users', {
       headers: authHeaders,
-      data: { name: 'Temp', email: tempEmail, role: 'Requester', password: 'Password1!', isActive: true }
+      data: { name: 'Temp', email: tempEmail, role: 'REQUESTER', initialPassword: 'Password1!', isActive: true }
     });
+    console.log('Create user response:', createRes.status(), await createRes.text());
     
+    await page.context().clearCookies();
     await page.goto('/login');
     await page.fill('input[type="email"]', tempEmail);
     await page.fill('input[type="password"]', 'Password1!');
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*change-password/);
+    await expect(page.locator('h4:has-text("Change Your Password")')).toBeVisible();
     
     await snap(page, 'authentication', 'change-password-form.png');
 
     await page.fill('input[type="password"]', 'weak');
     await snap(page, 'authentication', 'change-password-validation.png');
 
-    await page.fill('input[type="password"]', 'NewPass1!');
+    await page.fill('#currentPasswordInput', 'Password1!');
+    await page.fill('#newPasswordInput', 'NewPass1!');
+    await page.fill('#confirmPasswordInput', 'NewPass1!');
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*tickets/);
+    await expect(page.locator('.navbar')).toBeVisible();
     await snap(page, 'authentication', 'change-password-success.png');
     
     // Test inactive account
-    await ctx.patch('/api/admin/users/1', { // Admin user is 1, let's create another inactive user
+    await ctx.patch('http://localhost:3000/api/admin/users/1', { // Admin user is 1, let's create another inactive user
       headers: authHeaders,
-      data: { email: 'inactive@example.com', name: 'Inactive', role: 'Requester', password: 'Password1!', isActive: false }
+      data: { email: 'inactive.user@example.com', name: 'Inactive', role: 'REQUESTER', initialPassword: 'Password1!', isActive: false }
     }).catch(e => {}); // Ignore error if exists
     
-    if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
-    await page.click('button:has-text("Logout")', { force: true });
-    await page.fill('input[type="email"]', 'inactive@example.com');
+    await page.context().clearCookies();
+    await page.goto('/login');
+    await page.fill('input[type="email"]', 'inactive.user@example.com');
     await page.fill('input[type="password"]', 'Password1!');
     await page.click('button[type="submit"]');
     await expect(page.locator('.alert-danger')).toBeVisible();

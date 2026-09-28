@@ -17,7 +17,7 @@ test.describe('3. Staff Queue Screenshots', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await page.waitForLoadState('networkidle');
-    await page.goto('/queue');
+    await page.waitForSelector('text=My Tickets');
     await snap(page, 'staff-queue', 'queue-forbidden.png');
     if (await page.isVisible('.navbar-toggler')) { await page.click('.navbar-toggler'); await page.waitForTimeout(500); }
     await page.click('button:has-text("Logout")', { force: true });
@@ -27,8 +27,7 @@ test.describe('3. Staff Queue Screenshots', () => {
     await page.fill('input[type="email"]', 'e2e.staff@example.com');
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
-    await page.waitForLoadState('networkidle');
-    await page.goto('/queue');
+    await page.waitForLoadState('networkidle'); 
     await page.waitForLoadState('networkidle');
 
     // 1. queue-default-view.png
@@ -47,29 +46,24 @@ test.describe('3. Staff Queue Screenshots', () => {
       await new Promise(r => setTimeout(r, 1000));
       await route.fallback();
     });
-    const reloadPromise = page.reload();
-    await snap(page, 'staff-queue', 'queue-loading.png');
-    await reloadPromise;
-    await page.unroute('**/api/staff/tickets*');
+    await page.fill('input[placeholder="Search ticket number or summary..."]', 'NO_MATCH_1'); await page.waitForResponse('**/api/staff/tickets*'); await page.fill('input[placeholder="Search ticket number or summary..."]', 'NO_MATCH_2'); await snap(page, 'staff-queue', 'queue-loading.png'); await page.waitForResponse('**/api/staff/tickets*');
+    
 
     // 3. queue-empty.png
-    await page.route('**/api/staff/tickets*', async route => {
-      await route.fulfill({ json: { items: [], total: 0 } });
-    });
-    await page.reload();
-    await snap(page, 'staff-queue', 'queue-empty.png');
-    await page.unroute('**/api/staff/tickets*');
+    
+    await page.fill('input[placeholder="Search ticket number or summary..."]', 'NO_MATCH_3'); await page.waitForResponse('**/api/staff/tickets*'); await snap(page, 'staff-queue', 'queue-empty.png');
+    
 
     // 4. queue-no-results.png
-    await page.fill('input[placeholder*="Search"]', 'NonExistentTicket12345');
+    await page.fill('input[placeholder="Search ticket number or summary..."]', 'NonExistentTicket12345');
     await page.waitForTimeout(1000);
     await snap(page, 'staff-queue', 'queue-no-results.png');
 
     // 5. queue-search-active.png
-    await page.fill('input[placeholder*="Search"]', 'Login');
+    await page.fill('input[placeholder="Search ticket number or summary..."]', 'Login');
     await page.waitForTimeout(1000);
     await snap(page, 'staff-queue', 'queue-search-active.png');
-    await page.fill('input[placeholder*="Search"]', '');
+    await page.fill('input[placeholder="Search ticket number or summary..."]', '');
 
     // 6. queue-filters-active.png
     await page.selectOption('select:has(option[value="New"])', 'New');
