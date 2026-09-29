@@ -66,19 +66,18 @@ As of Lab 3, all accounts authenticate through the real login screen (the Lab 2 
 selector has been removed). Every account below uses the same universal initial password and will be
 prompted to set a new password on first login.
 
-| Role | Email | Status |
-|------|-------|--------|
-| **Requester** | `cream.su@example.com`, `bew.su@example.com`, `kanta.su@example.com`, `je.su@example.com`, `bewnoi.su@example.com`, `grace.su@example.com`, `phrao.su@example.com`, `pueng.su@example.com` | Active |
-| **Requester** | `inactive.user@example.com` | Inactive |
-| **IT Staff** | `staff1@example.com`, `staff2@example.com`, `staff3@example.com` | Active |
-| **IT Staff** | `inactive.staff@example.com` | Inactive |
-| **Admin** | `admin@example.com` | Active |
+| Role | Email | Status | Requires Password Change? |
+|------|-------|--------|--------------------------|
+| **Requester** | `cream.su@example.com`, `bew.su@example.com`, `kanta.su@example.com`, `je.su@example.com`, `bewnoi.su@example.com`, `grace.su@example.com`, `phrao.su@example.com`, `pueng.su@example.com` | Active | Yes |
+| **Requester** | `e2e.requester@example.com` | Active | No |
+| **Requester** | `inactive.user@example.com` | Inactive | Yes |
+| **IT Staff** | `staff1@example.com`, `staff2@example.com`, `staff3@example.com` | Active | Yes |
+| **IT Staff** | `e2e.staff@example.com` | Active | No |
+| **IT Staff** | `inactive.staff@example.com` | Inactive | Yes |
+| **Admin** | `admin@example.com` | Active | Yes |
 
-> **Verify against `server/prisma/seed.ts` before relying on this table** — confirm which specific accounts
-> are seeded as inactive, since seed data may have changed since this table was last updated.
-
-*Universal initial password: `Password123!` — every account (including Requesters migrated from Lab 2)
-uses this password and requires a password change on first login. These credentials are for local
+*Universal initial password: `Password123!` — most accounts (including Requesters migrated from Lab 2)
+use this password and require a password change on first login. E2E accounts do not require a password change. These credentials are for local
 development only; do not reuse them anywhere else.*
 
 ---

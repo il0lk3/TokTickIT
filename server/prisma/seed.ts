@@ -42,7 +42,7 @@ async function main() {
   const users = [
     // Requesters (existing ones from Lab 2)
     { email: "cream.su@example.com", name: "Cream Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
-    { email: "e2e.requester@example.com", name: "Bew Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "bew.su@example.com", name: "Bew Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
     { email: "kanta.su@example.com", name: "Kanta Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
     { email: "je.su@example.com", name: "Je Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
     { email: "bewnoi.su@example.com", name: "Bewnoi Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },

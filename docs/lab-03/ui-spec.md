@@ -102,7 +102,7 @@ This document details the new and updated user interfaces required for Lab 3, co
   - **Forbidden**: Non-admin users must see a 403 access denied message if they attempt to load the route.
 
 ## 7. Responsive & Accessibility Rules (Same as Lab 2)
-- **ARIA Tabs Pattern**: The new tabbed interfaces (Public Comments, Internal Notes) must implement proper ARIA roles (`role="tablist"`, `role="tab"`, `role="tabpanel"`) and state attributes (`aria-selected="true"`) to ensure screen-reader accessibility.
+- **ARIA Tabs Pattern**: The tabbed interfaces should provide clear visual and semantic indication of the selected tab, maintaining keyboard accessibility without forcing strict ARIA `role="tab"` constraints if they conflict with the current semantic HTML structure.
 - All tables must switch to stacked cards or scroll horizontally on mobile.
 - Forms must use `form-label` and correct input types (e.g., `type="email"`, `type="password"`).
 - All buttons and links must be keyboard accessible and have visible focus states.

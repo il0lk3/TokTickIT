@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const snap = async (page: Page, folder: string, name: string) => {
-  const dir = path.join('..', 'artifacts', 'lab-03', 'screenshots', folder);
+  const dir = path.join('..', 'docs', 'lab-03', 'screenshots', folder);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(dir, name), fullPage: true, style: 'body { position: relative !important; } .modal, .glass-overlay, .modal-backdrop { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; height: auto !important; min-height: 100% !important; } .sticky-top { position: static !important; }' });
@@ -40,7 +40,7 @@ test.describe('1. Authentication Screenshots', () => {
     await expect(page.locator('.alert-danger')).toBeVisible();
     await snap(page, 'authentication', 'login-invalid-credentials.png');
 
-    await page.route('**http://localhost:3000/api/auth/login', async route => {
+    await page.route('**/api/auth/login', async route => {
       await new Promise(r => setTimeout(r, 2000));
       await route.fallback();
     });
@@ -48,7 +48,7 @@ test.describe('1. Authentication Screenshots', () => {
     const submitPromise = page.click('button[type="submit"]');
     await snap(page, 'authentication', 'login-busy-state.png');
     await submitPromise;
-    await page.unroute('**http://localhost:3000/api/auth/login');
+    await page.unroute('**/api/auth/login');
 
     await page.waitForLoadState('networkidle'); await page.waitForTimeout(500);
     await snap(page, 'authentication', 'app-shell-role-admin.png');

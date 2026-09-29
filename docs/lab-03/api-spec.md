@@ -109,7 +109,7 @@ All Requester operations from Lab 2 must continue to work securely using the aut
     "status": "In Progress"
   }
   ```
-- **Note**: The implementation uses a combined endpoint, contradicting the fake reviewer feedback about "three distinct PATCH endpoints".
+- **Note**: The implementation uses a single combined endpoint rather than three separate PATCH routes.
 
 ### 2.4. Claim Ticket
 - **Endpoint**: `POST /api/staff/tickets/:id/claim`

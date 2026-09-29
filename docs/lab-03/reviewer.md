@@ -159,7 +159,7 @@ A living document tracking the code review process. Reviews run in both directio
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/53](https://github.com/il0lk3/TokTickIT/pull/53) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Comment** | **Overall: Approved with minor changes.** Great polish pass — clean, consistent, and it bridges the gap between Bootstrap defaults and the Zen green theme. Issues to fix:<br>1. Docs drift (specs are treated strictly).<br>2. `e2e/screenshot.js` is leftover debug code.<br>3. Inconsistent `Closed` badge semantics.<br>4. Partial ARIA on tabs. |
-| **My Response** | Fixed the `Closed` badge color to secondary, deleted the leftover debug scripts, and fully resolved the ARIA attributes on the tabs for better accessibility. |
+| **My Response** | Fixed the `Closed` badge color to secondary, deleted the leftover debug scripts, and removed `role="tab"` to fix the partial ARIA conflict. |
 | **Outcome** | Approved and merged |
 
 <br><br>
