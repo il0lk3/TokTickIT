@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { getTickets, TicketResponse, Category } from "../api.js";
-import { useRequester } from "../contexts/RequesterContext.js";
+import { useAuth } from "../contexts/AuthContext";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 interface MyTicketsProps {
   categories: Category[];
@@ -8,7 +9,7 @@ interface MyTicketsProps {
 }
 
 export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
-  const { activeRequester } = useRequester();
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +38,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   }, [search]);
 
   const fetchTickets = useCallback(async () => {
-    if (!activeRequester) return;
+    if (!user) return;
     setLoading(true);
     setError("");
     try {
@@ -50,7 +51,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
         limit: 10,
         sortBy,
         sortOrder
-      }, activeRequester.id);
+      });
       setTickets(res.data);
       setTotalPages(res.meta.totalPages);
       setTotalTickets(res.meta.total);
@@ -59,7 +60,9 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
     } finally {
       setLoading(false);
     }
-  }, [activeRequester, debouncedSearch, categoryId, requestedPriority, status, page, sortBy, sortOrder]);
+  }, [user, debouncedSearch, categoryId, requestedPriority, status, page, sortBy, sortOrder]);
+
+  const isMobile = useMediaQuery('(max-width: 767.98px)');
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -99,19 +102,21 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "New": return "bg-info bg-opacity-10 text-dark border border-info border-opacity-50"; 
-      case "InProgress": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
-      case "Resolved": return "bg-success bg-opacity-10 text-success border border-success border-opacity-50";
-      default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
+      case "New": return "badge-zen-info";
+      case "InProgress": return "badge-zen-warning";
+      case "WaitingForRequester": return "badge-zen-warning";
+      case "Resolved": return "badge-zen-success";
+      case "Closed": return "badge-zen-secondary";
+      default: return "badge-zen-secondary";
     }
   };
 
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
-      case "HIGH": return "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25";
-      case "MEDIUM": return "bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50";
-      case "LOW": return "bg-success bg-opacity-10 text-success border border-success border-opacity-25";
-      default: return "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25";
+      case "HIGH": return "badge-zen-danger";
+      case "MEDIUM": return "badge-zen-warning";
+      case "LOW": return "badge-zen-success";
+      default: return "badge-zen-secondary";
     }
   };
 
@@ -193,7 +198,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             {activeFilters.map((f, i) => (
               <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
                 {f.label}
-                <button type="button" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+                <button type="button" aria-label="Clear filter" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
               </span>
             ))}
             <button 
@@ -230,37 +235,38 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
       ) : (
         <div className="glass-panel overflow-hidden">
           {/* Desktop Table View */}
-          <div className="table-responsive d-none d-md-block">
-            <table className="table table-hover align-middle mb-0 custom-table">
-              <thead className="text-zen-primary small text-uppercase text-nowrap" style={{ borderBottom: '2px solid var(--zen-primary)' }}>
+          {!isMobile && (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle custom-table mb-0">
+              <thead className="text-zen-primary small text-uppercase text-nowrap">
                 <tr>
-                  <th className="border-0 fw-bold ps-4 py-3" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>
+                  <th tabIndex={0} aria-label="Sort by Ticket Number" onKeyDown={(e) => e.key === 'Enter' && handleSort("ticketNumber")} className={`border-0 fw-bold ps-4 py-3 ${sortBy === 'ticketNumber' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("ticketNumber")}>
                     <div className="d-flex align-items-center">Ticket No. <SortIcon field="ticketNumber" /></div>
                   </th>
                   <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Summary</th>
                   <th className="border-0 fw-bold py-3" style={{ letterSpacing: '0.5px' }}>Category</th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>
+                  <th tabIndex={0} aria-label="Sort by Requested Priority" onKeyDown={(e) => e.key === 'Enter' && handleSort("requestedPriority")} className={`border-0 fw-bold py-3 text-center ${sortBy === 'requestedPriority' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("requestedPriority")}>
                     <div className="d-flex align-items-center justify-content-center">Priority <SortIcon field="requestedPriority" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3 text-center" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("currentStatus")}>
+                  <th tabIndex={0} aria-label="Sort by Status" onKeyDown={(e) => e.key === 'Enter' && handleSort("currentStatus")} className={`border-0 fw-bold py-3 text-center ${sortBy === 'currentStatus' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("currentStatus")}>
                     <div className="d-flex align-items-center justify-content-center">Status <SortIcon field="currentStatus" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
-                    <div className="d-flex align-items-center justify-content-end">Date <SortIcon field="createdAt" /></div>
+                  <th tabIndex={0} aria-label="Sort by Date Created" onKeyDown={(e) => e.key === 'Enter' && handleSort("createdAt")} className={`border-0 fw-bold py-3 text-end pe-4 ${sortBy === 'createdAt' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("createdAt")}>
+                    <div className="d-flex align-items-center justify-content-end">Created Date <SortIcon field="createdAt" /></div>
                   </th>
-                  <th className="border-0 fw-bold py-3 text-end pe-4" style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("updatedAt")}>
+                  <th tabIndex={0} aria-label="Sort by Date Updated" onKeyDown={(e) => e.key === 'Enter' && handleSort("updatedAt")} className={`border-0 fw-bold py-3 text-end pe-4 ${sortBy === 'updatedAt' ? 'active-sort' : ''}`} style={{ cursor: 'pointer', letterSpacing: '0.5px' }} onClick={() => handleSort("updatedAt")}>
                     <div className="d-flex align-items-center justify-content-end">Last Updated <SortIcon field="updatedAt" /></div>
                   </th>
                 </tr>
               </thead>
               <tbody className="border-top-0">
                 {tickets.map((t: any) => (
-                  <tr key={t.id} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
+                  <tr key={t.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelectTicket(t.id)} aria-label={`View ticket ${t.ticketNumber}`} className="transition-all" style={{ cursor: "pointer" }} onClick={() => onSelectTicket(t.id)}>
                     <td className="ps-4 py-3 text-nowrap">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
                     </td>
                     <td className="py-3">
-                      <div className="fw-medium text-dark text-truncate" style={{ maxWidth: '400px' }} title={t.summary}>
+                      <div className="fw-medium text-dark text-truncate d-none d-md-block" style={{ maxWidth: '400px' }} title={t.summary}>
                         {t.summary}
                       </div>
                     </td>
@@ -288,9 +294,11 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
               </tbody>
             </table>
           </div>
+          )}
           
           {/* Mobile Card View */}
-          <div className="d-md-none bg-white">
+          {isMobile && (
+          <div className="bg-white">
             <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
               <span className="small fw-bold text-muted">Sort by</span>
               <div className="d-flex gap-2">
@@ -319,7 +327,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
             <div className="p-3 bg-light d-flex flex-column gap-3">
               {tickets.map((t: any) => (
-                <div key={t.id} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
+                <div key={t.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelectTicket(t.id)} aria-label={`View ticket ${t.ticketNumber}`} className="card shadow-sm border-0" style={{ cursor: "pointer", borderRadius: '8px' }} onClick={() => onSelectTicket(t.id)}>
                   <div className="card-body p-4">
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <span className="fw-bold text-zen-primary" style={{ fontFamily: 'monospace', letterSpacing: '-0.5px' }}>{t.ticketNumber}</span>
@@ -358,6 +366,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
               ))}
             </div>
           </div>
+          )}
           
           {totalPages > 1 && (
             <div className="d-flex justify-content-between align-items-center p-3 border-top bg-white">

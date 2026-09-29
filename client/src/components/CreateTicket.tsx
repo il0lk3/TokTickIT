@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getSystems, createTicket, uploadAttachment, Category, RelatedSystem } from "../api.js";
-import { useRequester } from "../contexts/RequesterContext.js";
+import { useAuth } from "../contexts/AuthContext";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
@@ -9,7 +9,7 @@ interface CreateTicketProps {
 }
 
 export default function CreateTicket({ categories }: CreateTicketProps) {
-  const { activeRequester } = useRequester();
+  const { user } = useAuth();
   const [systems, setSystems] = useState<RelatedSystem[]>([]);
   const [systemsError, setSystemsError] = useState(false);
   const [formState, setFormState] = useState<FormState>("idle");
@@ -63,7 +63,7 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeRequester) return;
+    if (!user) return;
 
     if (!validate()) return;
 
@@ -78,7 +78,7 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
         requestedPriority,
         summary,
         description
-      }, activeRequester.id);
+      });
 
       // Upload attachments if any
       if (attachments.length > 0) {
@@ -86,7 +86,7 @@ export default function CreateTicket({ categories }: CreateTicketProps) {
         let failedUploads = 0;
         for (const file of attachments) {
           try {
-            await uploadAttachment(response.id, file, activeRequester.id);
+            await uploadAttachment(response.id, file);
           } catch (uploadErr) {
             console.error("Failed to upload:", file.name);
             failedUploads++;

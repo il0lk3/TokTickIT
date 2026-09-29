@@ -1,11 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { getPrisma } from "../prisma.js";
+import { Ticket, Prisma } from "@prisma/client";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
 
 const router = Router();
 const prisma = getPrisma();
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 // Setup Multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -31,40 +33,16 @@ const upload = multer({
   }
 });
 
-// Middleware: Authenticate via X-Requester-Id header
-router.use(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const requesterId = req.header("X-Requester-Id");
-    if (!requesterId) {
-      res.status(401).json({ error: "Requester not found or missing X-Requester-Id header" });
-      return;
-    }
-
-    const id = parseInt(requesterId, 10);
-    if (isNaN(id)) {
-      res.status(401).json({ error: "Requester not found or missing X-Requester-Id header" });
-      return;
-    }
-
-    const requester = await getPrisma().requesterUser.findUnique({
-      where: { id, isActive: true }
-    });
-
-    if (!requester) {
-      res.status(401).json({ error: "Requester not found or missing X-Requester-Id header" });
-      return;
-    }
-
-    // Attach requesterId to locals for use in route handlers
-    res.locals.requesterId = id;
-    next();
-  } catch (error) {
-    next(error);
-  }
+// Middleware: Authenticate via JWT
+router.use(authenticateToken, (req: Request, res: Response, next: NextFunction) => {
+  // Map user id to requesterId for Lab 2 routes backward compatibility
+  // Note: IT Staff also uses this router for some endpoints in Lab 3 (e.g. GET /api/tickets/:id).
+  res.locals.requesterId = res.locals.user.id;
+  next();
 });
 
 // POST /api/tickets - Create a new ticket
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
   try {
     const { categoryId, relatedSystemId, requestedPriority, summary, description } = req.body;
     const requesterId = res.locals.requesterId as number;
@@ -124,7 +102,7 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     // Generate Ticket Number with retry
-    let ticket: any = null;
+    let ticket: Ticket | null = null;
     let attempts = 0;
     while (!ticket && attempts < 3) {
       attempts++;
@@ -142,14 +120,15 @@ router.post("/", async (req: Request, res: Response) => {
             summary: trimmedSummary,
             description: trimmedDesc,
             requestedPriority: requestedPriority as "LOW" | "MEDIUM" | "HIGH",
+            itPriority: requestedPriority as "LOW" | "MEDIUM" | "HIGH",
             currentStatus: "New",
             requesterId,
             categoryId: catId,
             relatedSystemId: sysId
           }
         });
-      } catch (e: any) {
-        if (e.code === 'P2002') { // Unique constraint violation
+      } catch (e: unknown) {
+        if (e && typeof e === 'object' && 'code' in e && e.code === 'P2002') { // Unique constraint violation
           continue; // retry
         }
         throw e;
@@ -170,7 +149,8 @@ router.post("/", async (req: Request, res: Response) => {
 
 // GET /api/tickets/:id - Get ticket details
 router.get("/:id", async (req: Request, res: Response) => {
-  const requesterId = res.locals.requesterId as number;
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
   const ticketId = parseInt(req.params.id, 10);
 
   try {
@@ -180,16 +160,27 @@ router.get("/:id", async (req: Request, res: Response) => {
         category: true,
         relatedSystem: true,
         requester: true,
-        attachments: true
+        attachments: true,
+        publicComments: { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } },
+        internalNotes: userRole === "IT_STAFF" ? { include: { author: { select: { name: true, role: true } } }, orderBy: { createdAt: 'asc' } } : false
       }
     });
 
-    if (!ticket || ticket.requesterId !== requesterId) {
+    if (!ticket) {
       return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Authorization: Requester must own ticket. IT Staff can view any.
+    if (userRole === "REQUESTER" && ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+    if (userRole === "ADMINISTRATOR") {
+      return res.status(403).json({ error: "Administrators cannot view tickets" });
     }
 
     res.json(ticket);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch ticket" });
   }
 });
@@ -246,14 +237,23 @@ router.post("/:id/attachments", (req, res, next) => {
 
 // GET /api/tickets/:id/attachments/:attachmentId/download
 router.get("/:id/attachments/:attachmentId/download", async (req: Request, res: Response) => {
-  const requesterId = res.locals.requesterId as number;
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
   const ticketId = parseInt(req.params.id, 10);
   const attachmentId = parseInt(req.params.attachmentId, 10);
 
   try {
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
-    if (!ticket || ticket.requesterId !== requesterId) {
+    if (!ticket) {
       return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Authorization
+    if (userRole === "REQUESTER" && ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+    if (userRole === "ADMINISTRATOR") {
+      return res.status(403).json({ error: "Administrators cannot view tickets" });
     }
 
     const attachment = await prisma.attachment.findUnique({ where: { id: attachmentId, ticketId } });
@@ -278,14 +278,20 @@ router.get("/:id/attachments/:attachmentId/download", async (req: Request, res: 
 
 // DELETE /api/tickets/:id/attachments/:attachmentId
 router.delete("/:id/attachments/:attachmentId", async (req: Request, res: Response) => {
-  const requesterId = res.locals.requesterId as number;
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
   const ticketId = parseInt(req.params.id, 10);
   const attachmentId = parseInt(req.params.attachmentId, 10);
   const { reason } = req.body;
 
   try {
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
-    if (!ticket || ticket.requesterId !== requesterId) {
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    // Only Requester who owns the ticket can delete attachments in this implementation
+    if (userRole !== "REQUESTER" || ticket.requesterId !== userId) {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
@@ -306,9 +312,9 @@ router.delete("/:id/attachments/:attachmentId", async (req: Request, res: Respon
 });
 
 // GET /api/tickets - List tickets with search, filter, pagination
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
   try {
-    const requesterId = res.locals.requesterId as number;
+    const requesterId = res.locals.user.id;
     const { 
       search, 
       categoryId, 
@@ -325,7 +331,7 @@ router.get("/", async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Build the where clause
-    const where: any = { requesterId };
+    const where: Prisma.TicketWhereInput = { requesterId };
 
     if (search && typeof search === 'string' && search.trim() !== '') {
       where.OR = [
@@ -339,11 +345,19 @@ router.get("/", async (req: Request, res: Response) => {
     }
     
     if (requestedPriority) {
-      where.requestedPriority = String(requestedPriority);
+      const validPriorities = ["LOW", "MEDIUM", "HIGH"];
+      if (!validPriorities.includes(String(requestedPriority))) {
+        return res.status(400).json({ error: "Invalid requestedPriority parameter" });
+      }
+      where.requestedPriority = String(requestedPriority) as import("@prisma/client").TicketPriority;
     }
     
     if (status) {
-      where.currentStatus = String(status);
+      const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
+      if (!validStatuses.includes(String(status))) {
+        return res.status(400).json({ error: "Invalid status parameter" });
+      }
+      where.currentStatus = String(status) as import("@prisma/client").TicketStatus;
     }
 
     // Ensure valid sort fields
@@ -382,6 +396,143 @@ router.get("/", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching tickets:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/tickets/:id/comments - Add a public comment
+router.post("/:id/comments", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+  const { content } = req.body;
+
+  try {
+    const trimmedContent = typeof content === 'string' ? content.trim() : "";
+    if (trimmedContent.length === 0 || trimmedContent.length > 1000) {
+      return res.status(400).json({ error: "Comment must be between 1 and 1000 characters" });
+    }
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    if (userRole === "ADMINISTRATOR") {
+      return res.status(403).json({ error: "Administrators cannot post comments" });
+    }
+    if (userRole === "REQUESTER" && ticket.requesterId !== userId) {
+      return res.status(404).json({ error: "Ticket not found" }); 
+    }
+
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Cannot add comments to a closed or resolved ticket" });
+    }
+
+    const comment = await prisma.publicComment.create({
+      data: {
+        content: trimmedContent,
+        authorId: userId,
+        ticketId
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(comment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to post comment" });
+  }
+});
+
+// POST /api/tickets/:id/notes - Add an internal note
+router.post("/:id/notes", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+  const { content } = req.body;
+
+  try {
+    if (userRole !== "IT_STAFF") {
+      return res.status(403).json({ error: "Only IT Staff can post internal notes" });
+    }
+
+    const trimmedContent = typeof content === 'string' ? content.trim() : "";
+    if (trimmedContent.length === 0 || trimmedContent.length > 1000) {
+      return res.status(400).json({ error: "Note must be between 1 and 1000 characters" });
+    }
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Cannot add notes to a closed or resolved ticket" });
+    }
+
+    const note = await prisma.internalNote.create({
+      data: {
+        content: trimmedContent,
+        authorId: userId,
+        ticketId
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(note);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to post note" });
+  }
+});
+
+// PATCH /api/tickets/:id/appears-resolved - Mark ticket as appears resolved
+router.patch("/:id/appears-resolved", async (req: Request, res: Response) => {
+  const userId = res.locals.user.id;
+  const userRole = res.locals.user.role;
+  const ticketId = parseInt(req.params.id, 10);
+
+  try {
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    if (userRole !== "REQUESTER" || ticket.requesterId !== userId) {
+      return res.status(403).json({ error: "Only the requester of this ticket can mark it as resolved" });
+    }
+
+    const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
+    if (terminalStatuses.includes(ticket.currentStatus)) {
+      return res.status(400).json({ error: "Ticket is already closed or resolved" });
+    }
+
+    if (ticket.appearsResolved) {
+      return res.status(400).json({ error: "Ticket is already marked as appears resolved" });
+    }
+
+    // Update ticket and add a comment in a single transaction
+    const [updatedTicket, comment] = await prisma.$transaction([
+      prisma.ticket.update({
+        where: { id: ticketId },
+        data: { appearsResolved: true }
+      }),
+      prisma.publicComment.create({
+        data: {
+          content: "The problem appears to be resolved.",
+          authorId: userId,
+          ticketId
+        },
+        include: { author: { select: { name: true, role: true } } }
+      })
+    ]);
+
+    res.json({ ticket: updatedTicket, comment });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to mark ticket as appears resolved" });
   }
 });
 
