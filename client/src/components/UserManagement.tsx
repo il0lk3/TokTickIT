@@ -153,6 +153,15 @@ export const UserManagement: React.FC = () => {
     return hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
   };
 
+  useEffect(() => {
+    if (isCreateModalOpen || isEditModalOpen || isPasswordModalOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [isCreateModalOpen, isEditModalOpen, isPasswordModalOpen]);
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -429,12 +438,12 @@ export const UserManagement: React.FC = () => {
                   
                   <div className="mb-3">
                     <label className="form-label text-muted small fw-bold mb-1">Name <span className="text-danger">*</span></label>
-                    <input type="text" className={`form-control ${fieldErrors.name ? 'is-invalid' : ''}`} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={isSaving} required autoFocus />
+                    <input type="text" name="name" className={`form-control ${fieldErrors.name ? 'is-invalid' : ''}`} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={isSaving} required autoFocus />
                     {fieldErrors.name && <div className="invalid-feedback d-block">{fieldErrors.name}</div>}
                   </div>
                   <div className="mb-3">
                     <label className="form-label text-muted small fw-bold mb-1">Email <span className="text-danger">*</span></label>
-                    <input type="email" className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} disabled={isSaving} required />
+                    <input type="email" name="email" className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} disabled={isSaving} required />
                     {fieldErrors.email && <div className="invalid-feedback d-block">{fieldErrors.email}</div>}
                   </div>
                   <div className="mb-3">
@@ -463,7 +472,7 @@ export const UserManagement: React.FC = () => {
                   </div>
                   <div className="mb-3">
                     <label className="form-label text-muted small fw-bold mb-1">Initial Password <span className="text-danger">*</span></label>
-                    <input type="password" className={`form-control ${fieldErrors.initialPassword ? 'is-invalid' : ''}`} value={formData.initialPassword} onChange={e => setFormData({...formData, initialPassword: e.target.value})} disabled={isSaving} required />
+                    <input type="password" name="password" className={`form-control ${fieldErrors.initialPassword ? 'is-invalid' : ''}`} value={formData.initialPassword} onChange={e => setFormData({...formData, initialPassword: e.target.value})} disabled={isSaving} required />
                     {fieldErrors.initialPassword ? (
                       <div className="invalid-feedback d-block">{fieldErrors.initialPassword}</div>
                     ) : (
@@ -496,12 +505,12 @@ export const UserManagement: React.FC = () => {
                   
                   <div className="mb-3">
                     <label className="form-label text-muted small fw-bold mb-1">Name <span className="text-danger">*</span></label>
-                    <input type="text" className={`form-control ${fieldErrors.name ? 'is-invalid' : ''}`} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={isSaving} required autoFocus />
+                    <input type="text" name="name" className={`form-control ${fieldErrors.name ? 'is-invalid' : ''}`} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={isSaving} required autoFocus />
                     {fieldErrors.name && <div className="invalid-feedback d-block">{fieldErrors.name}</div>}
                   </div>
                   <div className="mb-3">
                     <label className="form-label text-muted small fw-bold mb-1">Email <span className="text-danger">*</span></label>
-                    <input type="email" className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} disabled={isSaving} required />
+                    <input type="email" name="email" className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} disabled={isSaving} required />
                     {fieldErrors.email && <div className="invalid-feedback d-block">{fieldErrors.email}</div>}
                   </div>
                   <div className="mb-3">
@@ -563,7 +572,7 @@ export const UserManagement: React.FC = () => {
                   <p className="text-muted small mb-4">Setting a new initial password will force the user to change their password the next time they log in.</p>
                   <div className="mb-3">
                     <label className="form-label text-muted small fw-bold mb-1">New Initial Password <span className="text-danger">*</span></label>
-                    <input type="password" className={`form-control ${fieldErrors.initialPassword ? 'is-invalid' : ''}`} value={formData.initialPassword} onChange={e => setFormData({...formData, initialPassword: e.target.value})} disabled={isSaving} required autoFocus />
+                    <input type="password" name="password" className={`form-control ${fieldErrors.initialPassword ? 'is-invalid' : ''}`} value={formData.initialPassword} onChange={e => setFormData({...formData, initialPassword: e.target.value})} disabled={isSaving} required autoFocus />
                     {fieldErrors.initialPassword ? (
                       <div className="invalid-feedback d-block">{fieldErrors.initialPassword}</div>
                     ) : (

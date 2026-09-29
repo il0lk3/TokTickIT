@@ -75,7 +75,7 @@ async function main() {
 
   // 4. Seed Example Tickets
   const reqUser = await prisma.user.findUnique({ where: { email: "cream.su@example.com" } });
-  const reqUser2 = await prisma.user.findUnique({ where: { email: "bew.su@example.com" } });
+  const reqUser2 = await prisma.user.findUnique({ where: { email: "e2e.requester@example.com" } });
   const staffUser = await prisma.user.findUnique({ where: { email: "staff1@example.com" } });
   
   const catHardware = await prisma.category.findUnique({ where: { name: "Hardware" } });

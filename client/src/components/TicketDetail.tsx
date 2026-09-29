@@ -57,6 +57,15 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [confirmModal]);
 
+  useEffect(() => {
+    if (confirmModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [confirmModal]);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !ticket || !e.target.files?.length) return;
     const file = e.target.files[0];
