@@ -38,7 +38,7 @@ A living document tracking the code review process. Reviews run in both directio
 | [#49](https://github.com/il0lk3/TokTickIT/pull/49) | 8 — Administrator User Management | `feature/lab3` | Approved (after 1 revision) |
 | [#52](https://github.com/il0lk3/TokTickIT/pull/52) | 9 — End-to-End Testing, Authorization Hardening | `feature/lab3` | Approved (after 1 revision) |
 | [#53](https://github.com/il0lk3/TokTickIT/pull/53) | 10 — UI Polish & Zen Green Consistency Pass | `feature/lab3` | Approved (after 1 revision) |
-| TBD | 11 — Release Evidence (Docs, Screenshots) | `feature/lab3-release-evidence` | *Pending* |
+| [#54](https://github.com/il0lk3/TokTickIT/pull/54) | 11 — Release Evidence (Docs, Screenshots) | `feature/lab3-release-evidence` | Approved (after 1 revision) |
 
 > *Note: PR #44 was opened against the wrong base branch and closed without merging; work was redone in #45.*
 
@@ -162,6 +162,18 @@ A living document tracking the code review process. Reviews run in both directio
 | **My Response** | Fixed the `Closed` badge color to secondary, deleted the leftover debug scripts, and removed `role="tab"` to fix the partial ARIA conflict. |
 | **Outcome** | Approved and merged |
 
+---
+
+### PR #54 — Issue 11: Release Evidence (Docs, Screenshots)
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/54](https://github.com/il0lk3/TokTickIT/pull/54) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Comment** | Thanks for the heavy lifting on the evidence — ~80 screenshots, traceable test matrix, README and specs that finally match the implementation. It's almost there, but this is the deliverables PR so a few things need fixing first:<br><br>**Requested changes**<br>1. Duplicate seed row<br>2. README test accounts are already misaligned<br>3. ui-spec.md §7 contradicts the implementation<br>4. api-spec.md wording reads unprofessionally<br>5. Screenshot specs aren't reproducible as committed<br>6. reviewer.md #53 log is inaccurate<br><br>**Note**<br>Runtime changes slipped into a docs/evidence PR — all reasonable, but flagging them in the description keeps the scope honest. |
+| **My Response** | I've addressed all the requested changes, Here is the rundown of the fixes:<br>1. Duplicate seed row: Removed the duplicate entry and restored bew.su@example.com.<br>2. README test accounts: Synced the table with the actual seed data.<br>3. ui-spec.md §7: Softened the ARIA requirement to reflect our actual implementation.<br>4. api-spec.md wording: Reworded the note neutrally.<br>5. Screenshot specs: Pointed the output path to docs/lab-03/screenshots/ and deleted update_snap.js.<br>6. reviewer.md #53 log: Corrected the log.<br>Note on Runtime Changes: I've updated the PR description to explicitly flag the runtime and quality-of-life adjustments. |
+| **Outcome** | Approved and merged |
+
 <br><br>
 
 ---
@@ -185,6 +197,8 @@ A living document tracking the code review process. Reviews run in both directio
 | [#57](https://github.com/Achikan/TokTickIT/pull/57) | 23 — Administrator User Management | `feature/lab3-admin` | Approved (after 1 revision) |
 | [#58](https://github.com/Achikan/TokTickIT/pull/58) | 24 — E2E Testing | `feature/lab3-e2e` | Approved (after 1 revision) |
 | [#59](https://github.com/Achikan/TokTickIT/pull/59) | 25 — Final Review & Release Integration | `feature/lab3-release` | Approved |
+| [#60](https://github.com/Achikan/TokTickIT/pull/60) | 25 — Lab 3 sheet checklist gap fixes | `feature/25-final-review-screenshots-release` | Approved |
+| [#62](https://github.com/Achikan/TokTickIT/pull/62) | 25 — Final review gap fixes | `feature/25-final-review-screenshots-release` | Approved |
 
 <br>
 
@@ -303,5 +317,29 @@ A living document tracking the code review process. Reviews run in both directio
 | **PR Link** | [https://github.com/Achikan/TokTickIT/pull/59](https://github.com/Achikan/TokTickIT/pull/59) |
 | **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
 | **My Review Comment** | LGTM |
+| **Partner's Response** | *(No response yet)* |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #60 — Issue 25: Lab 3 sheet checklist gap fixes
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/60](https://github.com/Achikan/TokTickIT/pull/60) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | LGTM<br>1. Comprehensive Report (report.md): All 9 parts are documented beautifully, directly addressing the rubric requirements.<br>2. Next-Level Automation: Using evidence-lab3.mjs and make-lab3-pdf.mjs to automatically snapshot the git history, parse the GitHub API for PR reviews, capture test results, and generate the final PDF is incredibly impressive. This is true engineering.<br>3. Attention to Detail: Adding the explicit note about the lab-03 directory naming convention in specification.md is a very smart defensive move. |
+| **Partner's Response** | *(No response yet)* |
+| **Outcome** | Approved and merged |
+
+---
+
+### Partner PR #62 — Issue 25: Final review gap fixes
+
+| Field | Detail |
+|-------|--------|
+| **PR Link** | [https://github.com/Achikan/TokTickIT/pull/62](https://github.com/Achikan/TokTickIT/pull/62) |
+| **Reviewer** | [@il0lk3](https://github.com/il0lk3) (Me) |
+| **My Review Comment** | I have thoroughly reviewed the changes in PR #62<br>1. Test Plan Alignment: The restructuring of docs/lab-03/tests.md to precisely match the 7-column format required by the specification (Section 10) is spot on.<br>2. Test Coverage Completeness: Replacing the .todo placeholders with actual unit test implementations for password policy, email normalization, session lifecycle, and ticket numbers is excellent work. The increase to 195 passing server tests ensures robust coverage.<br>3. Evidence Quality: Adjusting the responsive screenshots to be viewport-clipped rather than full-page prevents the PDF from generating unreadable, vertically stretched pages.<br>Perfect, LGTM |
 | **Partner's Response** | *(No response yet)* |
 | **Outcome** | Approved and merged |
