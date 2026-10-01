@@ -27,7 +27,7 @@ This document details the new and updated user interfaces required for Lab 3, co
 ### 2.2. Mandatory Password Change Screen
 - **Trigger**: Appears immediately after a successful login if the user's `requiresPasswordChange` flag is true.
 - **Fields**: Current (Initial) Password, New Password, Confirm New Password.
-- **Rules**: New password must be validated (e.g., min 8 chars). Confirm password must match.
+- **Rules**: New password must be validated (min 8 chars, mixed case, numbers, and symbols). Confirm password must match.
 - **Actions**: Update Password.
 - **State**: The user cannot bypass this screen to reach the main application until the password is successfully changed.
 
@@ -94,6 +94,7 @@ This document details the new and updated user interfaces required for Lab 3, co
 - **Rules**:
   - Cannot deactivate the last active Admin.
   - Cannot deactivate self.
+  - Cannot change own role.
   - Changing the initial password automatically sets `requiresPasswordChange = true` for the user.
 - **Feedback States**:
   - **Loading / Saving**: Display spinners during data fetch and form submission.
@@ -102,7 +103,7 @@ This document details the new and updated user interfaces required for Lab 3, co
   - **Forbidden**: Non-admin users must see a 403 access denied message if they attempt to load the route.
 
 ## 7. Responsive & Accessibility Rules (Same as Lab 2)
-- **ARIA Tabs Pattern**: The tabbed interfaces should provide clear visual and semantic indication of the selected tab, maintaining keyboard accessibility without forcing strict ARIA `role="tab"` constraints if they conflict with the current semantic HTML structure.
+- **ARIA Tabs Pattern**: The tabbed interfaces provide clear visual and semantic indication of the selected tab, maintaining full keyboard accessibility and fully resolving ARIA `role="tab"` attributes for better accessibility.
 - All tables must switch to stacked cards or scroll horizontally on mobile.
 - Forms must use `form-label` and correct input types (e.g., `type="email"`, `type="password"`).
 - All buttons and links must be keyboard accessible and have visible focus states.
