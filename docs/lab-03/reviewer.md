@@ -28,17 +28,18 @@ A living document tracking the code review process. Reviews run in both directio
 
 | PR | Issue | Branch | Reviewer Verdict |
 |---|---|---|---|
-| [#41](https://github.com/il0lk3/TokTickIT/pull/41) | 1 — Lab 3 Sprint Specification and Test Plan | `docs(lab3)` | Approved (after 1 revision) |
-| [#42](https://github.com/il0lk3/TokTickIT/pull/42) | 2 — User model, DB migration, and seed data | `feature/lab3` | Approved (after 1 revision) |
-| [#43](https://github.com/il0lk3/TokTickIT/pull/43) | 3 — Implement Authentication API and Session | `feature/lab3` | Approved (after 1 revision) |
-| [#45](https://github.com/il0lk3/TokTickIT/pull/45) | 4 — Login & Change-Password UI + App Shell | `feature/lab3` | Approved (after 1 revision) |
-| [#46](https://github.com/il0lk3/TokTickIT/pull/46) | 5 — Complete Requester Ticket Detail & Regression Tests | `feature/lab3` | Approved (after 1 revision) |
-| [#47](https://github.com/il0lk3/TokTickIT/pull/47) | 6 — IT Staff Ticket Queue | `feature/lab3` | Approved (after 1 revision) |
-| [#48](https://github.com/il0lk3/TokTickIT/pull/48) | 7 — IT Staff Ticket Detail | `feature/lab3` | Approved (after 2 revisions) |
-| [#49](https://github.com/il0lk3/TokTickIT/pull/49) | 8 — Administrator User Management | `feature/lab3` | Approved (after 1 revision) |
-| [#52](https://github.com/il0lk3/TokTickIT/pull/52) | 9 — End-to-End Testing, Authorization Hardening | `feature/lab3` | Approved (after 1 revision) |
-| [#53](https://github.com/il0lk3/TokTickIT/pull/53) | 10 — UI Polish & Zen Green Consistency Pass | `feature/lab3` | Approved (after 1 revision) |
+| [#41](https://github.com/il0lk3/TokTickIT/pull/41) | 1 — Lab 3 Sprint Specification and Test Plan | `feature/lab3-specs` | Approved (after 1 revision) |
+| [#42](https://github.com/il0lk3/TokTickIT/pull/42) | 2 — User model, DB migration, and seed data | `feature/lab3-user-db` | Approved (after 1 revision) |
+| [#43](https://github.com/il0lk3/TokTickIT/pull/43) | 3 — Implement Authentication API and Session | `feature/lab3-auth` | Approved (after 1 revision) |
+| [#45](https://github.com/il0lk3/TokTickIT/pull/45) | 4 — Login & Change-Password UI + App Shell | `feature/lab3-auth-ui` | Approved (after 1 revision) |
+| [#46](https://github.com/il0lk3/TokTickIT/pull/46) | 5 — Complete Requester Ticket Detail & Regression Tests | `feature/issue-5-requester-flow` | Approved (after 1 revision) |
+| [#47](https://github.com/il0lk3/TokTickIT/pull/47) | 6 — IT Staff Ticket Queue | `feature/issue-6-staff-queue` | Approved (after 1 revision) |
+| [#48](https://github.com/il0lk3/TokTickIT/pull/48) | 7 — IT Staff Ticket Detail | `feature/issue-7-ticket-detail` | Approved (after 2 revisions) |
+| [#49](https://github.com/il0lk3/TokTickIT/pull/49) | 8 — Administrator User Management | `feature/issue-8-user-administration` | Approved (after 1 revision) |
+| [#52](https://github.com/il0lk3/TokTickIT/pull/52) | 9 — End-to-End Testing, Authorization Hardening | `feature/issue-9-polish` | Approved (after 1 revision) |
+| [#53](https://github.com/il0lk3/TokTickIT/pull/53) | 10 — UI Polish & Zen Green Consistency Pass | `feature/issue-10-ui-polish` | Approved (after 1 revision) |
 | [#54](https://github.com/il0lk3/TokTickIT/pull/54) | 11 — Release Evidence (Docs, Screenshots) | `feature/lab3-release-evidence` | Approved (after 1 revision) |
+| [#55](https://github.com/il0lk3/TokTickIT/pull/55) | Final Release — Promote Lab 3 Sprint to main | `lab3-staging` | Merged directly to `main` |
 
 > *Note: PR #44 was opened against the wrong base branch and closed without merging; work was redone in #45.*
 

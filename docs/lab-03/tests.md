@@ -37,7 +37,7 @@ The backend test suite verifies strict compliance with the API specifications an
 |---|---|---|---|---|---|
 | `API-USER-01` | **AC-08, AC-09** | Admin creates/edits user, assigns role | `200/201 OK`; returns correct data and sets flag | `users-admin.api.test.ts` | Pass |
 | `API-USER-02` | **BR-07** | Admin creates duplicate email | `409 Conflict` | `users-admin.api.test.ts` | Pass |
-| `API-USER-03` | **BR-06** | Admin deactivates self | `409 Conflict` | `users-admin.api.test.ts` | Pass |
+| `API-USER-03` | **AC-06, BR-06** | Admin deactivates self | `409 Conflict` | `users-admin.api.test.ts` | Pass |
 | `API-USER-04` | **AC-10** | Admin attempts to deactivate last active Admin | `409 Conflict` | `users-admin.api.test.ts` | Pass |
 | `API-USER-05` | **BR-11** | Admin resets initial password | `200 OK`; sets requiresPasswordChange to true | `users-admin.api.test.ts` | Pass |
 | `API-USER-06` | **BR-13** | Assign invalid role | `400 Bad Request` | `users-admin.api.test.ts` | Pass |
@@ -127,6 +127,7 @@ Every Acceptance Criterion (AC) strictly ties back to at least one automated tes
 | **AC-03** (Role Isolation) | `API-TICKET-06`, `API-TICKET-07` |
 | **AC-04** (Internal Note Privacy) | `API-CMT-02` |
 | **AC-05** (Staff Queue) | `API-TICKET-01`, `UI-STAFF-01`, `E2E-03` |
+| **AC-06** (Admin Deactivate Self) | `API-USER-03` |
 | **AC-07** (Inactive Accounts) | `API-AUTH-03` |
 | **AC-08** (Admin Create User) | `API-USER-01`, `API-USER-05`, `E2E-04` |
 | **AC-09** (Admin Edit User) | `API-USER-01` |

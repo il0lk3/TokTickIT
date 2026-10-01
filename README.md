@@ -205,8 +205,6 @@ directly to `main` or `lab3-staging`.
 | 10. UI Polish & Zen Green Consistency Pass | `feature/issue-10-ui-polish` | `lab3-staging` |
 | 11. Release Evidence (Docs, Screenshots) | `feature/lab3-release-evidence` | `lab3-staging` → `main` |
 
-> Verify branch names above against actual PR history before final submission — some may have diverged
-> slightly during implementation.
 
 ---
 
