@@ -31,7 +31,7 @@ test.describe('2. User Management Screenshots', () => {
     await page.fill('input[type="email"]', 'e2e.admin@example.com');
     await page.fill('input[type="password"]', 'Password123!');
     await Promise.all([page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200), page.click('button[type="submit"]')]);
-    await page.goto('/admin/users'); await page.waitForSelector('tr:has-text("e2e.admin@example.com")');
+    await page.goto('/admin/users'); await page.waitForSelector('tr:has-text("e2e.admin@example.com"), .card:has-text("e2e.admin@example.com")');
 
     // 1. user-list-default.png
     await snap(page, 'user-management', 'user-list-default.png');
@@ -103,7 +103,7 @@ test.describe('2. User Management Screenshots', () => {
     await page.click('.modal button:has-text("Cancel")');
 
     // 11. deactivate-self-blocked.png
-    await page.click('tr:has-text("e2e.admin@example.com") button:has-text("Edit")');
+    await page.locator('tr:has-text("e2e.admin@example.com"), .card:has-text("e2e.admin@example.com")').locator('button:has-text("Edit")').click();
     await expect(page.locator('button:has-text("Deactivate User")')).toBeDisabled();
     await snap(page, 'user-management', 'deactivate-self-blocked.png');
     await page.click('.modal button:has-text("Cancel")');
@@ -123,8 +123,8 @@ test.describe('2. User Management Screenshots', () => {
     });
     // Refresh page
     await page.goto('/admin/users');
-    await page.waitForSelector('tr:has-text("e2e.admin@example.com")');
-    await page.click('tr:has-text("e2e.admin@example.com") button:has-text("Edit")');
+    await page.waitForSelector('tr:has-text("e2e.admin@example.com"), .card:has-text("e2e.admin@example.com")');
+    await page.locator('tr:has-text("e2e.admin@example.com"), .card:has-text("e2e.admin@example.com")').locator('button:has-text("Edit")').click();
     await expect(page.locator('button:has-text("Deactivate User")')).toBeDisabled();
     await page.click('.modal button:has-text("Cancel")');
     
@@ -144,17 +144,17 @@ test.describe('2. User Management Screenshots', () => {
     await page.click('button:has-text("Continue")');
     await page.waitForTimeout(500);
     await page.goto('/admin/users');
-    await page.waitForSelector('tr:has-text("e2e.admin@example.com")');
+    await page.waitForSelector('tr:has-text("e2e.admin@example.com"), .card:has-text("e2e.admin@example.com")');
     
     // 13. deactivate-user-success.png (Deactivate new user)
-    await page.click(`tr:has-text("${newEmail}") button:has-text("Edit")`);
+    await page.locator(`tr:has-text("${newEmail}"), .card:has-text("${newEmail}")`).locator('button:has-text("Edit")').click();
     await page.click('button:has-text("Deactivate User")');
     await page.click('button:has-text("Save Changes")');
     await page.waitForTimeout(500);
     await snap(page, 'user-management', 'deactivate-user-success.png');
     
     // Deactivate Admin 1
-    await page.click('tr:has-text("e2e.admin@example.com") button:has-text("Edit")');
+    await page.locator('tr:has-text("e2e.admin@example.com"), .card:has-text("e2e.admin@example.com")').locator('button:has-text("Edit")').click();
     await page.click('button:has-text("Deactivate User")');
     await page.click('button:has-text("Save Changes")');
     

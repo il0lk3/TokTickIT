@@ -37,7 +37,7 @@ The backend test suite verifies strict compliance with the API specifications an
 |---|---|---|---|---|---|
 | `API-USER-01` | **AC-08, AC-09** | Admin creates/edits user, assigns role | `200/201 OK`; returns correct data and sets flag | `users-admin.api.test.ts` | Pass |
 | `API-USER-02` | **BR-07** | Admin creates duplicate email | `409 Conflict` | `users-admin.api.test.ts` | Pass |
-| `API-USER-03` | **BR-06** | Admin deactivates self | `409 Conflict` | `users-admin.api.test.ts` | Pass |
+| `API-USER-03` | **AC-06, BR-06** | Admin deactivates self | `409 Conflict` | `users-admin.api.test.ts` | Pass |
 | `API-USER-04` | **AC-10** | Admin attempts to deactivate last active Admin | `409 Conflict` | `users-admin.api.test.ts` | Pass |
 | `API-USER-05` | **BR-11** | Admin resets initial password | `200 OK`; sets requiresPasswordChange to true | `users-admin.api.test.ts` | Pass |
 | `API-USER-06` | **BR-13** | Assign invalid role | `400 Bad Request` | `users-admin.api.test.ts` | Pass |
@@ -127,6 +127,7 @@ Every Acceptance Criterion (AC) strictly ties back to at least one automated tes
 | **AC-03** (Role Isolation) | `API-TICKET-06`, `API-TICKET-07` |
 | **AC-04** (Internal Note Privacy) | `API-CMT-02` |
 | **AC-05** (Staff Queue) | `API-TICKET-01`, `UI-STAFF-01`, `E2E-03` |
+| **AC-06** (Admin Deactivate Self) | `API-USER-03` |
 | **AC-07** (Inactive Accounts) | `API-AUTH-03` |
 | **AC-08** (Admin Create User) | `API-USER-01`, `API-USER-05`, `E2E-04` |
 | **AC-09** (Admin Edit User) | `API-USER-01` |
@@ -139,13 +140,16 @@ Every Acceptance Criterion (AC) strictly ties back to at least one automated tes
 
 ---
 
-## 6. Manual QA & Visual Checklist
+## 6. Manual QA & Completed Visual Checklist
 
-While automated tests cover the critical paths, the following visual checks were manually validated to ensure the "Zen Green" design language and polished UX constraints are met:
+To fulfill the requirements of Part 9, the following 9 specific visual and UX consistency checks were manually validated across Desktop, Tablet, and Mobile viewports:
 
-- [x] **Focus States:** Input fields and textareas feature a smooth green (`#27AE60`) focus ring, overriding default browser blue.
-- [x] **Typography:** All tables and badges use appropriate sizing (e.g., `small`, `fw-bold`) to ensure data density without looking cluttered.
-- [x] **Disabled/Read-only Styling:** Closed and Cancelled tickets clearly show disabled dropdowns and muted colors, preventing confusion about actionability.
-- [x] **Empty States:** The queue gracefully shows a "No tickets found" illustration/text when filters yield zero results.
-- [x] **Mobile Menus:** The App Shell's hamburger menu is easily tappable on mobile devices, and closes upon navigation.
-- [x] **Horizontal Scroll Prevention:** No pages require horizontal scrolling on devices down to 320px width.
+- [x] **Design Consistency:** Primary/destructive buttons, card radii, shadows, and spacing follow a unified "Zen Green" pattern across all screens.
+- [x] **Role Navigation:** The App Shell strictly shows only permitted links per role. No cross-role layout leakage occurs.
+- [x] **Badges:** Status, Priority, and Role badges use consistent pill shapes, font weights, and semantic colors app-wide.
+- [x] **Editable/Read-Only Fields:** Editable inputs have clear borders/backgrounds, while read-only fields (e.g., Requested Priority) are distinctly muted to prevent false click affordances.
+- [x] **Validation Placement:** Inline error messages appear consistently below their respective inputs across all forms, utilizing the same alert styling.
+- [x] **Focus:** Keyboard navigation yields a visible green focus ring on all interactive elements. Modals properly trap focus.
+- [x] **Clipping:** No text or UI elements are visually cut off or truncated incorrectly on smaller screens.
+- [x] **Overlap:** UI elements (e.g., badges, buttons, labels) do not overlap each other on narrow viewports; they wrap or stack gracefully.
+- [x] **Horizontal Overflow:** No pages produce a horizontal scrollbar on the main body at widths down to 320px.
