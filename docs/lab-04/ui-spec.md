@@ -34,19 +34,19 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 ## 2. App Shell & Global Navigation
 
 ### 2.1 Navigation Bar Updates
-- **Brand**: TokTickIT logo links to the user's role-specific home (`/staff/dashboard` or `/requester/dashboard`).
+- **Brand**: TokTickIT logo links to the user's home (`/dashboard`).
 - **Navigation Links**:
   - **Requester**:
-    - `Dashboard` (`/requester/dashboard`)
+    - `Dashboard` (`/dashboard`)
     - `My Tickets` (`/tickets`)
     - `Create Ticket` (`/tickets/new`)
   - **IT Staff**:
-    - `Dashboard` (`/staff/dashboard`)
-    - `Ticket Queue` (`/staff/queue`)
+    - `Dashboard` (`/dashboard`)
+    - `Ticket Queue` (`/queue`)
     - `Create Ticket` (`/tickets/new`)
   - **Administrator**:
-    - `Dashboard` (`/staff/dashboard`)
-    - `Ticket Queue` (`/staff/queue`)
+    - `Dashboard` (`/dashboard`)
+    - `Ticket Queue` (`/queue`)
     - `User Management` (`/admin/users`)
 - **Active Page Indicator**:
   - Current active page link has a bottom indicator bar (`border-bottom: 3px solid #2d6a4f`), bold font weight, and `aria-current="page"`.
@@ -76,7 +76,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ---
 
-## 3. IT Staff Dashboard Screen (`/staff/dashboard`)
+## 3. IT Staff Dashboard Screen (`/dashboard`)
 
 *Based on Lab 4 Mockup Handout page 5.*
 
@@ -91,17 +91,17 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
     3. **In Progress**: Currently active investigation tickets.
     4. **Waiting for Requester**: Tickets blocked awaiting user reply.
     5. **My Assigned**: Tickets assigned to the logged-in staff member.
-  - Card Design: Large bold count numeral (36px), clear semantic label, subtle "+X from yesterday" indicator, and clickable drill-down linking directly to `/staff/queue?status={Status}`.
+  - Card Design: Large bold count numeral (36px), clear semantic label, subtle "+X from yesterday" indicator, and clickable drill-down linking directly to `/queue?status={Status}`.
 - **Main Section (Split 2:1 on Desktop)**:
   - **Left (67% width) — "My Recent Tickets"**:
     - Table/list of the 5 most recently active tickets.
     - Columns: Ticket Number (monospace link), Summary, Status Badge, Formatted Timestamp (e.g. "May 12, 09:14 AM").
-    - Header includes a `"View all"` link navigating to `/staff/queue`.
+    - Header includes a `"View all"` link navigating to `/queue`.
   - **Right (33% width) — "Quick Actions"**:
     - Card container containing 3 prominent shortcut buttons:
       - `+ Create Ticket`: Opens ticket creation modal/page.
       - `🔍 Search Tickets`: Opens ticket queue with focus on search input.
-      - `📋 My Queue`: Navigates to `/staff/queue?ownerId=me`.
+      - `📋 My Queue`: Navigates to `/queue?ownerId=me`.
 
 ### 3.2 UI States
 - **Loading State**: Metric cards render pulsing skeleton blocks; recent tickets table shows 5 skeleton rows.
@@ -111,7 +111,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ---
 
-## 4. Requester Dashboard Screen (`/requester/dashboard`)
+## 4. Requester Dashboard Screen (`/dashboard`)
 
 *Based on Lab 4 Mockup Handout page 6.*
 
@@ -132,7 +132,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
     - Link to view full ticket details.
   - **Right (33% width) — "Quick Actions"**:
     - `+ Create Ticket`: Primary button (`#2d6a4f`) to submit a new IT service request.
-    - `📋 View My Tickets`: Secondary button to navigate to the full tickets table.
+    - `📋 View My Tickets`: Secondary button to navigate to the full tickets table (`/tickets`).
 
 ### 4.2 UI States
 - **Loading State**: Shimmer skeleton blocks for cards and ticket rows.
@@ -143,7 +143,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ## 5. Actions Taken on Ticket Detail
 
-*Positioned on both Staff Ticket Detail (`/staff/tickets/:id`) and Requester Ticket Detail (`/tickets/:id`).*
+*Positioned on Ticket Detail (`/tickets/:ticketId`).*
 
 ### 5.1 Placement & Visual Hierarchy
 - Placed immediately below the Ticket Details card and above the Public Comments / Internal Notes tabbed container.

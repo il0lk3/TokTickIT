@@ -78,7 +78,7 @@ cd e2e && npx playwright test lab-04
 | **UI-WKF-02** | UI | **AC-06** | Resolution gate incomplete shows helpful feedback | Resolve button disabled with explanatory tooltip | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | **UI-WKF-03** | UI | **AC-07** | Server returns 409 Conflict | Displays Conflict Modal with "Reload Latest" button | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | **UI-DSH-01** | UI | **AC-09** | Staff Dashboard renders 5 metric cards and recent tickets | Displays correct counts and renders ticket rows | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
-| **UI-DSH-02** | UI | **FR-08** | Clicking metric card navigates to filtered Queue (Drill-down) | URL navigates to `/staff/queue?status=...` | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
+| **UI-DSH-02** | UI | **FR-08** | Clicking metric card navigates to filtered Queue (Drill-down) | URL navigates to `/queue?status=...` | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | **UI-DSH-03** | UI | **AC-02** | Requester Dashboard renders personal metrics | Cards render counts; Recent tickets list displays | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | **UI-DSH-04** | UI | **AC-08** | Requester with zero tickets renders welcoming empty state | Displays empty state with "+ Create Ticket" button | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | **UI-NAV-01** | UI | **DoD-5** | App routing & role guards (protected, role redirects) | Redirects unauthenticated to `/login`, role-restricted routes show forbidden | `client/tests/lab-04/AppRouting.test.tsx` | Planned |

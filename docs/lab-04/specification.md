@@ -75,7 +75,7 @@ The service desk can now receive tickets and allow communication between IT Staf
 | View own tickets & actions | Yes | No* | No* |
 | View Ticket Queue | No | Yes | Yes |
 | View Ticket Detail & Actions | Yes (own ticket, read-only) | Yes | Yes |
-| Create Ticket | Yes | No | No |
+| Create Ticket | Yes | Yes (on behalf of user) | Yes (on behalf of user) |
 | Create Action Taken | No (403) | Yes | Yes |
 | Edit Action Taken | No (403) | Yes | Yes |
 | Assign / Reassign Owner | No (403) | Yes | Yes |
@@ -142,18 +142,18 @@ The UI extends the established **Zen Green** design language. Complete wireframe
 | `/queue` | Staff, Admin | `TicketQueue` | IT Staff operational queue; supports `status`, `owner`, etc. query filters |
 | `/admin/users` | Administrator | `UserManagement` | Admin user CRUD and account management |
 | `*` | All | `NotFound` | Zen Green 404 page |
-- **IT Staff Dashboard (`/staff/dashboard`)**:
+- **IT Staff Dashboard (`/dashboard`)**:
   - Operational banner welcoming the authenticated staff member with a quick **Refresh** button.
   - 5 concise metric cards: `New`, `Open`, `In Progress`, `Waiting for Requester`, and `My Assigned`.
-  - Each card features an accessible drill-down click action linking to the Ticket Queue filtered by that specific criterion.
+  - Each card features an accessible drill-down click action linking to the Ticket Queue (`/queue`) filtered by that specific criterion.
   - "My Recent Tickets" table showing recent active tickets with status badges, date, and detail links.
-  - Quick Action shortcuts: `+ Create Ticket`, `🔍 Search Tickets`, `📋 My Queue`.
-- **Requester Dashboard (`/requester/dashboard`)**:
+  - Quick Action shortcuts: `+ Create Ticket`, `🔍 Search Tickets`, `📋 My Queue` (links to `/queue?ownerId=me`).
+- **Requester Dashboard (`/dashboard`)**:
   - Concise personal overview summarizing tickets owned by the authenticated Requester.
-  - 4 metric cards: `My Open Tickets`, `In Progress`, `Resolved`, `Closed` (each with View all drill-down).
+  - 4 metric cards: `My Open Tickets`, `In Progress`, `Resolved`, `Closed` (each with View all drill-down to `/tickets?status=...`).
   - "Recent Tickets" summary list with status badges and timestamps.
-  - Quick Action buttons: `+ Create Ticket` and `📋 View My Tickets`.
-- **Actions Taken on Ticket Detail (`/staff/tickets/:id` & `/tickets/:id`)**:
+  - Quick Action buttons: `+ Create Ticket` and `📋 View My Tickets` (links to `/tickets`).
+- **Actions Taken on Ticket Detail (`/tickets/:ticketId`)**:
   - Dedicated "Actions Taken" card/section positioned below Ticket Description and above Comments/Notes.
   - Displays a structured table on desktop and stacked card view on mobile.
   - Columns: Date/Time, Description, Result, Performed By (badge), Follow-Up (icon + text badge), Follow-up Note, Attachment Notes.
@@ -204,8 +204,9 @@ Additions to `Ticket` model:
 ```prisma
 model Ticket {
   // ... existing fields ...
-  version       Int           @default(1)
-  actionsTaken  ActionTaken[]
+  appearsResolved Boolean       @default(false)
+  version         Int           @default(1)
+  actionsTaken    ActionTaken[]
 
   // Indexes to support rapid dashboard aggregation
   @@index([currentStatus])

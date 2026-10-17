@@ -230,6 +230,50 @@ Handles owner assignment, priority adjustment, and status transitions with optim
 
 ---
 
+### 3.2 Advisory Resolution Signal (Requester)
+Allows a Requester to signal that their issue appears resolved. This action posts an advisory audit comment and sets a flag, but strictly does NOT alter the formal ticket status.
+
+- **Method / Path**: `PATCH /api/tickets/:id/appears-resolved`
+- **Access**: `REQUESTER` (Must be the owner of the ticket; non-owners or other roles receive `403 Forbidden`).
+- **Path Parameters**:
+  - `id`: Integer (Ticket ID)
+- **Request Body**: None (Empty body `{}`)
+- **Business Validations**:
+  - Ticket must exist (`404 Not Found` if missing).
+  - Authenticated user must be the ticket requester (`ticket.requesterId === res.locals.user.id`).
+  - Ticket cannot be in terminal status (`Resolved`, `Closed`, `Cancelled`) -> `400 Bad Request` (`TICKET_ALREADY_CLOSED_OR_RESOLVED`).
+  - Ticket cannot already have `appearsResolved === true` -> `400 Bad Request` (`TICKET_ALREADY_MARKED_RESOLVED`).
+- **Processing**:
+  - Atomically sets `ticket.appearsResolved = true`.
+  - Automatically posts a public comment: `"The problem appears to be resolved."` with author set to the requester.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "ticket": {
+      "id": 14,
+      "ticketNumber": "TKT-2026-000014",
+      "currentStatus": "InProgress",
+      "appearsResolved": true,
+      "updatedAt": "2026-10-17T10:05:00.000Z"
+    },
+    "comment": {
+      "id": 55,
+      "content": "The problem appears to be resolved.",
+      "author": {
+        "name": "Jennifer Requester",
+        "role": "REQUESTER"
+      },
+      "createdAt": "2026-10-17T10:05:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Ticket already marked or in terminal state.
+  - `403 Forbidden`: User is not the owner of this ticket.
+  - `404 Not Found`: Ticket ID not found.
+
+---
+
 ## 4. Operational Dashboard APIs
 
 ### 4.1 Requester Dashboard
@@ -306,12 +350,12 @@ Provides system-wide operational metrics, queue counts, and drill-down links.
       }
     },
     "drillDown": {
-      "unassigned": "/staff/queue?ownerId=unassigned",
-      "ownedByMe": "/staff/queue?ownerId=me",
-      "newTickets": "/staff/queue?status=New",
-      "openTickets": "/staff/queue?status=Open",
-      "inProgress": "/staff/queue?status=InProgress",
-      "waitingForRequester": "/staff/queue?status=WaitingForRequester"
+      "unassigned": "/queue?ownerId=unassigned",
+      "ownedByMe": "/queue?ownerId=me",
+      "newTickets": "/queue?status=New",
+      "openTickets": "/queue?status=Open",
+      "inProgress": "/queue?status=InProgress",
+      "waitingForRequester": "/queue?status=WaitingForRequester"
     },
     "recentTickets": [
       {
