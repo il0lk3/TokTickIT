@@ -73,8 +73,8 @@ Retrieve all Actions Taken entries for a specific ticket, ordered chronologicall
 - **Empty State Response (200 OK)**: `[]` (When no actions have been logged yet).
 - **Error Responses**:
   - `401 Unauthorized`: Token missing or expired.
-  - `403 Forbidden`: Requester accessing another user's ticket actions.
-  - `404 Not Found`: Ticket does not exist.
+  - `403 Forbidden`: Authenticated user lacks required role.
+  - `404 Not Found`: Ticket does not exist, or belongs to another user (Requester tenant isolation returns `404 Not Found` to prevent ID enumeration).
 
 ---
 
