@@ -67,8 +67,8 @@ cd e2e && npx playwright test lab-04
 | **API-DSH-03** | API | **BR-15** | Requester attempts to call Staff dashboard endpoint | HTTP 403 Forbidden | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | **API-DSH-04** | API | **AC-09, BR-14** | Staff retrieves operational dashboard metrics | HTTP 200 OK; metric counts match direct PostgreSQL queries | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | **API-DSH-05** | API | **BR-13** | Administrator retrieves Staff dashboard | HTTP 200 OK; includes `adminUserCounts` block | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
-| **API-MIG-01** | DB | **AC-11** | Database migration preserves Labs 1-3 records | Pre- and post-migration record counts for Users, Tickets, etc. are identical | `server/tests/lab-04/database-regression.test.ts` | Planned |
-| **API-MIG-02** | DB | **AC-11** | Seed script is idempotent when executed repeatedly | Database record counts remain unchanged after 2nd seed run | `server/tests/lab-04/database-regression.test.ts` | Planned |
+| **API-MIG-01** | DB | **AC-11** | Database migration preserves Labs 1-3 records | Pre- and post-migration record counts for Users, Tickets, etc. are identical | `server/tests/lab-04/database-regression.test.ts` | Passed |
+| **API-MIG-02** | DB | **AC-11** | Seed script is idempotent when executed repeatedly | Database record counts remain unchanged after 2nd seed run | `server/tests/lab-04/database-regression.test.ts` | Passed |
 | **UI-ACT-01** | UI | **AC-01, AC-08** | Actions Taken section renders list and empty state | Renders table on desktop, empty alert when 0 actions | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | **UI-ACT-02** | UI | **AC-03** | Requester sees read-only view without create/edit controls | Form buttons hidden; action data readable | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | **UI-ACT-03** | UI | **AC-04** | Follow-Up checkbox reveals note field with inline validation | Note input expands; validates on submit | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
