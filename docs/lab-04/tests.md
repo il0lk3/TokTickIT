@@ -81,10 +81,13 @@ cd e2e && npx playwright test lab-04
 | **UI-DSH-02** | UI | **FR-08** | Clicking metric card navigates to filtered Queue (Drill-down) | URL navigates to `/staff/queue?status=...` | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | **UI-DSH-03** | UI | **AC-02** | Requester Dashboard renders personal metrics | Cards render counts; Recent tickets list displays | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | **UI-DSH-04** | UI | **AC-08** | Requester with zero tickets renders welcoming empty state | Displays empty state with "+ Create Ticket" button | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
+| **UI-NAV-01** | UI | **DoD-5** | App routing & role guards (protected, role redirects) | Redirects unauthenticated to `/login`, role-restricted routes show forbidden | `client/tests/lab-04/AppRouting.test.tsx` | Planned |
+| **UI-NAV-02** | UI | **DoD-5** | Active nav indicator & accessible link tags | Navigation renders `<NavLink>` with `aria-current="page"` and visible focus | `client/tests/lab-04/AppRouting.test.tsx` | Planned |
 | **E2E-01** | E2E | **AC-01, AC-03** | Complete Actions Taken flow across roles | Staff logs in -> logs action -> Requester logs in -> sees action read-only | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | **E2E-02** | E2E | **AC-06, AC-07** | Ticket Resolution & Concurrency conflict flow | Resolve blocked -> action added -> Resolve succeeds -> second tab gets 409 | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | **E2E-03** | E2E | **AC-02, AC-09** | Dashboard metrics and drill-down navigation | Metrics verify against UI; clicking cards navigates to filtered lists | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | **E2E-04** | E2E | **AC-12** | Responsive verification across 375px, 768px, 1280px | No horizontal scroll, no clipping, accessible tap targets | `e2e/lab-04/dashboards.spec.ts` | Planned |
+| **E2E-NAV-01** | E2E | **DoD-1** | Deep linking, browser Back/Forward & refresh retention | Navigating directly to `/tickets/:id` preserves ticket; Back preserves filters | `e2e/lab-04/navigation.spec.ts` | Planned |
 | **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/lab-01`, `lab-02`, `lab-03` | Planned |
 
 ---

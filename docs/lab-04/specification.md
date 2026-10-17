@@ -121,11 +121,27 @@ The service desk can now receive tickets and allow communication between IT Staf
 
 The UI extends the established **Zen Green** design language. Complete wireframes, responsive grids, and design tokens are detailed in `docs/lab-04/ui-spec.md`.
 
-- **Global Navigation (App Shell)**:
-  - Top navigation updated with a role-aware **Dashboard** link.
+- **Global Navigation (App Shell) & Routing Architecture**:
+  - The in-memory state switching (`activeTab`, `selectedTicketId`) in `App.tsx` is completely replaced with robust URL routing using `react-router-dom`. Every view has a stable, deep-linkable URL supporting browser Back/Forward navigation, bookmarking, and page refreshes.
+  - Top navigation updated with a role-aware **Dashboard** link as real anchor tags (`<NavLink>` / `<Link>`).
   - Active-page state is styled with high-contrast indicator and semantic `aria-current="page"`.
   - Requesters navigate between `Dashboard`, `My Tickets`, and `Create Ticket`.
-  - IT Staff and Administrators navigate between `Dashboard`, `Ticket Queue`, and (for Admin) `User Management`.
+  - IT Staff navigate between `Dashboard`, `Ticket Queue`, and `Create Ticket`.
+  - Administrators navigate between `Dashboard`, `Ticket Queue`, and `User Management`.
+
+### 6.1 Client Route Map
+| Path | Allowed Roles | Screen Component | Notes |
+|---|---|---|---|
+| `/login` | Public (Unauthenticated) | `Login` | Redirects back to intended destination after sign-in |
+| `/change-password` | Authenticated (`requiresPasswordChange: true`) | `ChangePassword` | Blocks all other application routes until password changed |
+| `/` | Authenticated | Redirect | Redirects to role default landing route (`/dashboard`) |
+| `/dashboard` | Requester, Staff, Admin | `RequesterDashboard` / `StaffDashboard` | Role-aware operational landing screen with summary metrics |
+| `/tickets` | Requester | `MyTickets` | Full searchable/paginated list; supports URL query filters |
+| `/tickets/new` | Requester, Staff, Admin | `CreateTicket` | Create service request; IT Staff can log tickets on behalf of users |
+| `/tickets/:ticketId` | Requester (own), Staff, Admin | `TicketDetail` | Deep-linkable ticket view; preserves filter state on Back |
+| `/queue` | Staff, Admin | `TicketQueue` | IT Staff operational queue; supports `status`, `owner`, etc. query filters |
+| `/admin/users` | Administrator | `UserManagement` | Admin user CRUD and account management |
+| `*` | All | `NotFound` | Zen Green 404 page |
 - **IT Staff Dashboard (`/staff/dashboard`)**:
   - Operational banner welcoming the authenticated staff member with a quick **Refresh** button.
   - 5 concise metric cards: `New`, `Open`, `In Progress`, `Waiting for Requester`, and `My Assigned`.
@@ -301,3 +317,9 @@ A feature or pull request in Sprint 4 is considered **Done** only when meeting a
 - **Dashboard Timezone and Date Boundaries**:
   - The operational timezone for calculating "recently updated" and "recently resolved" tickets is set to `Asia/Bangkok` (UTC+7).
   - The "recently resolved" metric window is defined as tickets resolved within the last **7 days** relative to the current timestamp.
+- **Decision on IT Staff "Create Ticket" Capability**:
+  - In modern IT service operations, IT Staff frequently receive requests via phone, walk-in, or system alerts. In accordance with the IT Staff navigation mockup in Handout Page 5, IT Staff and Administrators are granted access to `/tickets/new` to log tickets directly.
+- **Decision on Requester Default Landing Screen & Navigation**:
+  - In accordance with Handout Section 4.6 and Section 8.2, the default landing route after login for all roles is `/dashboard`. For Requesters, `/dashboard` displays high-level operational counts (`openTickets`, `inProgress`, `recentlyResolved`, `closed`), recent tickets, and quick action shortcuts. The global navigation bar provides distinct links for both `Dashboard` and `My Tickets` (`/tickets`), ensuring Requesters can effortlessly switch between executive summaries and the full searchable ticket archive without UI ambiguity.
+- **Administrator Extended Operational Access**:
+  - Administrators can access the Dashboard (`/dashboard`), Ticket Queue (`/queue`), Ticket Detail (`/tickets/:ticketId`), and User Management (`/admin/users`), satisfying Handout Section 4.3 ("Administrator: Perform IT Staff behavior and retain administrative access needed for support and testing").

@@ -54,6 +54,26 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
   - Shows authenticated user's name and role badge (e.g., `Michael Staff (IT Staff)`).
   - Contains **Sign Out** button.
 
+### 2.2 Client Route Map & Route Guards
+
+| Path | Allowed Roles | Component | Guard / Redirect Rule |
+|---|---|---|---|
+| `/login` | Public (Unauthenticated) | `Login` | Redirects to role default landing route if already authenticated |
+| `/change-password` | Authenticated (`requiresPasswordChange: true`) | `ChangePassword` | All protected routes redirect here until initial password is changed |
+| `/` | Authenticated | Redirect | Redirects to role landing route (`/dashboard`) |
+| `/dashboard` | Requester, Staff, Admin | `RequesterDashboard` / `StaffDashboard` | Role-aware dashboard; renders role-specific metric cards and recent lists |
+| `/tickets` | Requester | `MyTickets` | Supports filter query params: `?status=...&priority=...` |
+| `/tickets/new` | Requester, Staff, Admin | `CreateTicket` | IT Staff/Admin can log tickets on behalf of users |
+| `/tickets/:ticketId` | Requester (own), Staff, Admin | `TicketDetail` | Deep-linkable; preserves list filter query params when clicking Back |
+| `/queue` | Staff, Admin | `TicketQueue` | Supports drill-down query params: `?status=...&ownerId=...` |
+| `/admin/users` | Administrator | `UserManagement` | Admin user CRUD management |
+| `*` | All | `NotFound` | Zen Green 404 page |
+
+- **Route Guard Behaviors**:
+  - Unauthenticated access to protected routes redirects to `/login`, preserving intended target path in location state for post-login return.
+  - Accessing unauthorized routes (e.g., Requester hitting `/queue` or `/admin/users`) redirects to `/dashboard` or renders a Zen Green 403 Forbidden screen.
+  - Deep-linking and page refreshes preserve state completely without losing the loaded ticket or filters.
+
 ---
 
 ## 3. IT Staff Dashboard Screen (`/staff/dashboard`)
