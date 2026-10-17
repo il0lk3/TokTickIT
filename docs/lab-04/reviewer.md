@@ -30,6 +30,8 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|---|---|
 | [#69](https://github.com/il0lk3/TokTickIT/pull/69) | Issue 1 — Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | Pending Review |
 
+> *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
+
 ---
 
 ### PR #69 — Issue 1: Sprint 4 Engineering Contract (Spec DD + Test DD)
