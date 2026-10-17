@@ -8,6 +8,7 @@ import path from "path";
 const router = Router();
 const prisma = getPrisma();
 import { authenticateToken, requireRole } from "../middleware/auth.js";
+import { actionsTakenRouter } from "./actions-taken.js";
 
 // Setup Multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -40,6 +41,10 @@ router.use(authenticateToken, (req: Request, res: Response, next: NextFunction) 
   res.locals.requesterId = res.locals.user.id;
   next();
 });
+
+// Actions Taken Sub-Router (Issue 3)
+router.use("/:id/actions-taken", actionsTakenRouter);
+
 
 // POST /api/tickets - Create a new ticket
 router.post("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {

@@ -42,17 +42,17 @@ cd e2e && npx playwright test lab-04
 
 | Test ID | Layer | Req / AC | What It Tests | Expected Result | Automated Test File | Status |
 |---|:---:|:---:|---|---|---|:---:|
-| **API-ACT-01** | API | **AC-01, BR-03** | IT Staff creates valid Action Taken | HTTP 201; saved under correct Ticket with `performedById = session.user.id` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-02** | API | **AC-03, BR-05** | Requester attempts POST on Actions Taken | HTTP 403 Forbidden; no database record created | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-03** | API | **AC-03, BR-05** | Requester attempts PATCH on Action Taken | HTTP 403 Forbidden; record remains unmodified | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-04** | API | **BR-05** | Requester GET actions on another user's ticket | HTTP 403 Forbidden or 404 Not Found (tenant isolated) | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-05** | API | **AC-04, BR-04** | Create action with `followUpRequired=true` but empty note | HTTP 400 Bad Request; explanatory validation error | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-06** | API | **BR-04** | Create action with `followUpRequired=false` and note provided | HTTP 201; note is saved as null or empty | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-07** | API | **BR-03** | Client payload attempts to forge `performedById` | Forged ID ignored; server enforces authenticated user ID | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-08** | API | **AC-08, BR-16** | Ticket with zero actions returns empty list | HTTP 200 OK with `[]` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-09** | API | **BR-02, BR-16** | Ticket with multiple actions from different staff members | HTTP 200 OK; correct stable chronological order | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-10** | API | **BR-07** | Attempt to add Action Taken to Closed/Cancelled ticket | HTTP 400 Bad Request; `TERMINAL_TICKET_LOCKED` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| **API-ACT-11** | API | **AC-10** | Duplicate action submission within short window | Deduplicated or handled safely without duplicate records | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| **API-ACT-01** | API | **AC-01, BR-03** | IT Staff creates valid Action Taken | HTTP 201; saved under correct Ticket with `performedById = session.user.id` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-02** | API | **AC-03, BR-05** | Requester attempts POST on Actions Taken | HTTP 403 Forbidden; no database record created | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-03** | API | **AC-03, BR-05** | Requester attempts PATCH on Action Taken | HTTP 403 Forbidden; record remains unmodified | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-04** | API | **BR-05** | Requester GET actions on another user's ticket | HTTP 403 Forbidden or 404 Not Found (tenant isolated) | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-05** | API | **AC-04, BR-04** | Create action with `followUpRequired=true` but empty note | HTTP 400 Bad Request; explanatory validation error | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-06** | API | **BR-04** | Create action with `followUpRequired=false` and note provided | HTTP 201; note is saved as null or empty | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-07** | API | **BR-03** | Client payload attempts to forge `performedById` | Forged ID ignored; server enforces authenticated user ID | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-08** | API | **AC-08, BR-16** | Ticket with zero actions returns empty list | HTTP 200 OK with `[]` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-09** | API | **BR-02, BR-16** | Ticket with multiple actions from different staff members | HTTP 200 OK; correct stable chronological order | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-10** | API | **BR-07** | Attempt to add Action Taken to Closed/Cancelled ticket | HTTP 400 Bad Request; `TERMINAL_TICKET_LOCKED` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-11** | API | **AC-10** | Duplicate action submission within short window | Deduplicated or handled safely without duplicate records | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-WKF-01** | API | **AC-05, BR-10** | Permitted transitions in matrix (Open -> InProgress -> Waiting) | HTTP 200 OK; status updated successfully | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | **API-WKF-02** | API | **AC-05, BR-10** | Disallowed transition outside matrix (New -> Resolved) | HTTP 400 Bad Request; `INVALID_STATUS_TRANSITION` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
 | **API-WKF-03** | API | **AC-06, BR-09** | Transition to Resolved without assigned Owner | HTTP 400 Bad Request; `RESOLUTION_GATE_FAILED` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
@@ -88,7 +88,7 @@ cd e2e && npx playwright test lab-04
 | **E2E-03** | E2E | **AC-02, AC-09** | Dashboard metrics and drill-down navigation | Metrics verify against UI; clicking cards navigates to filtered lists | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | **E2E-04** | E2E | **AC-12** | Responsive verification across 375px, 768px, 1280px | No horizontal scroll, no clipping, accessible tap targets | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | **E2E-NAV-01** | E2E | **DoD-1** | Deep linking, browser Back/Forward & refresh retention | Navigating directly to `/tickets/:id` preserves ticket; Back preserves filters | `e2e/lab-04/navigation.spec.ts` | Planned |
-| **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/lab-01`, `lab-02`, `lab-03` | Planned |
+| **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/lab-01`, `lab-02`, `lab-03` | Passed (Unit & API) |
 
 ---
 
