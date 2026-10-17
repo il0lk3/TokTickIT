@@ -143,6 +143,57 @@ async function main() {
     });
   }
 
+  // Helper for idempotent PublicComment creation without hardcoded IDs
+  async function upsertPublicComment(data: { ticketId: number; authorId: number; content: string }) {
+    const existing = await prisma.publicComment.findFirst({
+      where: { ticketId: data.ticketId, authorId: data.authorId, content: data.content },
+    });
+    if (existing) {
+      return existing;
+    }
+    return prisma.publicComment.create({ data });
+  }
+
+  // Helper for idempotent InternalNote creation without hardcoded IDs
+  async function upsertInternalNote(data: { ticketId: number; authorId: number; content: string }) {
+    const existing = await prisma.internalNote.findFirst({
+      where: { ticketId: data.ticketId, authorId: data.authorId, content: data.content },
+    });
+    if (existing) {
+      return existing;
+    }
+    return prisma.internalNote.create({ data });
+  }
+
+  // Helper for idempotent Attachment creation
+  async function upsertAttachment(data: {
+    ticketId: number;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    isRemoved?: boolean;
+  }) {
+    return prisma.attachment.upsert({
+      where: { filename: data.filename },
+      update: {
+        ticketId: data.ticketId,
+        originalName: data.originalName,
+        mimeType: data.mimeType,
+        size: data.size,
+        isRemoved: data.isRemoved ?? false,
+      },
+      create: {
+        ticketId: data.ticketId,
+        filename: data.filename,
+        originalName: data.originalName,
+        mimeType: data.mimeType,
+        size: data.size,
+        isRemoved: data.isRemoved ?? false,
+      },
+    });
+  }
+
   // 5. Seed Tickets covering all 8 statuses, all priorities, owned & unassigned
 
   // Ticket 1: In Progress, Assigned to Staff 1, Multiple Actions (from Staff 1 and Staff 2)
@@ -167,16 +218,24 @@ async function main() {
     },
   });
 
-  await prisma.publicComment.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, content: "I am looking into this.", authorId: staff1.id, ticketId: t1.id },
+  await upsertPublicComment({
+    ticketId: t1.id,
+    authorId: staff1.id,
+    content: "I am looking into this.",
   });
 
-  await prisma.internalNote.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, content: "Needs new toner and paper roller assembly.", authorId: staff1.id, ticketId: t1.id },
+  await upsertInternalNote({
+    ticketId: t1.id,
+    authorId: staff1.id,
+    content: "Needs new toner and paper roller assembly.",
+  });
+
+  await upsertAttachment({
+    ticketId: t1.id,
+    filename: "seed-duplexer-gear-photo.png",
+    originalName: "duplexer-gear.png",
+    mimeType: "image/png",
+    size: 102400,
   });
 
   await upsertActionTaken({
@@ -455,6 +514,14 @@ async function main() {
     attachmentNotes: "battery_diagnostic_report.pdf",
     actionAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
   });
+
+  // Align PostgreSQL auto-increment sequences with seeded IDs to prevent sequence collisions
+  const tables = ["PublicComment", "InternalNote", "ActionTaken", "Attachment", "Ticket", "User"];
+  for (const table of tables) {
+    await prisma.$executeRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"${table}"', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM "${table}";`
+    );
+  }
 
   console.log("Database seeded successfully with Lab 4 idempotent test fixtures.");
 }

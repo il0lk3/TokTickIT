@@ -29,7 +29,7 @@ A living document tracking the code review process. Reviews run in both directio
 | PR | Issue | Branch | Reviewer Verdict |
 |---|---|---|---|
 | [#69](https://github.com/il0lk3/TokTickIT/pull/69) | Issue 1 — Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | Approved & Merged |
-| [#70](https://github.com/il0lk3/TokTickIT/pull/70) | Issue 2 — Database Increment — ActionTaken Model, Migration, Backfill, Seed | `feature/lab4-db-actions-taken` | Pending Review |
+| [#70](https://github.com/il0lk3/TokTickIT/pull/70) | Issue 2 — Database Increment — ActionTaken Model, Migration, Backfill, Seed | `feature/lab4-db-actions-taken` | Changes Requested (Addressed, Pending Re-review) |
 
 > *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
 
@@ -54,9 +54,10 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/70](https://github.com/il0lk3/TokTickIT/pull/70) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
-| **Review Verdict** | Pending Review |
-| **Review Comments** | Pending peer review comments from @Achikan |
-| **My Response / Actions Taken** | - |
-| **Outcome** | In Review |
+| **Review Verdict** | Changes Requested ([Review #5557454686](https://github.com/il0lk3/TokTickIT/pull/70#pullrequestreview-5557454686)) |
+| **Review Comments** | 1. **Missing Attachment Seeding in Clean Setup:** `server/prisma/seed.ts` lacked an `Attachment` seed, causing `API-MIG-01` to fail on fresh environments where `attachmentCount` starts at 0.<br>2. **Avoid Hardcoded IDs for Comments/Notes:** In `seed.ts`, comments and notes used fixed `id: 1` which can cause PK conflicts if database sequences diverge. |
+| **My Response / Actions Taken** | 1. Added `upsertAttachment` helper to [seed.ts](file:///Users/karn/Downloads/toktickit/server/prisma/seed.ts) and seeded a sample attachment (`duplexer-gear.png`) for Ticket 1.<br>2. Replaced hardcoded IDs with dynamic `upsertPublicComment` and `upsertInternalNote` lookup helpers, and added PostgreSQL sequence realignment (`setval`) across all tables at the end of seed execution. |
+| **Outcome** | Changes Addressed & Committed to `feature/lab4-db-actions-taken` (Ready for Peer Re-Review) |
+
 
 
