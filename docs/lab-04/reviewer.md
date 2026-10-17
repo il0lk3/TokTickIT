@@ -28,15 +28,15 @@ A living document tracking the code review process. Reviews run in both directio
 
 | PR | Issue | Branch | Reviewer Verdict |
 |---|---|---|---|
-| *In Review* | Issue 1 — Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | Pending Review |
+| [#69](https://github.com/il0lk3/TokTickIT/pull/69) | Issue 1 — Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | Pending Review |
 
 ---
 
-### PR — Issue 1: Sprint 4 Engineering Contract (Spec DD + Test DD)
+### PR #69 — Issue 1: Sprint 4 Engineering Contract (Spec DD + Test DD)
 
 | Field | Detail |
 |---|---|
-| **PR Link** | *(Pending peer review & merge by @Achikan)* |
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/69](https://github.com/il0lk3/TokTickIT/pull/69) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Comment** | Pending peer review comments from @Achikan |
 | **My Response** | Pending response |
