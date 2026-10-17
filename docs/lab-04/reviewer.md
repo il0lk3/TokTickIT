@@ -30,7 +30,8 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|---|---|
 | [#69](https://github.com/il0lk3/TokTickIT/pull/69) | Issue 1 — Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | Approved & Merged |
 | [#70](https://github.com/il0lk3/TokTickIT/pull/70) | Issue 2 — Database Increment — ActionTaken Model, Migration, Backfill, Seed | `feature/lab4-db-actions-taken` | Approved & Merged |
-| [#71](https://github.com/il0lk3/TokTickIT/pull/71) | Issue 3 — Actions Taken API and Authorization (TDD) | `feature/lab4-actions-taken-api` | Pending Review |
+| [#71](https://github.com/il0lk3/TokTickIT/pull/71) | Issue 3 — Actions Taken API and Authorization (TDD) | `feature/lab4-actions-taken-api` | Approved & Merged |
+| [#72](https://github.com/il0lk3/TokTickIT/pull/72) | Issue 4 — Ticket Workflow Rules and Conflict Handling (API) | `feature/lab4-ticket-workflow-api` | Pending Review |
 
 > *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
 
@@ -67,6 +68,19 @@ A living document tracking the code review process. Reviews run in both directio
 | Field | Detail |
 |---|---|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/71](https://github.com/il0lk3/TokTickIT/pull/71) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Verdict** | Approved |
+| **Review Comments** | "LGTM! The Actions Taken API implementation is thorough, clean, and fully compliant with the Lab 4 handout and specifications. Role authorization, terminal status guards, follow-up validations, session-bound performer derivations, and 5-second duplicate protection are all properly enforced and backed by 27 passing tests. Excellent work! Approved!" |
+| **My Response / Actions Taken** | Addressed all 27 TDD test requirements and peer review criteria cleanly. |
+| **Outcome** | Approved & Merged into `lab4-staging` by @Achikan |
+
+---
+
+### PR #72 — Issue 4: Ticket Workflow Rules and Conflict Handling (API)
+
+| Field | Detail |
+|---|---|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/72](https://github.com/il0lk3/TokTickIT/pull/72) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Verdict** | Pending Review |
 | **Review Comments** | *(Pending peer review)* |

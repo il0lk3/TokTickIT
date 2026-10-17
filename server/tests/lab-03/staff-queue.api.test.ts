@@ -56,11 +56,11 @@ describe("IT Staff Ticket Queue API", () => {
     expect(res.status).toBe(403);
   });
 
-  it("should return 403 Forbidden for Administrator on /api/staff/tickets", async () => {
+  it("should permit Administrator on /api/staff/tickets per Lab 4 BR-13", async () => {
     const res = await request(app)
       .get("/api/staff/tickets")
       .set("Cookie", adminCookie);
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 
   it("should return 403 Forbidden for Requester on /api/it-staff", async () => {

@@ -70,41 +70,44 @@ describe("IT Staff Ticket Detail API", () => {
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", requesterCookie)
-      .send({ itPriority: "HIGH" });
+      .send({ expectedVersion: 1, itPriority: "HIGH" });
     expect(res.status).toBe(403);
   });
 
-  it("should return 403 Forbidden for Admin", async () => {
+  it("should permit Admin on PATCH /api/staff/tickets/:id per Lab 4 BR-13", async () => {
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", adminCookie)
-      .send({ itPriority: "HIGH" });
-    expect(res.status).toBe(403);
+      .send({ expectedVersion: 1, itPriority: "HIGH" });
+    expect(res.status).toBe(200);
   });
 
   it("should reject invalid ownerId", async () => {
+    const fresh = await prisma.ticket.findUnique({ where: { id: ticketId } });
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", staffCookie)
-      .send({ ownerId: requesterId }); // Requester ID
+      .send({ expectedVersion: fresh!.version, ownerId: requesterId }); // Requester ID
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("Must be an active IT Staff");
   });
 
   it("should reject assignment to an administrator", async () => {
+    const fresh = await prisma.ticket.findUnique({ where: { id: ticketId } });
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", staffCookie)
-      .send({ ownerId: adminId });
+      .send({ expectedVersion: fresh!.version, ownerId: adminId });
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("Must be an active IT Staff");
   });
 
   it("should successfully set ownerId and transition New -> Open if New", async () => {
+    const fresh = await prisma.ticket.findUnique({ where: { id: ticketId } });
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", staffCookie)
-      .send({ ownerId: staffId });
+      .send({ expectedVersion: fresh!.version, ownerId: staffId });
     expect(res.status).toBe(200);
     expect(res.body.ownerId).toBe(staffId);
     expect(res.body.currentStatus).toBe("Open");
@@ -129,19 +132,21 @@ describe("IT Staff Ticket Detail API", () => {
   });
 
   it("should reject invalid status transition", async () => {
+    const fresh = await prisma.ticket.findUnique({ where: { id: ticketId } });
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", staffCookie)
-      .send({ status: "Closed" });
+      .send({ expectedVersion: fresh!.version, status: "Closed" });
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("Invalid status transition");
   });
 
   it("should allow any state to Cancelled", async () => {
+    const fresh = await prisma.ticket.findUnique({ where: { id: ticketId } });
     const res = await request(app)
       .patch(`/api/staff/tickets/${ticketId}`)
       .set("Cookie", staffCookie)
-      .send({ status: "Cancelled" });
+      .send({ expectedVersion: fresh!.version, status: "Cancelled" });
     expect(res.status).toBe(200);
     expect(res.body.currentStatus).toBe("Cancelled");
   });

@@ -147,6 +147,13 @@ describe("API-07, API-08, API-19: Comments & Notes", () => {
   });
 
   describe("Terminal Status Guards & Appears Resolved", () => {
+    beforeAll(async () => {
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { currentStatus: "Open" }
+      });
+    });
+
     it("Requester can mark ticket as appears resolved", async () => {
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/appears-resolved`)
