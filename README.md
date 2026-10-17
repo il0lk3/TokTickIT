@@ -4,18 +4,19 @@ An IT service desk application designed to streamline support requests for Accou
 
 This repository demonstrates a full-stack architecture built progressively. **Lab 1** established the
 vertical slice (database to frontend), **Lab 2** introduced the core **Requester Ticketing MVP** (ticket
-creation, attachment management, and a Zen Green Premium UI), and **Lab 3** adds real authentication,
+creation, attachment management, and a Zen Green Premium UI), **Lab 3** added real authentication,
 server-side role-based authorization (Requester / IT Staff / Administrator), an operational IT Staff ticket
-workflow (queue, ownership, priority, status, comments, and notes), and a minimalist Administrator user
-management screen.
+workflow, and user management. **Lab 4** introduces Action Taken logging, deterministic optimistic concurrency
+with Resolution Gate controls, role-tailored operational dashboards, and client routing.
 
 ```text
 React + Vite + Bootstrap  →  Express REST API (JWT Auth)  →  Prisma ORM  →  PostgreSQL
         (Client)                       (Server)
 ```
 
-See [docs/lab-02/specification.md](./docs/lab-02/specification.md) and
-[docs/lab-03/specification.md](./docs/lab-03/specification.md) for the engineering contracts and
+See [docs/lab-02/specification.md](./docs/lab-02/specification.md),
+[docs/lab-03/specification.md](./docs/lab-03/specification.md), and
+[docs/lab-04/specification.md](./docs/lab-04/specification.md) for the engineering contracts and
 business rules for each sprint.
 
 ---
@@ -49,14 +50,14 @@ cp .env.example .env
 # 3. Start PostgreSQL via Docker
 docker compose up -d
 
-# 4. Create database tables
+# 4. Create database tables and apply migrations
 npx prisma migrate dev
 
-# 5. Insert seed data (Categories, Systems, Users, and sample Tickets/Comments/Notes)
+# 5. Insert idempotent seed data (Categories, Systems, Users, Tickets across all 8 statuses, and Actions Taken)
 npx prisma db seed
 cd ..
 ```
-*Note: The seed script is idempotent. Running it multiple times will not create duplicate records.*
+*Note: The seed script is completely idempotent. Running it repeatedly preserves existing data and generates zero duplicates.*
 
 ---
 
@@ -111,13 +112,14 @@ The project is built using Test-Driven Development (TDD). Tests are split betwee
 organized by sprint.
 
 ```bash
-# Run all backend tests (Lab 2 + Lab 3)
+# Run all backend tests (Lab 2 + Lab 3 + Lab 4)
 cd server
 npm run test
 
 # Or target a specific sprint's suite only
 npx vitest run tests/lab-02/
 npx vitest run tests/lab-03/
+npx vitest run tests/lab-04/
 
 # Run all frontend tests (Lab 2 + Lab 3)
 cd client
@@ -204,6 +206,25 @@ directly to `main` or `lab3-staging`.
 | 9. Authorization Hardening, Regression & Cleanup | `feature/issue-9-polish` | `lab3-staging` |
 | 10. UI Polish & Zen Green Consistency Pass | `feature/issue-10-ui-polish` | `lab3-staging` |
 | 11. Release Evidence (Docs, Screenshots) | `feature/lab3-release-evidence` | `lab3-staging` → `main` |
+
+## Git Workflow (Lab 4)
+
+Development continues following the strict feature-branch workflow. Work is never committed directly to `main` or `lab4-staging`.
+
+| Issue | Feature Branch | Pull Request Target |
+|-------|----------------|---------------------|
+| 1. Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | `lab4-staging` |
+| 2. Database Increment — ActionTaken Model, Migration, Backfill, Seed | `feature/lab4-db-actions-taken` | `lab4-staging` |
+| 3. Actions Taken API — CRUD, Validation, and Isolation | `feature/lab4-actions-taken-api` | `lab4-staging` |
+| 4. Ticket Workflow API — Concurrency, Resolution Gate & State Transitions | `feature/lab4-ticket-workflow-api` | `lab4-staging` |
+| 5. Client Routing and Role-aware Application Shell | `feature/lab4-client-routing` | `lab4-staging` |
+| 6. Actions Taken UI — Timeline, Drawer, and Inline Edit | `feature/lab4-actions-taken-ui` | `lab4-staging` |
+| 7. Ticket Workflow UI — Controls, Resolution Gate & 409 Reload | `feature/lab4-ticket-workflow-ui` | `lab4-staging` |
+| 8. Operational Dashboard API — Metrics & Drill-downs | `feature/lab4-dashboard-api` | `lab4-staging` |
+| 9. Operational Dashboard UI — Metrics, Cards & Queue Filters | `feature/lab4-dashboard-ui` | `lab4-staging` |
+| 10. Regression Hardening, Polish & Evidence | `feature/lab4-regression-hardening` | `lab4-staging` |
+| 11. Final Polish, Review Verification & Release | `feature/lab4-polish-release` | `lab4-staging` → `main` |
+
 
 
 ---
