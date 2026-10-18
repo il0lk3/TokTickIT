@@ -83,14 +83,35 @@ cd e2e && npx playwright test lab-04
 | **UI-DSH-02** | UI | **FR-08** | Clicking metric card navigates to filtered Queue (Drill-down) | URL navigates to `/queue?status=...` | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
 | **UI-DSH-03** | UI | **AC-02** | Requester Dashboard renders personal metrics | Cards render counts; Recent tickets list displays | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | **UI-DSH-04** | UI | **AC-08** | Requester with zero tickets renders welcoming empty state | Displays empty state with "+ Create Ticket" button | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
-| **UI-NAV-01** | UI | **DoD-5** | App routing & role guards (protected, role redirects) | Redirects unauthenticated to `/login`, role-restricted routes show forbidden | `client/tests/lab-04/AppRouting.test.tsx` | Planned |
-| **UI-NAV-02** | UI | **DoD-5** | Active nav indicator & accessible link tags | Navigation renders `<NavLink>` with `aria-current="page"` and visible focus | `client/tests/lab-04/AppRouting.test.tsx` | Planned |
+| **UI-NAV-01** | UI | **AC-14, DoD-5** | Unauthenticated access redirects to `/login` with `from` state | Browser redirects to `/login`, preserves return URL in state | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-02** | UI | **AC-14, DoD-5** | Active nav items expose `aria-current="page"` | Link matching current URL has `aria-current="page"` and active styling | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-03** | UI | **AC-14** | Session loading shows accessible loading spinner | Renders centered spinner while `isLoading = true` | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-04** | UI | **AC-14** | Temporary password forces redirect to `/change-password` | Users with `requiresPasswordChange` quarantined to password screen | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-05** | UI | **AC-14** | Role Screen Matrix: Requester routes (`/dashboard`, `/tickets`, `/tickets/new`) | Permitted screens render; `/queue` and `/admin/users` render 403 | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-06** | UI | **AC-14** | Role Screen Matrix: Staff routes (`/dashboard`, `/queue`, `/tickets/:id`) | Permitted screens render; `/tickets/new` and `/admin/users` render 403 | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-07** | UI | **AC-14** | Role Screen Matrix: Admin routes (`/dashboard`, `/queue`, `/tickets/:id`, `/admin/users`) | Full operational and admin access; `/tickets/new` renders 403 | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-08** | UI | **AC-14** | Unrecognized route renders Zen Green 404 page | 404 screen displays "Page Not Found" and "Back to Dashboard" button | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-09** | UI | **AC-14** | Non-numeric ticket ID (`/tickets/abc`) renders 404 | Error boundary / validation renders 404 without crashing | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-10** | UI | **AC-14** | Parent nav highlighting on detail screen | Viewing `/tickets/:id` highlights parent `/queue` or `/tickets` | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-11** | UI | **AC-14** | In-app Back button history fallback | Direct deep link Back button falls back to `/queue` or `/tickets` | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-12** | UI | **AC-15** | Queue reads initial filters from URL query parameters | `?status=Open&itPriority=HIGH` initializes filter inputs | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-13** | UI | **AC-15** | Queue updates URL searchParams when filter inputs change | Changing dropdown updates browser URL synchronously | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-14** | UI | **AC-15** | Queue sanitizes invalid URL filter parameters | Unknown status/priority reset to empty/defaults | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-15** | UI | **AC-15** | My Tickets synchronizes filters with URL searchParams | Filter changes update URL; Back/Forward restores previous filters | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-16** | UI | **AC-15** | Deep link drill-down parses and dispatches sanitized API query | Fetch dispatched with query params matching valid URL state | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-17** | UI | **AC-14, DoD-5** | Mobile navbar toggler accessibility and auto-collapse | Toggler has `aria-controls`, `aria-expanded`; closes on nav click | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
+| **UI-NAV-18** | UI | **AC-14, DoD-5** | Accessibility skip link and dynamic `document.title` | Skip link targets `#main-content`; title reflects current page | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
 | **E2E-01** | E2E | **AC-01, AC-03** | Complete Actions Taken flow across roles | Staff logs in -> logs action -> Requester logs in -> sees action read-only | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
 | **E2E-02** | E2E | **AC-06, AC-07** | Ticket Resolution & Concurrency conflict flow | Resolve blocked -> action added -> Resolve succeeds -> second tab gets 409 | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | **E2E-03** | E2E | **AC-02, AC-09** | Dashboard metrics and drill-down navigation | Metrics verify against UI; clicking cards navigates to filtered lists | `e2e/lab-04/dashboards.spec.ts` | Planned |
 | **E2E-04** | E2E | **AC-12** | Responsive verification across 375px, 768px, 1280px | No horizontal scroll, no clipping, accessible tap targets | `e2e/lab-04/dashboards.spec.ts` | Planned |
-| **E2E-NAV-01** | E2E | **DoD-1** | Deep linking, browser Back/Forward & refresh retention | Navigating directly to `/tickets/:id` preserves ticket; Back preserves filters | `e2e/lab-04/navigation.spec.ts` | Planned |
-| **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/lab-01`, `lab-02`, `lab-03` | Passed (Unit & API) |
+| **E2E-NAV-01** | E2E | **AC-14** | Admin Operational Parity | Admin logs in, views `/queue`, opens `/tickets/1`, verifies queue/detail | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **E2E-NAV-02** | E2E | **AC-14** | Role Boundary Enforcement | Requester navigating to `/queue` or `/admin/users` gets in-place 403 | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **E2E-NAV-03** | E2E | **AC-14** | Deep-link Login Return | Unauthenticated `/tickets/1` redirects to `/login` and returns on auth | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **E2E-NAV-04** | E2E | **AC-14** | Deep-link Direct History Fallback | Opening `/tickets/1` directly falls back to `/queue` on Back click | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **E2E-NAV-05** | E2E | **AC-15** | Filter Persistence & History | Back button preserves URL searchParams across filter transitions | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **E2E-NAV-06** | E2E | **AC-14** | Zen Green 404 Route Handling | Navigating to `/unknown-route` renders 404 with Back to Dashboard button | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/`, `client/tests/`, `e2e/` | Passed |
 
 ---
 
@@ -108,4 +129,7 @@ cd e2e && npx playwright test lab-04
 - **AC-10**: Verified by `API-ACT-11`, `UI-ACT-04`
 - **AC-11**: Verified by `API-MIG-01`, `API-MIG-02`
 - **AC-12**: Verified by `E2E-04`
-- **AC-13**: Verified by `REG-01`
+- **AC-13**: Verified by `REG-01` (165/165 server tests, 60/60 client tests, 100% pass)
+- **AC-14**: Verified by `UI-NAV-01` through `UI-NAV-11`, `UI-NAV-17`, `UI-NAV-18`, `E2E-NAV-01` through `E2E-NAV-04`, `E2E-NAV-06`
+- **AC-15**: Verified by `UI-NAV-12` through `UI-NAV-16`, `E2E-NAV-05`
+

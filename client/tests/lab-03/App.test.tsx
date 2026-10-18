@@ -50,6 +50,7 @@ describe('App Shell Routing (AC-01/02/11)', () => {
   });
 
   it('renders Main App when user is authenticated and password change is not required', async () => {
+    window.history.pushState({}, '', '/tickets');
     vi.spyOn(AuthContextModule, 'useAuth').mockReturnValue({
       user: { id: 1, name: 'Test', email: 'test@example.com', role: 'REQUESTER', requiresPasswordChange: false },
       isLoading: false,

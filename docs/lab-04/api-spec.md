@@ -423,6 +423,27 @@ Provides system-wide operational metrics, queue counts, and drill-down links.
   - `adminUserCounts`: Returned if authenticated user is `ADMINISTRATOR`, otherwise `null`.
   - `recentTickets`: Top 5 active tickets in system ordered by `updatedAt DESC`.
 
+### 4.3 Client-Side Filter & Drill-Down Query Parameters
+The frontend application shell synchronizes table and list filters directly with the URL `window.location.search`. This enables persistent state across page reloads and direct navigation from dashboard drill-down links.
+
+#### Ticket Queue (`/queue`):
+- `status`: String matching valid Ticket status (`New`, `Open`, `InProgress`, `WaitingForRequester`, `Resolved`, `Closed`, `Reopened`, `Cancelled`).
+- `ownerId`: Integer string representing user ID or keyword `unassigned`.
+- `itPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
+- `requestedPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
+- `categoryId`: Integer string matching Category ID.
+- `search`: Text search string matched against summary/description.
+- `page`: Integer page number (default: 1).
+- `limit`: Integer page size (default: 10).
+
+#### My Tickets (`/tickets`):
+- `status`: String matching valid Ticket status.
+- `categoryId`: Integer string matching Category ID.
+- `requestedPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
+- `search`: Text search string.
+- `page`: Integer page number.
+- `limit`: Integer page size.
+
 ---
 
 ## 5. Date & Timezone Conventions

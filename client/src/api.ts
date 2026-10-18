@@ -128,6 +128,7 @@ export interface TicketResponse {
   appearsResolved: boolean;
   requestedPriority: string;
   itPriority: string;
+  version?: number;
   createdAt: string;
 }
 

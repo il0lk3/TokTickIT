@@ -85,7 +85,21 @@ A living document tracking the code review process. Reviews run in both directio
 | **Review Verdict** | Changes Requested ([Review #5561575083](https://github.com/il0lk3/TokTickIT/pull/72#pullrequestreview-5561575083)) |
 | **Review Comments** | 1. **Guard against Ineligible Owner in `POST /api/staff/tickets/:id/claim` (BR-12)**: In `/claim`, verify caller has active `IT_STAFF` role (`ASSIGNEE_NOT_ELIGIBLE` if ineligible, `INACTIVE_ASSIGNEE_REJECTED` if inactive) because Administrator access was permitted on `/api/staff/*` (BR-13) and assigning an Admin causes Resolution Gate to fail.<br>2. **Validate Non-Empty Update Payload in `PATCH /api/staff/tickets/:id`**: Reject payloads providing only `{ expectedVersion }` without `ownerId`, `itPriority`, or `status` with 400 Bad Request (`NO_FIELDS_TO_UPDATE`). |
 | **My Response / Actions Taken** | 1. Added role and active status checks in `POST /api/staff/tickets/:id/claim` returning 400 Bad Request (`ASSIGNEE_NOT_ELIGIBLE`) if caller is not `IT_STAFF` and (`INACTIVE_ASSIGNEE_REJECTED`) if inactive.<br>2. Added empty update payload guard in `PATCH /api/staff/tickets/:id` returning 400 Bad Request (`NO_FIELDS_TO_UPDATE`) when none of `ownerId`, `itPriority`, or `status` are supplied.<br>3. Added automated test cases `API-WKF-VAL-07` and `API-WKF-OWN-04` covering both scenarios in `server/tests/lab-04/ticket-workflow.api.test.ts`. All 38 workflow tests pass (100%).<br>4. Verified zero regressions across all server suites (16 suites, 165 tests pass) and client suites (8 suites, 25 tests pass); TypeScript compilation passes with 0 errors.<br>5. Updated API specification (`docs/lab-04/api-spec.md`) and testing matrix (`docs/lab-04/tests.md`). |
-| **Outcome** | Addressed changes requested, tests verified, pushed to `feature/lab4-ticket-workflow-api` for re-review |
+| **Outcome** | Approved & Merged into `lab4-staging` by @Achikan |
+
+---
+
+### PR #73 — Issue 5: Client Routing and Role-aware Application Shell
+
+| Field | Detail |
+|---|---|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/73](https://github.com/il0lk3/TokTickIT/pull/73) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Verdict** | Pending Review |
+| **Review Comments** | Pending peer review from @Achikan. |
+| **My Response / Actions Taken** | 1. Implemented client routing with `react-router-dom` v6, eliminating in-memory tab state in `App.tsx` and adding semantic `<Link>` navigation.<br>2. Implemented route guards: `ProtectedRoute` with session `isLoading` check and temporary password quarantine, and `RoleRoute` with in-place Zen Green 403 Forbidden screens preserving navigation context.<br>3. Built Zen Green `NotFound` (404) and `DashboardShell` components.<br>4. Established URL searchParams as the single source of truth for all filters in `TicketQueueRoute` and `MyTicketsRoute`, with strict input whitelisting and browser history push.<br>5. Implemented deep linking for `/tickets/:ticketId` with numeric ID validation, and history fallback navigating back to `/queue` or `/tickets` if opened directly without previous history.<br>6. Added accessibility skip link to `#main-content`, dynamic `document.title` synchronization, and mobile navbar auto-collapsing.<br>7. Added 35 component tests (`UI-NAV-01` to `UI-NAV-18`) in `client/tests/lab-04/AppRouting.test.tsx` (100% pass) and 6 E2E tests (`E2E-NAV-01` to `E2E-NAV-06`) in `e2e/lab-04/navigation.spec.ts` (100% pass).<br>8. Zero regressions across all 16 server test suites (165/165 tests pass) and 9 client test suites (60/60 tests pass). Both client and server compile with 0 errors. |
+| **Outcome** | PR opened targeting `lab4-staging`, submitted for peer review. |
+
 
 
 

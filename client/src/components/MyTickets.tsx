@@ -6,9 +6,34 @@ import { useMediaQuery } from "../hooks/useMediaQuery";
 interface MyTicketsProps {
   categories: Category[];
   onSelectTicket: (id: number) => void;
+  status?: string;
+  requestedPriority?: string;
+  categoryId?: string;
+  search?: string;
+  page?: number;
+  initialStatus?: string;
+  initialRequestedPriority?: string;
+  initialCategoryId?: string;
+  initialSearch?: string;
+  initialPage?: number;
+  onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
 
-export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
+export function MyTickets({
+  categories,
+  onSelectTicket,
+  status: propStatus,
+  requestedPriority: propRequestedPriority,
+  categoryId: propCategoryId,
+  search: propSearch,
+  page: propPage,
+  initialStatus,
+  initialRequestedPriority,
+  initialCategoryId,
+  initialSearch,
+  initialPage,
+  onFilterChange
+}: MyTicketsProps) {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -17,23 +42,50 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
   // Filters
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [requestedPriority, setRequestedPriority] = useState("");
-  const [status, setStatus] = useState("");
+  const [search, setSearch] = useState(propSearch ?? initialSearch ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? initialSearch ?? "");
+  const [categoryId, setCategoryId] = useState(propCategoryId ?? initialCategoryId ?? "");
+  const [requestedPriority, setRequestedPriority] = useState(propRequestedPriority ?? initialRequestedPriority ?? "");
+  const [status, setStatus] = useState(propStatus ?? initialStatus ?? "");
   
   // Pagination
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(propPage ?? initialPage ?? 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
 
-  // Debounce search input
+  // Sync prop changes into state
+  useEffect(() => {
+    if (propStatus !== undefined) setStatus(propStatus);
+  }, [propStatus]);
+
+  useEffect(() => {
+    if (propRequestedPriority !== undefined) setRequestedPriority(propRequestedPriority);
+  }, [propRequestedPriority]);
+
+  useEffect(() => {
+    if (propCategoryId !== undefined) setCategoryId(propCategoryId);
+  }, [propCategoryId]);
+
+  useEffect(() => {
+    if (propSearch !== undefined) {
+      setSearch(propSearch);
+      setDebouncedSearch(propSearch);
+    }
+  }, [propSearch]);
+
+  useEffect(() => {
+    if (propPage !== undefined) setPage(propPage);
+  }, [propPage]);
+
+  // Debounce search input and notify parent
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1); // Reset page on search change
-    }, 500);
+      setPage(1);
+      if (onFilterChange && search !== (propSearch ?? "")) {
+        onFilterChange({ search, page: 1 });
+      }
+    }, 300);
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -95,9 +147,13 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
     fetchTickets();
   }, [fetchTickets]);
 
-  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setter(e.target.value);
+  const handleFilterChange = (field: string, setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setter(val);
     setPage(1); // Reset to page 1 on filter change
+    if (onFilterChange) {
+      onFilterChange({ [field]: val, page: 1 });
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -129,12 +185,12 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
   const activeFilters = useMemo(() => {
     const filters = [];
-    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => setSearch("") });
-    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => setCategoryId("") });
-    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => setRequestedPriority("") });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => setStatus("") });
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
+    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => { setRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
+    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
     return filters;
-  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap]);
+  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap, onFilterChange]);
 
   return (
     <div className="animate-enter">
@@ -169,13 +225,13 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             </div>
           </div>
           <div className="col-12 col-md-3">
-            <select className="form-select" value={categoryId} onChange={handleFilterChange(setCategoryId)}>
+            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setCategoryId)}>
               <option value="">All Categories</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={requestedPriority} onChange={handleFilterChange(setRequestedPriority)}>
+            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setRequestedPriority)}>
               <option value="">Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -183,7 +239,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             </select>
           </div>
           <div className="col-6 col-md-3">
-            <select className="form-select" value={status} onChange={handleFilterChange(setStatus)}>
+            <select className="form-select" value={status} onChange={handleFilterChange("status", setStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
               <option value="InProgress">In Progress</option>
@@ -203,7 +259,14 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             ))}
             <button 
               className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
-              onClick={() => { setSearch(""); setCategoryId(""); setRequestedPriority(""); setStatus(""); }}
+              onClick={() => {
+                setSearch("");
+                setCategoryId("");
+                setRequestedPriority("");
+                setStatus("");
+                setPage(1);
+                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", status: "", page: 1 });
+              }}
             >
               Clear All
             </button>
