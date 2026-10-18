@@ -207,6 +207,14 @@ router.patch("/tickets/:id", async (req: Request, res: Response) => {
       });
     }
 
+    // Reject empty update payload where no operational fields are provided
+    if (ownerId === undefined && itPriority === undefined && status === undefined) {
+      return res.status(400).json({
+        error: "At least one operational field (ownerId, itPriority, or status) must be provided to update",
+        code: "NO_FIELDS_TO_UPDATE"
+      });
+    }
+
     // 2. Validate enum types before touching database
     if (status !== undefined) {
       const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
@@ -439,10 +447,26 @@ router.post("/tickets/:id/notes", async (req: Request, res: Response) => {
 
 // POST /api/staff/tickets/:id/claim
 router.post("/tickets/:id/claim", async (req: Request, res: Response) => {
-  const userId = res.locals.user.id;
+  const user = res.locals.user;
+  const userId = user.id;
   const ticketId = parseNumericId(req.params.id);
   if (!ticketId) {
     return res.status(400).json({ error: "Invalid ticket ID", code: "INVALID_ID_FORMAT" });
+  }
+
+  // Guard against ineligible owner: only active IT_STAFF can claim (BR-12)
+  if (user.role !== "IT_STAFF") {
+    return res.status(400).json({
+      error: "Must be an active IT Staff member (ineligible role)",
+      code: "ASSIGNEE_NOT_ELIGIBLE"
+    });
+  }
+
+  if (!user.isActive) {
+    return res.status(400).json({
+      error: "Must be an active IT Staff member (inactive user rejected)",
+      code: "INACTIVE_ASSIGNEE_REJECTED"
+    });
   }
 
   try {

@@ -274,6 +274,16 @@ describe("Lab 4 Issue 4: Ticket Workflow Rules and Conflict Handling (API-WKF)",
       expect(res.status).toBe(400);
       expect(res.body.code).toBe("INVALID_PRIORITY");
     });
+
+    it("API-WKF-VAL-07: payload containing only expectedVersion without operational fields returns 400 Bad Request (NO_FIELDS_TO_UPDATE)", async () => {
+      const ticket = await createTestTicket();
+      const res = await request(app)
+        .patch(`/api/staff/tickets/${ticket.id}`)
+        .set("Cookie", staff1Cookie)
+        .send({ expectedVersion: ticket.version });
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe("NO_FIELDS_TO_UPDATE");
+    });
   });
 
   // ==========================================
@@ -524,6 +534,17 @@ describe("Lab 4 Issue 4: Ticket Workflow Rules and Conflict Handling (API-WKF)",
       expect(res.status).toBe(200);
       expect(res.body.ownerId).toBe(staff2.id);
       expect(res.body.version).toBe(ticket.version + 1);
+    });
+
+    it("API-WKF-OWN-04: non-IT_STAFF (e.g. Administrator) calling POST /api/staff/tickets/:id/claim returns 400 Bad Request (ASSIGNEE_NOT_ELIGIBLE)", async () => {
+      const ticket = await createTestTicket(TicketStatus.Open);
+      const res = await request(app)
+        .post(`/api/staff/tickets/${ticket.id}/claim`)
+        .set("Cookie", adminCookie)
+        .send();
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe("ASSIGNEE_NOT_ELIGIBLE");
     });
   });
 

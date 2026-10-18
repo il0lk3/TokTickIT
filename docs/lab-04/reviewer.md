@@ -82,10 +82,11 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/72](https://github.com/il0lk3/TokTickIT/pull/72) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
-| **Review Verdict** | Pending Review |
-| **Review Comments** | *(Pending peer review)* |
-| **My Response / Actions Taken** | *(Pending peer review)* |
-| **Outcome** | Under Review |
+| **Review Verdict** | Changes Requested ([Review #5561575083](https://github.com/il0lk3/TokTickIT/pull/72#pullrequestreview-5561575083)) |
+| **Review Comments** | 1. **Guard against Ineligible Owner in `POST /api/staff/tickets/:id/claim` (BR-12)**: In `/claim`, verify caller has active `IT_STAFF` role (`ASSIGNEE_NOT_ELIGIBLE` if ineligible, `INACTIVE_ASSIGNEE_REJECTED` if inactive) because Administrator access was permitted on `/api/staff/*` (BR-13) and assigning an Admin causes Resolution Gate to fail.<br>2. **Validate Non-Empty Update Payload in `PATCH /api/staff/tickets/:id`**: Reject payloads providing only `{ expectedVersion }` without `ownerId`, `itPriority`, or `status` with 400 Bad Request (`NO_FIELDS_TO_UPDATE`). |
+| **My Response / Actions Taken** | 1. Added role and active status checks in `POST /api/staff/tickets/:id/claim` returning 400 Bad Request (`ASSIGNEE_NOT_ELIGIBLE`) if caller is not `IT_STAFF` and (`INACTIVE_ASSIGNEE_REJECTED`) if inactive.<br>2. Added empty update payload guard in `PATCH /api/staff/tickets/:id` returning 400 Bad Request (`NO_FIELDS_TO_UPDATE`) when none of `ownerId`, `itPriority`, or `status` are supplied.<br>3. Added automated test cases `API-WKF-VAL-07` and `API-WKF-OWN-04` covering both scenarios in `server/tests/lab-04/ticket-workflow.api.test.ts`. All 38 workflow tests pass (100%).<br>4. Verified zero regressions across all server suites (16 suites, 165 tests pass) and client suites (8 suites, 25 tests pass); TypeScript compilation passes with 0 errors.<br>5. Updated API specification (`docs/lab-04/api-spec.md`) and testing matrix (`docs/lab-04/tests.md`). |
+| **Outcome** | Addressed changes requested, tests verified, pushed to `feature/lab4-ticket-workflow-api` for re-review |
+
 
 
 

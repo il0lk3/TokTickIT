@@ -62,6 +62,8 @@ cd e2e && npx playwright test lab-04
 | **API-WKF-07** | API | **BR-11** | Status update with matching `expectedVersion` | HTTP 200 OK; `version` atomically increments by 1 | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
 | **API-WKF-08** | API | **BR-12** | Assign Ticket Owner to an inactive IT Staff user | HTTP 400 Bad Request; `INACTIVE_ASSIGNEE_REJECTED` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
 | **API-WKF-09** | API | **BR-08** | Requester calls `/appears-resolved` | HTTP 200 OK; sets advisory flag; status unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
+| **API-WKF-10** | API | **AC-05, BR-10** | Reject PATCH with only `expectedVersion` and no operational fields | HTTP 400 Bad Request; `NO_FIELDS_TO_UPDATE` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
+| **API-WKF-11** | API | **BR-12** | Non-IT_STAFF (e.g. Administrator) attempts to claim ticket | HTTP 400 Bad Request; `ASSIGNEE_NOT_ELIGIBLE` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
 | **API-DSH-01** | API | **AC-02, BR-15** | Requester retrieves dashboard metrics | HTTP 200 OK; returns only tickets and counts owned by user | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | **API-DSH-02** | API | **AC-08, BR-14** | Requester with zero tickets loads dashboard | HTTP 200 OK; all metric counters return 0; empty array | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | **API-DSH-03** | API | **BR-15** | Requester attempts to call Staff dashboard endpoint | HTTP 403 Forbidden | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
