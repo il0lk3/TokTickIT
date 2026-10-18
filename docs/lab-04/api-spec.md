@@ -182,38 +182,47 @@ Handles owner assignment, priority adjustment, and status transitions with optim
   ```
 
 #### Business Rules & Validation Steps:
-1. **Optimistic Concurrency Check**:
-   - Compare `body.expectedVersion` with current `ticket.version`.
-   - If `body.expectedVersion !== undefined && body.expectedVersion !== ticket.version`:
+1. **Mandatory Concurrency Version Check**:
+   - `expectedVersion` is strictly required (`400 Bad Request`, `VERSION_REQUIRED` if omitted).
+   - `expectedVersion` must be a non-negative integer (`400 Bad Request`, `INVALID_VERSION_FORMAT` if string/negative/float/null).
+   - If `expectedVersion !== ticket.version`:
      - Return **`409 Conflict`**:
        ```json
        {
          "error": "This ticket has been modified by another user. Please reload the latest changes.",
          "code": "STALE_VERSION_CONFLICT",
          "currentVersion": 3,
-         "currentStatus": "InProgress"
+         "currentStatus": "InProgress",
+         "updatedAt": "2026-10-18T02:00:00.000Z"
        }
        ```
-2. **Assignee / Owner Eligibility**:
+2. **Non-Empty Update Payload Guard**:
+   - At least one operational field (`ownerId`, `itPriority`, or `status`) must be provided alongside `expectedVersion`. Submitting only `{ expectedVersion }` returns **`400 Bad Request`** (`NO_FIELDS_TO_UPDATE`).
+3. **Terminal / Locked Ticket Guard**:
+   - `Closed` and `Cancelled` tickets are locked. Modifications to priority, owner, or status are blocked (`400 Bad Request`, `TERMINAL_TICKET_LOCKED`), with the sole exception of `Closed -> Reopened`.
+4. **Assignee / Owner Eligibility**:
    - If `ownerId` is provided:
      - Target user must exist, have role `IT_STAFF`, and `isActive === true`.
-     - If inactive or invalid: Return **`400 Bad Request`** (`INACTIVE_ASSIGNEE_REJECTED`).
-3. **Status Transition Matrix Validation**:
-   - Verify `ticket.currentStatus -> body.status` is permitted by the status matrix.
+     - If inactive: Return **`400 Bad Request`** (`INACTIVE_ASSIGNEE_REJECTED`).
+     - If non-staff role: Return **`400 Bad Request`** (`ASSIGNEE_NOT_ELIGIBLE`).
+5. **Status Transition Matrix Validation**:
+   - Verify `ticket.currentStatus -> body.status` is permitted by the 8x8 status matrix.
    - If not permitted: Return **`400 Bad Request`** (`INVALID_STATUS_TRANSITION`).
-4. **Resolution Gate Enforcement**:
+6. **Resolution Gate Enforcement**:
    - When transitioning to `Resolved`:
-     - Target ticket must have an assigned Owner (`(ownerId || ticket.ownerId) !== null`).
+     - Target ticket must have an assigned active IT Staff Owner (`(ownerId || ticket.ownerId) !== null` and active).
      - Target ticket must have at least **1** `ActionTaken` entry with non-empty `result`.
      - If either condition fails: Return **`400 Bad Request`**:
        ```json
        {
-         "error": "Resolution gate failed: Ticket must have an assigned owner and at least one completed Action Taken with a result.",
-         "code": "RESOLUTION_GATE_FAILED"
+         "error": "Resolution gate failed: Ticket must have an active IT Staff owner and at least one Action Taken with a result.",
+         "code": "RESOLUTION_GATE_FAILED",
+         "details": ["ACTIVE_STAFF_OWNER_REQUIRED", "ACTION_TAKEN_WITH_RESULT_REQUIRED"]
        }
        ```
-5. **Atomic Commit & Version Increment**:
-   - On success, `version` is incremented by 1 (`version: { increment: 1 }`).
+7. **Atomic Conditional Commit & Version Increment**:
+   - On success, `version` is atomically incremented by 1 (`version: { increment: 1 }`).
+   - If a status transition occurs, `appearsResolved` is reset to `false`.
 
 - **Success Response (200 OK)**:
   ```json
@@ -224,7 +233,14 @@ Handles owner assignment, priority adjustment, and status transitions with optim
     "ownerId": 2,
     "itPriority": "HIGH",
     "version": 3,
-    "updatedAt": "2026-10-17T10:00:00.000Z"
+    "updatedAt": "2026-10-18T02:20:00.000Z",
+    "allowedTransitions": ["Closed", "Reopened", "Cancelled"],
+    "resolutionGate": {
+      "met": true,
+      "hasActiveOwner": true,
+      "validActionCount": 1,
+      "missing": []
+    }
   }
   ```
 
@@ -271,6 +287,28 @@ Allows a Requester to signal that their issue appears resolved. This action post
   - `400 Bad Request`: Ticket already marked or in terminal state.
   - `403 Forbidden`: User is not the owner of this ticket.
   - `404 Not Found`: Ticket ID not found.
+
+---
+
+### 3.3 Claim Ticket
+Allows an active IT Staff member to claim ownership of an existing ticket.
+
+- **Method / Path**: `POST /api/staff/tickets/:id/claim`
+- **Access**: `IT_STAFF` only (per BR-12; Administrators calling this receive `400 Bad Request` with `ASSIGNEE_NOT_ELIGIBLE`).
+- **Validation Rules**:
+  - Caller must have role `IT_STAFF` (`400 Bad Request`, `ASSIGNEE_NOT_ELIGIBLE` if ineligible role).
+  - Caller must be active (`400 Bad Request`, `INACTIVE_ASSIGNEE_REJECTED` if inactive).
+  - Target ticket must exist (`404 Not Found`, `TICKET_NOT_FOUND`).
+  - Cannot claim terminal tickets (`Closed`, `Cancelled`) -> `400 Bad Request` (`TERMINAL_TICKET_LOCKED`).
+  - If ticket is currently `New`, it transitions automatically to `Open` and resets `appearsResolved` to `false`.
+  - Atomically increments ticket `version` by 1.
+- **Success Response (200 OK)**:
+  Returns updated ticket object enriched with `allowedTransitions` array and `resolutionGate` status.
+- **Error Responses**:
+  - `400 Bad Request`: `ASSIGNEE_NOT_ELIGIBLE` if caller is not `IT_STAFF`.
+  - `400 Bad Request`: `INACTIVE_ASSIGNEE_REJECTED` if caller is inactive.
+  - `400 Bad Request`: `TERMINAL_TICKET_LOCKED` if ticket is `Closed` or `Cancelled`.
+  - `404 Not Found`: `TICKET_NOT_FOUND`.
 
 ---
 
