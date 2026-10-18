@@ -1,4 +1,11 @@
 import { test, expect } from '@playwright/test';
+import path from 'path';
+import fs from 'fs';
+
+const SCREENSHOT_DIR = path.resolve(__dirname, '../../artifacts/lab-04/screenshots/actions-taken');
+if (!fs.existsSync(SCREENSHOT_DIR)) {
+  fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
+}
 
 test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () => {
   test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Actions Taken E2E runs once on Chromium desktop');
@@ -179,36 +186,38 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     await page.setViewportSize({ width: 1280, height: 900 });
     await actionsSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-desktop-table.png' });
+    const isOverflowingDesktop = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(isOverflowingDesktop).toBe(false);
+    await expect(actionsSection.locator('thead')).toBeVisible();
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-desktop-table.png') });
 
-    // 2. Tablet Viewport (768px)
+    // 2. Tablet Viewport (768px - Table layout per ui-spec >= 768px)
     await page.setViewportSize({ width: 768, height: 1024 });
     await actionsSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-tablet.png' });
+    const isOverflowingTablet = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(isOverflowingTablet).toBe(false);
+    await expect(actionsSection.locator('thead')).toBeVisible();
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-tablet.png') });
 
-    // 3. Mobile Viewport (375px)
+    // 3. Mobile Viewport (375px - Card layout per ui-spec < 768px)
     await page.setViewportSize({ width: 375, height: 812 });
     await actionsSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-mobile-cards.png' });
-
-    // Verify 0 horizontal scrolling at 375px
-    const isOverflowing = await page.evaluate(() => {
-      return document.documentElement.scrollWidth > document.documentElement.clientWidth;
-    });
-    expect(isOverflowing).toBe(false);
+    const isOverflowingMobile = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(isOverflowingMobile).toBe(false);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-mobile-cards.png') });
 
     // 4. Create Form & Validation Error Screenshots
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.click('button:has-text("+ Log Action Taken")');
     await page.waitForTimeout(300);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-create-form.png' });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-create-form.png') });
 
     // Trigger validation error
     await page.click('button:has-text("Log Action")');
     await page.waitForTimeout(300);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-validation-error.png' });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-validation-error.png') });
 
     // 5. Terminal Locked Screenshot on Ticket 3
     await page.goto('/tickets/3');
@@ -216,7 +225,7 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     const lockedSection = page.getByTestId('actions-taken-section');
     await lockedSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-terminal-locked.png' });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-terminal-locked.png') });
 
     // 6. Requester Read-Only Screenshot
     await logoutUser(page);
@@ -226,6 +235,6 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     const reqSection = page.getByTestId('actions-taken-section');
     await reqSection.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-requester-readonly.png' });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'actions-taken-requester-readonly.png') });
   });
 });

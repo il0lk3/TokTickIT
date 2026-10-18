@@ -353,6 +353,61 @@ describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (UI-ACT)', () => {
     });
   });
 
+  // UI-ACT-04B: Handles 200 duplicate response gracefully
+  it('UI-ACT-04B: handles 200 duplicate response gracefully', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string, options?: any) => {
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockStaff) });
+      }
+      if (url.includes('/api/tickets/1/actions-taken') && (!options || options.method === 'GET')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      if (url.includes('/api/tickets/1/actions-taken') && options?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({
+            id: 105,
+            ticketId: 1,
+            actionAt: new Date().toISOString(),
+            description: 'Duplicate test',
+            result: 'Acknowledged',
+            performedById: 2,
+            performedBy: { id: 2, name: 'Alex Tech', role: 'IT_STAFF' },
+            followUpRequired: false,
+            followUpNote: null,
+            attachmentNotes: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    }));
+
+    render(
+      <AuthProvider>
+        <ActionsTakenSection ticketId={1} ticketStatus="InProgress" onActionChanged={mockOnActionChanged} />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /\+ log action taken/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /\+ log action taken/i }));
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Duplicate test' } });
+    fireEvent.change(screen.getByLabelText(/result/i), { target: { value: 'Acknowledged' } });
+
+    const submitBtn = screen.getByRole('button', { name: /save action|log action/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/action saved successfully/i)).toBeInTheDocument();
+      expect(mockOnActionChanged).toHaveBeenCalledTimes(1);
+    });
+  });
+
   // UI-ACT-05: Recoverable 500 error preserves form input
   it('UI-ACT-05: API 500 failure preserves entered form input and displays error alert', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string, options?: any) => {
