@@ -32,7 +32,8 @@ A living document tracking the code review process. Reviews run in both directio
 | [#70](https://github.com/il0lk3/TokTickIT/pull/70) | Issue 2 — Database Increment — ActionTaken Model, Migration, Backfill, Seed | `feature/lab4-db-actions-taken` | Approved & Merged |
 | [#71](https://github.com/il0lk3/TokTickIT/pull/71) | Issue 3 — Actions Taken API and Authorization (TDD) | `feature/lab4-actions-taken-api` | Approved & Merged |
 | [#72](https://github.com/il0lk3/TokTickIT/pull/72) | Issue 4 — Ticket Workflow Rules and Conflict Handling (API) | `feature/lab4-ticket-workflow-api` | Approved & Merged |
-| [#73](https://github.com/il0lk3/TokTickIT/pull/73) | Issue 5 — Client Routing and Role-aware Application Shell | `feature/lab4-client-routing-shell` | Changes Requested (Addressed) |
+| [#73](https://github.com/il0lk3/TokTickIT/pull/73) | Issue 5 — Client Routing and Role-aware Application Shell | `feature/lab4-client-routing-shell` | Approved & Merged |
+| [#74](https://github.com/il0lk3/TokTickIT/pull/74) | Issue 6 — Actions Taken UI on Ticket Detail | `feature/lab4-actions-taken-ui` | Pending Review |
 
 > *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
 
@@ -96,10 +97,23 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/73](https://github.com/il0lk3/TokTickIT/pull/73) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
-| **Review Verdict** | Changes Requested ([Review #5562656247](https://github.com/il0lk3/TokTickIT/pull/73#pullrequestreview-5562656247)), addressed |
+| **Review Verdict** | Approved ([Review #5562656247](https://github.com/il0lk3/TokTickIT/pull/73#pullrequestreview-5562656247)) |
 | **Review Comments** | 1. **`AppRoutes` `useEffect` loading state flash on session restore**: The `useEffect` depends on `user` object reference. On mount/session restore, `user` transition triggers `setAppState("loading")` synchronously before cleanup, causing a brief spinner flash.<br>2. **`DashboardShell` is a navigation shortcut, not a real dashboard**: Lab 4 requires backend-driven metrics. Renaming to `DashboardPlaceholder` with an explicit `// TODO(issue-9): implement dashboard metrics` comment is required until Issue 8 & Issue 9 deliver live metric cards.<br>3. **`TicketQueueRoute` & `MyTicketsRoute` contradictory controlled/uncontrolled prop contract**: Both `initial*` seed props and live controlled props are passed, causing ambiguity and risk of desync on browser Back/Forward navigation.<br>4. **Clean up orphaned `RequesterContext`**: Verify whether `useRequester` is still imported anywhere.<br>5. **`NotFound` icon color**: Change green error icon styling (`bg-success bg-opacity-10 text-success`) to neutral `text-muted`. |
 | **My Response / Actions Taken** | 1. Updated `useEffect` dependency in `AppRoutes` (`client/src/App.tsx`) to `[user?.id, user?.requiresPasswordChange]` so re-renders or session restores do not trigger false loading state resets.<br>2. Renamed component to `DashboardPlaceholder` (`client/src/components/dashboard/DashboardPlaceholder.tsx`) and added explicit `// TODO(issue-9)` comment documenting follow-up in Issue 8 & 9. Maintained `DashboardShell` alias for backwards compatibility.<br>3. Removed all `initial*` seed props from `TicketQueueRoute`, `MyTicketsRoute`, `TicketQueue`, and `MyTickets`. Derived filter inputs directly from live props when provided, preserving URL searchParams as the single source of truth during browser Back/Forward navigation.<br>4. Verified `client/src/` has zero occurrences or imports of `RequesterContext` (already cleaned up in Lab 3).<br>5. Updated `NotFound.tsx` icon container style to `bg-secondary bg-opacity-10 text-muted` for semantic clarity.<br>6. Updated `e2e/lab-04/navigation.spec.ts` (`E2E-NAV-05`) selector to click `tbody tr` directly to handle dynamic ticket prefixes.<br>7. Verified 100% test pass: 60/60 client tests (35/35 `AppRouting`), 165/165 server tests, 6/6 E2E navigation tests, and 0 TypeScript build errors. |
-| **Outcome** | Addressed requested changes; pushed to `feature/lab4-client-routing-shell` and requested re-review from @Achikan. |
+| **Outcome** | Approved & Merged into `lab4-staging` by @Achikan |
+
+---
+
+### PR #74 — Issue 6: Actions Taken UI on Ticket Detail
+
+| Field | Detail |
+|---|---|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/74](https://github.com/il0lk3/TokTickIT/pull/74) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Verdict** | Pending Review |
+| **Review Comments** | Pending peer review from @Achikan. |
+| **My Response / Actions Taken** | 1. Extended `client/src/api.ts` with typed interfaces (`ActionTaken`, `ActionTakenPerformer`, `CreateActionTakenPayload`, `UpdateActionTakenPayload`), `ApiError` class with `fields` support, and client functions `getActionsTaken`, `createActionTaken`, `updateActionTaken`.<br>2. Built `ActionsTakenSection` (`client/src/components/ticket/ActionsTakenSection.tsx`) with single-DOM responsive table-to-card CSS (`.actions-table-responsive`) preventing duplicate markup in JSDOM and screen readers.<br>3. Enforced mutual exclusion between create and edit forms, full-width inline row expansion (`colSpan={7}`), local datetime conversion to ISO UTC with 10-minute future margin, and preserved form data upon recoverable API errors.<br>4. Integrated `ActionsTakenSection` in `client/src/components/TicketDetail.tsx` with mandatory `onActionChanged` callback that refetches the Ticket to refresh `updatedAt`, `_count.actionsTaken`, and Resolution Gate eligibility.<br>5. Enforced terminal status locking: when ticket is `Closed` or `Cancelled`, create/edit buttons are hidden and locked notice is displayed; concurrent `TERMINAL_TICKET_LOCKED` errors are handled gracefully.<br>6. Authored comprehensive TDD test suite `client/tests/lab-04/ActionsTaken.test.tsx` (18/18 tests pass, 100%).<br>7. Authored Playwright E2E suite `e2e/lab-04/actions-taken.spec.ts` (`E2E-ACT-01` through `E2E-ACT-06`) verifying cross-role lifecycle, editing, validation, locked state, admin capabilities, and 375px zero horizontal scroll (`scrollWidth <= clientWidth`), capturing 7 screenshot evidence artifacts in `artifacts/lab-04/screenshots/actions-taken/`.<br>8. Verified zero regressions across all 16 server test suites (165/165 tests pass) and 10 client test suites (78/78 tests pass). Both client and server compile with 0 errors. |
+| **Outcome** | PR opened targeting `lab4-staging`, submitted for peer review. |
 
 
 

@@ -428,3 +428,99 @@ export async function setInitialPassword(id: number, newInitialPassword: string)
   }
   return res.json();
 }
+
+// --- LAB 4: ACTIONS TAKEN API ---
+export type UserRole = "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR";
+
+export interface ActionTakenPerformer {
+  id: number;
+  name: string;
+  role: UserRole;
+}
+
+export interface ActionTaken {
+  id: number;
+  ticketId: number;
+  actionAt: string;
+  description: string;
+  result: string;
+  performedById: number;
+  performedBy: ActionTakenPerformer;
+  followUpRequired: boolean;
+  followUpNote: string | null;
+  attachmentNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateActionTakenPayload {
+  actionAt?: string;
+  description: string;
+  result: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+}
+
+export interface UpdateActionTakenPayload {
+  description?: string;
+  result?: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+}
+
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  fields?: Record<string, string>;
+
+  constructor(message: string, status: number, code?: string, fields?: Record<string, string>) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.fields = fields;
+  }
+}
+
+export async function getActionsTaken(ticketId: number): Promise<ActionTaken[]> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions-taken`, {
+    method: "GET",
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to fetch actions taken", res.status, errorData.code, errorData.fields);
+  }
+  return res.json();
+}
+
+export async function createActionTaken(ticketId: number, payload: CreateActionTakenPayload): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions-taken`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to create action taken", res.status, errorData.code, errorData.fields);
+  }
+  return res.json();
+}
+
+export async function updateActionTaken(ticketId: number, actionId: number, payload: UpdateActionTakenPayload): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions-taken/${actionId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to update action taken", res.status, errorData.code, errorData.fields);
+  }
+  return res.json();
+}
+

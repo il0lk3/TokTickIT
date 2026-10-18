@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { TicketDetailResponse, getTicketDetail, uploadAttachment, removeAttachment, downloadAttachmentBlob, postComment, markAppearsResolved, getItStaff, UserResponse, updateTicket, postNote } from "../api.js";
 import { useAuth } from "../contexts/AuthContext";
+import { ActionsTakenSection } from "./ticket/ActionsTakenSection";
 
 interface TicketDetailProps {
   ticketId: number;
@@ -44,6 +45,17 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     }
     load();
   }, [ticketId, user]);
+
+  const reloadTicket = async () => {
+    if (!user) return;
+    try {
+      const isStaffUser = user.role === "IT_STAFF" || user.role === "ADMINISTRATOR";
+      const detail = await getTicketDetail(ticketId, isStaffUser);
+      setTicket(detail);
+    } catch (err: any) {
+      console.error("Failed to reload ticket:", err);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -424,9 +436,23 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
               <label className="form-label text-muted small fw-bold mb-1">Resolution Summary</label>
               <textarea className="form-control bg-light text-muted fst-italic border-light" readOnly rows={2} style={{ resize: 'none', cursor: 'default' }} value={ticket.resolutionSummary || 'No resolution summary available yet.'} />
             </div>
+          </div>
+        </div>
+      </div>
 
+      {/* Actions Taken Section */}
+      <ActionsTakenSection
+        ticketId={ticketId}
+        ticketStatus={ticket.currentStatus}
+        onActionChanged={reloadTicket}
+      />
+
+      {/* Communication Tabs Container */}
+      <div className="glass-panel overflow-hidden mb-4">
+        <div className="p-4 p-md-5">
+          <div className="row g-4">
             {/* Tabs Header */}
-            <div className="col-12 mt-4 pt-3 border-top">
+            <div className="col-12">
               <div className="zen-tabs">
                 <button 
 

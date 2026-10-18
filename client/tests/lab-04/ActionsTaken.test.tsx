@@ -594,7 +594,9 @@ describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (UI-ACT)', () => {
     const cancelBtn = screen.getByRole('button', { name: /cancel/i });
     fireEvent.click(cancelBtn);
 
-    expect(triggerBtn).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /\+ log action taken/i })).toHaveFocus();
+    });
   });
 
   // UI-ACT-11: Mandatory onActionChanged callback invoked on create and edit
