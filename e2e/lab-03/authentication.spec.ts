@@ -28,8 +28,9 @@ test.describe('E2E-03: Authentication and Identity Flow', () => {
     await page.getByRole('button', { name: 'Continue' }).click();
 
     // 4. Verify successful redirection / App Shell loads
-    await expect(page.getByRole('button', { name: 'My Tickets' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Create Ticket' })).toBeVisible();
+    const nav = page.locator('nav.navbar');
+    await expect(nav.getByRole('link', { name: 'My Tickets' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Create Ticket' })).toBeVisible();
     
     // Verify user profile is rendered
     await expect(page.getByText('Logout')).toBeVisible();

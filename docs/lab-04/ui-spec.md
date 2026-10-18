@@ -35,6 +35,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ### 2.1 Navigation Bar Updates
 - **Brand**: TokTickIT logo links to the user's home (`/dashboard`).
+- **Skip Navigation Link**: Hidden until focused (`.visually-hidden-focusable`) skip link pointing directly to `#main-content` for keyboard accessibility.
 - **Navigation Links**:
   - **Requester**:
     - `Dashboard` (`/dashboard`)
@@ -43,36 +44,42 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
   - **IT Staff**:
     - `Dashboard` (`/dashboard`)
     - `Ticket Queue` (`/queue`)
-    - `Create Ticket` (`/tickets/new`)
   - **Administrator**:
     - `Dashboard` (`/dashboard`)
     - `Ticket Queue` (`/queue`)
     - `User Management` (`/admin/users`)
-- **Active Page Indicator**:
-  - Current active page link has a bottom indicator bar (`border-bottom: 3px solid #2d6a4f`), bold font weight, and `aria-current="page"`.
-- **Profile Dropdown**:
+- **Active Page Indicator & Accessibility**:
+  - Semantic `<Link>` elements with `NavItemLink` helper.
+  - Active navigation item exposes `aria-current="page"` (using exact pathname matching for dashboard/lists, and highlighting parent `/queue` or `/tickets` when viewing ticket detail `/tickets/:id`).
+  - Mobile navbar toggler provides accessible attributes (`aria-controls="main-navbar"`, `aria-expanded`), and automatically closes the collapsed menu when any navigation link is clicked.
+- **Dynamic Document Title**:
+  - Automatically synchronizes `document.title` on every route transition (e.g. `TokTickIT — Ticket Queue`, `TokTickIT — Ticket #1`).
+- **Profile Controls**:
   - Shows authenticated user's name and role badge (e.g., `Michael Staff (IT Staff)`).
-  - Contains **Sign Out** button.
+  - Contains **Sign Out** button with keyboard accessible triggers.
 
 ### 2.2 Client Route Map & Route Guards
 
 | Path | Allowed Roles | Component | Guard / Redirect Rule |
 |---|---|---|---|
-| `/login` | Public (Unauthenticated) | `Login` | Redirects to role default landing route if already authenticated |
-| `/change-password` | Authenticated (`requiresPasswordChange: true`) | `ChangePassword` | All protected routes redirect here until initial password is changed |
+| `/login` | Public (Unauthenticated) | `Login` | Redirects to `from` location or `/dashboard` if already authenticated |
+| `/change-password` | Authenticated (`requiresPasswordChange: true`) | `ChangePassword` | All protected routes quarantine here until initial password is changed |
 | `/` | Authenticated | Redirect | Redirects to role landing route (`/dashboard`) |
-| `/dashboard` | Requester, Staff, Admin | `RequesterDashboard` / `StaffDashboard` | Role-aware dashboard; renders role-specific metric cards and recent lists |
-| `/tickets` | Requester | `MyTickets` | Supports filter query params: `?status=...&priority=...` |
-| `/tickets/new` | Requester, Staff, Admin | `CreateTicket` | IT Staff/Admin can log tickets on behalf of users |
-| `/tickets/:ticketId` | Requester (own), Staff, Admin | `TicketDetail` | Deep-linkable; preserves list filter query params when clicking Back |
-| `/queue` | Staff, Admin | `TicketQueue` | Supports drill-down query params: `?status=...&ownerId=...` |
-| `/admin/users` | Administrator | `UserManagement` | Admin user CRUD management |
-| `*` | All | `NotFound` | Zen Green 404 page |
+| `/dashboard` | Requester, Staff, Admin | `DashboardShell` / Role Dashboards | Role-aware dashboard landing frame with drill-down links |
+| `/tickets` | Requester | `MyTicketsRoute` | URL searchParams sync: `?status=...&categoryId=...&requestedPriority=...` |
+| `/tickets/new` | Requester | `CreateTicketRoute` | Strict requester boundary (enforces Lab 3 API contract); Staff/Admin get in-place 403 |
+| `/tickets/:ticketId` | Requester (own), Staff, Admin | `TicketDetailRoute` | Validates numeric ID (404 if invalid); deep-linkable; in-app Back button falls back to parent list |
+| `/queue` | Staff, Admin | `TicketQueueRoute` | URL searchParams sync: `?status=...&ownerId=...&itPriority=...&requestedPriority=...` |
+| `/admin/users` | Administrator | `UserManagement` | Admin user CRUD management; Staff/Requester get in-place 403 |
+| `*` | All | `NotFound` | Zen Green 404 page with "Back to Dashboard" button |
 
 - **Route Guard Behaviors**:
-  - Unauthenticated access to protected routes redirects to `/login`, preserving intended target path in location state for post-login return.
-  - Accessing unauthorized routes (e.g., Requester hitting `/queue` or `/admin/users`) redirects to `/dashboard` or renders a Zen Green 403 Forbidden screen.
-  - Deep-linking and page refreshes preserve state completely without losing the loaded ticket or filters.
+  - **Session Loading Resilience**: While `isLoading` is true, renders an accessible centered spinner, avoiding premature redirects.
+  - **Authentication Boundary (`ProtectedRoute`)**: Unauthenticated access to protected routes redirects to `/login`, preserving `{ from: location }` in state. After successful login, the user is redirected back to their intended deep link.
+  - **Temporary Password Quarantine**: Users with `requiresPasswordChange: true` are restricted to `/change-password` across all protected routes.
+  - **In-Place Authorization Guard (`RoleRoute`)**: Accessing unauthorized routes (e.g., Requester hitting `/queue` or `/admin/users`, or Staff hitting `/tickets/new`) renders an in-place Zen Green 403 Forbidden screen preserving top navigation shell and application state.
+  - **Numeric ID & Fallback Navigation**: Direct access to `/tickets/:ticketId` parses and validates numeric ID; non-numeric IDs immediately render 404 Not Found. Clicking Back navigates `-1` in history, or falls back to `/queue` (Staff/Admin) or `/tickets` (Requester) if opened directly in a new tab.
+  - **URL Search Parameter Single Source of Truth**: `/queue` and `/tickets` read filters directly from `window.location.search`, sanitize all values against allowed enums, and push query updates on every filter change. Browser Back/Forward restores previous filter criteria seamlessly.
 
 ---
 

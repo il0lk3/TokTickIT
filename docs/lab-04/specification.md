@@ -282,6 +282,8 @@ All error responses adhere to standard format: `{ "error": "Clear, safe message"
 - **AC-11 (Data Preservation After Migration)**: Given existing database records from Labs 1–3, when the Prisma migration is applied, then 100% of Users, Tickets, Comments, Notes, and Attachments remain intact and operational.
 - **AC-12 (Responsive Mobile Layouts)**: Given any major screen (Dashboard, Ticket Queue, Ticket Detail with Actions Taken) viewed at 375px mobile viewport, then there is no horizontal page scrolling, clipping, or overlapping UI elements.
 - **AC-13 (Zero-Regression Suite)**: Given the full suite of automated tests from Labs 1–3, when executed against the Lab 4 codebase, then all tests pass with zero regressions.
+- **AC-14 (Role-Based Client Routing & Screen Boundaries)**: Given unauthenticated access to protected routes, the application redirects to `/login` preserving target location in state for seamless post-login return. Given an authenticated user accessing an unauthorized route (e.g. Requester navigating to `/queue` or `/admin/users`), the system renders an in-place Zen Green 403 Forbidden screen with navbar preserved. Invalid paths (or non-numeric ticket IDs) render a Zen Green 404 Not Found screen.
+- **AC-15 (URL Single Source of Truth for Screen Filters)**: Given filter or pagination changes on `/queue` or `/tickets`, the URL search parameters update synchronously without page reload. Direct deep links with search parameters (e.g. `/queue?status=Open&itPriority=HIGH`) sanitize values against whitelists and initialize filter inputs accordingly, enabling drill-down navigation from dashboard metric cards. Browser Back/Forward restores previous filter criteria reliably.
 
 ---
 
@@ -319,7 +321,7 @@ A feature or pull request in Sprint 4 is considered **Done** only when meeting a
   - The operational timezone for calculating "recently updated" and "recently resolved" tickets is set to `Asia/Bangkok` (UTC+7).
   - The "recently resolved" metric window is defined as tickets resolved within the last **7 days** relative to the current timestamp.
 - **Decision on IT Staff "Create Ticket" Capability**:
-  - In modern IT service operations, IT Staff frequently receive requests via phone, walk-in, or system alerts. In accordance with the IT Staff navigation mockup in Handout Page 5, IT Staff and Administrators are granted access to `/tickets/new` to log tickets directly.
+  - In accordance with Lab 3 backend middleware (`requireRole(["REQUESTER"])` on `POST /api/tickets`), `/tickets/new` is role-guarded strictly to `REQUESTER`. IT Staff and Administrators attempting to navigate to `/tickets/new` are shown the in-place 403 Forbidden screen, preventing client-side submission of calls that the backend rejects. IT Staff and Administrators manage tickets via the operational Ticket Queue (`/queue`) and Ticket Detail (`/tickets/:id`).
 - **Decision on Requester Default Landing Screen & Navigation**:
   - In accordance with Handout Section 4.6 and Section 8.2, the default landing route after login for all roles is `/dashboard`. For Requesters, `/dashboard` displays high-level operational counts (`openTickets`, `inProgress`, `recentlyResolved`, `closed`), recent tickets, and quick action shortcuts. The global navigation bar provides distinct links for both `Dashboard` and `My Tickets` (`/tickets`), ensuring Requesters can effortlessly switch between executive summaries and the full searchable ticket archive without UI ambiguity.
 - **Administrator Extended Operational Access**:

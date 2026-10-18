@@ -201,7 +201,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     setUpdating(true);
     try {
       const isStaffUser = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
-      await updateTicket(ticketId, updates, isStaffUser);
+      await updateTicket(ticketId, { ...updates, expectedVersion: ticket.version ?? 1 }, isStaffUser);
       const detail = await getTicketDetail(ticketId, isStaffUser);
       setTicket(detail);
     } catch (err: any) {
@@ -362,7 +362,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                       Appears Resolved
                     </span>
                   )}
-                  {user?.role === 'REQUESTER' && !ticket.appearsResolved && !isTerminal && (
+                  {user?.role === 'REQUESTER' && !ticket.appearsResolved && !isTerminal && ticket.currentStatus !== 'New' && (
                     <button 
                       className="btn btn-outline-success btn-sm px-2 rounded-pill fw-medium"
                       onClick={handleAppearsResolved}

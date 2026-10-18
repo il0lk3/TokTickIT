@@ -6,9 +6,24 @@ import { useMediaQuery } from "../hooks/useMediaQuery";
 interface MyTicketsProps {
   categories: Category[];
   onSelectTicket: (id: number) => void;
+  status?: string;
+  requestedPriority?: string;
+  categoryId?: string;
+  search?: string;
+  page?: number;
+  onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
 
-export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
+export function MyTickets({
+  categories,
+  onSelectTicket,
+  status: propStatus,
+  requestedPriority: propRequestedPriority,
+  categoryId: propCategoryId,
+  search: propSearch,
+  page: propPage,
+  onFilterChange
+}: MyTicketsProps) {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -16,26 +31,51 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
-  // Filters
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [requestedPriority, setRequestedPriority] = useState("");
-  const [status, setStatus] = useState("");
-  
-  // Pagination
-  const [page, setPage] = useState(1);
+  // Uncontrolled fallback state
+  const [localSearch, setLocalSearch] = useState(propSearch ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? "");
+  const [localCategoryId, setLocalCategoryId] = useState(propCategoryId ?? "");
+  const [localRequestedPriority, setLocalRequestedPriority] = useState(propRequestedPriority ?? "");
+  const [localStatus, setLocalStatus] = useState(propStatus ?? "");
+  const [localPage, setLocalPage] = useState(propPage ?? 1);
+
+  // Effective filter values (Controlled if prop passed, otherwise fallback to local state)
+  const status = propStatus !== undefined ? propStatus : localStatus;
+  const requestedPriority = propRequestedPriority !== undefined ? propRequestedPriority : localRequestedPriority;
+  const categoryId = propCategoryId !== undefined ? propCategoryId : localCategoryId;
+  const page = propPage !== undefined ? propPage : localPage;
+  const search = localSearch;
+
+  // Pagination totals
   const [totalPages, setTotalPages] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
 
-  // Debounce search input
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const next = typeof updater === "function" ? updater(page) : updater;
+    setLocalPage(next);
+    if (onFilterChange) {
+      onFilterChange({ page: next });
+    }
+  };
+
+  // Sync external search prop (e.g. Back/Forward navigation)
+  useEffect(() => {
+    if (propSearch !== undefined && propSearch !== localSearch) {
+      setLocalSearch(propSearch);
+      setDebouncedSearch(propSearch);
+    }
+  }, [propSearch]);
+
+  // Debounce search input and notify parent
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1); // Reset page on search change
-    }, 500);
+      setDebouncedSearch(localSearch);
+      if (onFilterChange && localSearch !== (propSearch ?? "")) {
+        onFilterChange({ search: localSearch, page: 1 });
+      }
+    }, 300);
     return () => clearTimeout(handler);
-  }, [search]);
+  }, [localSearch]);
 
   const fetchTickets = useCallback(async () => {
     if (!user) return;
@@ -95,9 +135,13 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
     fetchTickets();
   }, [fetchTickets]);
 
-  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setter(e.target.value);
+  const handleFilterChange = (field: string, setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setter(val);
     setPage(1); // Reset to page 1 on filter change
+    if (onFilterChange) {
+      onFilterChange({ [field]: val, page: 1 });
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -129,12 +173,12 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
 
   const activeFilters = useMemo(() => {
     const filters = [];
-    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => setSearch("") });
-    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => setCategoryId("") });
-    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => setRequestedPriority("") });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => setStatus("") });
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setLocalSearch(""); setDebouncedSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setLocalCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
+    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
+    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
     return filters;
-  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap]);
+  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap, onFilterChange]);
 
   return (
     <div className="animate-enter">
@@ -164,18 +208,18 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
                 className="form-control border-start-0 ps-0" 
                 placeholder="Search tickets..." 
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </div>
           </div>
           <div className="col-12 col-md-3">
-            <select className="form-select" value={categoryId} onChange={handleFilterChange(setCategoryId)}>
+            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setLocalCategoryId)}>
               <option value="">All Categories</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={requestedPriority} onChange={handleFilterChange(setRequestedPriority)}>
+            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setLocalRequestedPriority)}>
               <option value="">Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -183,7 +227,7 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             </select>
           </div>
           <div className="col-6 col-md-3">
-            <select className="form-select" value={status} onChange={handleFilterChange(setStatus)}>
+            <select className="form-select" value={status} onChange={handleFilterChange("status", setLocalStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
               <option value="InProgress">In Progress</option>
@@ -203,7 +247,15 @@ export function MyTickets({ categories, onSelectTicket }: MyTicketsProps) {
             ))}
             <button 
               className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
-              onClick={() => { setSearch(""); setCategoryId(""); setRequestedPriority(""); setStatus(""); }}
+              onClick={() => {
+                setLocalSearch("");
+                setDebouncedSearch("");
+                setLocalCategoryId("");
+                setLocalRequestedPriority("");
+                setLocalStatus("");
+                setPage(1);
+                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", status: "", page: 1 });
+              }}
             >
               Clear All
             </button>

@@ -12,7 +12,9 @@ test.describe('IT Staff Ticket Detail', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     
-    // Wait for the queue to load
+    // Wait for login to complete and navigate to /queue
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto('/queue');
     await expect(page.locator('h2', { hasText: 'Ticket Queue' })).toBeVisible();
   });
 
@@ -71,17 +73,8 @@ test.describe('IT Staff Ticket Detail', () => {
     await priorityPromise;
     await page.waitForLoadState('networkidle');
     
-    // Reload and assert persistence
+    // Reload and assert persistence (Lab 4 deep linking preserves ticket view on refresh)
     await page.reload();
-
-    // After reload, we are back at the queue because state is reset.
-    // Search for the ticket again
-    await page.fill('input[placeholder="Search ticket number or summary..."]', 'TKT-2026-000002');
-    await page.waitForResponse(response => response.url().includes('/api/staff/tickets') && response.request().method() === 'GET');
-    
-    // We must click the ticket again (it is now InProgress).
-    const reloadedTicketRow = page.locator('tr, div.card', { hasText: 'TKT-2026-000002' }).first();
-    await reloadedTicketRow.click();
     await expect(page.locator('text=Ticket Details')).toBeVisible();
 
     await expect(page.locator('select').nth(2)).toHaveValue('HIGH'); // IT Priority

@@ -1,81 +1,161 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Link, Outlet, useLocation } from "react-router-dom";
 import { checkSystem, Category } from "./api";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/auth/Login";
 import ChangePassword from "./components/auth/ChangePassword";
-import CreateTicket from "./components/CreateTicket";
-import { MyTickets } from "./components/MyTickets";
-import { TicketQueue } from "./components/TicketQueue";
-import { TicketDetail } from "./components/TicketDetail";
 import { UserManagement } from "./components/UserManagement";
+import { NotFound } from "./components/common/NotFound";
+import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import { RoleRoute } from "./components/common/RoleRoute";
+import { DashboardPlaceholder } from "./components/dashboard/DashboardPlaceholder";
+import { MyTicketsRoute } from "./routes/MyTicketsRoute";
+import { CreateTicketRoute } from "./routes/CreateTicketRoute";
+import { TicketQueueRoute } from "./routes/TicketQueueRoute";
+import { TicketDetailRoute } from "./routes/TicketDetailRoute";
 
 type UiState = "idle" | "loading" | "success" | "error";
-type Tab = "create" | "list" | "queue" | "users";
 
-function AppShell() {
-  const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>("list");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [appState, setAppState] = useState<UiState>("loading");
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [isNavOpen, setIsNavOpen] = useState(false);
+interface NavItemLinkProps {
+  to: string;
+  end?: boolean;
+  isContextuallyActive?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+
+function NavItemLink({
+  to,
+  end = false,
+  isContextuallyActive = false,
+  children,
+  onClick
+}: NavItemLinkProps) {
+  const location = useLocation();
+  const isMatch = end
+    ? location.pathname === to
+    : location.pathname === to || location.pathname.startsWith(to + "/");
+  const isActive = isMatch || isContextuallyActive;
+
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
+      className={`nav-link d-flex align-items-center gap-2 px-3 rounded ${
+        isActive ? "text-white fw-bold bg-white bg-opacity-10 active" : "text-white text-opacity-75"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function DocumentTitleUpdater() {
+  const location = useLocation();
 
   useEffect(() => {
-    if (!user) {
-      // Reset state on logout
-      setActiveTab("list");
-      setCategories([]);
-      setAppState("loading");
-      setSelectedTicketId(null);
-      return;
+    const path = location.pathname;
+    let title = "TokTickIT";
+
+    if (path === "/login") {
+      title = "Login | TokTickIT";
+    } else if (path === "/change-password") {
+      title = "Change Password | TokTickIT";
+    } else if (path === "/dashboard" || path === "/") {
+      title = "Dashboard | TokTickIT";
+    } else if (path === "/tickets") {
+      title = "My Tickets | TokTickIT";
+    } else if (path === "/tickets/new") {
+      title = "Create Ticket | TokTickIT";
+    } else if (path.startsWith("/tickets/")) {
+      title = "Ticket Detail | TokTickIT";
+    } else if (path === "/queue") {
+      title = "Ticket Queue | TokTickIT";
+    } else if (path === "/admin/users") {
+      title = "User Management | TokTickIT";
+    } else {
+      title = "Page Not Found | TokTickIT";
     }
 
-    if (!user.requiresPasswordChange) {
-      // Default tabs based on role
-      if (user.role === "REQUESTER") setActiveTab("list");
-      else if (user.role === "IT_STAFF") setActiveTab("queue");
-      else if (user.role === "ADMINISTRATOR") setActiveTab("users");
+    document.title = title;
+  }, [location.pathname]);
 
-      checkSystem()
-        .then(result => {
-          if (result.online) {
-            setCategories(result.categories);
-            setAppState("success");
-          } else {
-            setAppState("error");
-          }
-        })
-        .catch(() => setAppState("error"));
-    }
-  }, [user]);
+  return null;
+}
 
-  if (!user) return <Login />;
-  if (user.requiresPasswordChange) return <ChangePassword />;
+interface AppShellProps {
+  categories: Category[];
+  appState: UiState;
+}
+
+export function AppShell({ categories: _categories, appState }: AppShellProps) {
+  const { user, logout } = useAuth();
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const location = useLocation();
+
+  if (!user) return null;
+
+  const isTicketDetail =
+    /^\/tickets\/\d+$/.test(location.pathname) ||
+    (location.pathname.startsWith("/tickets/") && location.pathname !== "/tickets/new");
 
   return (
     <div className="min-vh-100 d-flex flex-column animate-enter">
+      <a
+        href="#main-content"
+        className="visually-hidden-focusable btn btn-zen-primary position-absolute top-0 start-0 m-2 z-3"
+      >
+        Skip to main content
+      </a>
+
       <nav className="navbar navbar-expand-lg navbar-dark bg-zen-primary sticky-top py-2 shadow-sm">
         <div className="container-xl">
-          <a className="navbar-brand fw-bold d-flex align-items-center gap-2 text-white me-5" href="#">
+          <Link
+            className="navbar-brand fw-bold d-flex align-items-center gap-2 text-white me-5"
+            to="/dashboard"
+            onClick={() => setIsNavOpen(false)}
+          >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
             <span style={{ fontSize: '1.25rem', letterSpacing: '-0.03em' }}>TokTickIT</span>
-          </a>
-          
-          <button className="navbar-toggler border-0 text-white" type="button" onClick={() => setIsNavOpen(!isNavOpen)}>
+          </Link>
+
+          <button
+            className="navbar-toggler border-0 text-white"
+            type="button"
+            aria-label="Toggle navigation"
+            aria-expanded={isNavOpen ? "true" : "false"}
+            aria-controls="navbarNav"
+            onClick={() => setIsNavOpen(!isNavOpen)}
+          >
             <span className="navbar-toggler-icon"></span>
           </button>
-          
+
           <div className={`collapse navbar-collapse ${isNavOpen ? 'show' : ''} mt-3 mt-lg-0`} id="navbarNav">
             <ul className="navbar-nav me-auto gap-3">
+              <li className="nav-item">
+                <NavItemLink to="/dashboard" end onClick={() => setIsNavOpen(false)}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                  Dashboard
+                </NavItemLink>
+              </li>
+
               {user.role === "REQUESTER" && (
                 <>
                   <li className="nav-item">
-                    <button 
-                      className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'list' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                      onClick={() => { setActiveTab('list'); setSelectedTicketId(null); setIsNavOpen(false); }}
+                    <NavItemLink
+                      to="/tickets"
+                      end
+                      isContextuallyActive={isTicketDetail && user.role === "REQUESTER"}
+                      onClick={() => setIsNavOpen(false)}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -85,47 +165,59 @@ function AppShell() {
                         <polyline points="10 9 9 9 8 9"></polyline>
                       </svg>
                       My Tickets
-                    </button>
+                    </NavItemLink>
                   </li>
                   <li className="nav-item">
-                    <button 
-                      className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'create' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                      onClick={() => { setActiveTab('create'); setSelectedTicketId(null); setIsNavOpen(false); }}
-                    >
+                    <NavItemLink to="/tickets/new" end onClick={() => setIsNavOpen(false)}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="16"></line>
                         <line x1="8" y1="12" x2="16" y2="12"></line>
                       </svg>
                       Create Ticket
-                    </button>
+                    </NavItemLink>
                   </li>
                 </>
               )}
-              {user.role === "IT_STAFF" && (
+
+              {(user.role === "IT_STAFF" || user.role === "ADMINISTRATOR") && (
                 <li className="nav-item">
-                  <button 
-                    className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'queue' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                    onClick={() => { setActiveTab('queue'); setSelectedTicketId(null); setIsNavOpen(false); }}
+                  <NavItemLink
+                    to="/queue"
+                    end
+                    isContextuallyActive={isTicketDetail && (user.role === "IT_STAFF" || user.role === "ADMINISTRATOR")}
+                    onClick={() => setIsNavOpen(false)}
                   >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="8" y1="6" x2="21" y2="6"></line>
+                      <line x1="8" y1="12" x2="21" y2="12"></line>
+                      <line x1="8" y1="18" x2="21" y2="18"></line>
+                      <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                      <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                      <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
                     Ticket Queue
-                  </button>
+                  </NavItemLink>
                 </li>
               )}
+
               {user.role === "ADMINISTRATOR" && (
                 <li className="nav-item">
-                  <button 
-                    className={`nav-link btn btn-link text-decoration-none d-flex align-items-center gap-2 px-3 rounded ${activeTab === 'users' ? 'text-white fw-bold bg-white bg-opacity-10' : 'text-white text-opacity-75'}`}
-                    onClick={() => { setActiveTab('users'); setSelectedTicketId(null); setIsNavOpen(false); }}
-                  >
+                  <NavItemLink to="/admin/users" end onClick={() => setIsNavOpen(false)}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
                     User Management
-                  </button>
+                  </NavItemLink>
                 </li>
               )}
             </ul>
-            
+
             <hr className="d-lg-none text-white opacity-25 my-3" />
-            
+
             <div className="d-flex align-items-center mt-2 mt-lg-0 gap-3">
               <div className="d-flex align-items-center text-white px-3 py-1 rounded bg-white bg-opacity-10">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
@@ -150,7 +242,7 @@ function AppShell() {
         </div>
       </nav>
 
-      <main className="flex-grow-1 py-5">
+      <main id="main-content" tabIndex={-1} className="flex-grow-1 py-5">
         <div className="container-xl">
           {appState === "loading" ? (
             <div className="d-flex flex-column align-items-center justify-content-center py-5 my-5 glass-panel">
@@ -172,26 +264,8 @@ function AppShell() {
               </div>
             </div>
           ) : (
-            <div className="animate-enter mt-4">
-              {user.role === "REQUESTER" && (
-                selectedTicketId ? (
-                  <TicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />
-                ) : activeTab === "create" ? (
-                  <CreateTicket categories={categories} />
-                ) : (
-                  <MyTickets categories={categories} onSelectTicket={setSelectedTicketId} />
-                )
-              )}
-              {user.role === "IT_STAFF" && (
-                selectedTicketId ? (
-                  <TicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />
-                ) : (
-                  <TicketQueue categories={categories} onSelectTicket={setSelectedTicketId} />
-                )
-              )}
-              {user.role === "ADMINISTRATOR" && (
-                <UserManagement />
-              )}
+            <div className="animate-enter">
+              <Outlet />
             </div>
           )}
         </div>
@@ -200,26 +274,159 @@ function AppShell() {
   );
 }
 
-function MainApp() {
-  const { isLoading } = useAuth();
+function LoginRouteWrapper() {
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100 bg-zen-light">
         <div className="spinner-border text-zen-primary" style={{ width: '3rem', height: '3rem' }} role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">Loading session...</span>
         </div>
       </div>
     );
   }
 
-  return <AppShell />;
+  if (user) {
+    if (user.requiresPasswordChange) {
+      return <Navigate to="/change-password" replace />;
+    }
+    const fromPath = (location.state as any)?.from?.pathname || "/dashboard";
+    const fromSearch = (location.state as any)?.from?.search || "";
+    return <Navigate to={`${fromPath}${fromSearch}`} replace />;
+  }
+
+  return <Login />;
+}
+
+function AppRoutes() {
+  const { user, isLoading } = useAuth();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [appState, setAppState] = useState<UiState>("loading");
+
+  useEffect(() => {
+    if (!user || user.requiresPasswordChange) {
+      setCategories([]);
+      setAppState("loading");
+      return;
+    }
+
+    let isMounted = true;
+    checkSystem()
+      .then(result => {
+        if (!isMounted) return;
+        if (result.online) {
+          setCategories(result.categories);
+          setAppState("success");
+        } else {
+          setAppState("error");
+        }
+      })
+      .catch(() => {
+        if (isMounted) setAppState("error");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id, user?.requiresPasswordChange]);
+
+  return (
+    <>
+      <DocumentTitleUpdater />
+      <Routes>
+        {/* Public Login Route */}
+        <Route path="/login" element={<LoginRouteWrapper />} />
+
+        {/* Temporary Password Quarantine Route */}
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Application Layout and Routes */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppShell categories={categories} appState={appState} />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <RoleRoute allowedRoles={["REQUESTER", "IT_STAFF", "ADMINISTRATOR"]}>
+                <DashboardPlaceholder />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/tickets"
+            element={
+              <RoleRoute allowedRoles={["REQUESTER"]}>
+                <MyTicketsRoute categories={categories} />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/tickets/new"
+            element={
+              <RoleRoute allowedRoles={["REQUESTER"]}>
+                <CreateTicketRoute categories={categories} />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/tickets/:ticketId"
+            element={
+              <RoleRoute allowedRoles={["REQUESTER", "IT_STAFF", "ADMINISTRATOR"]}>
+                <TicketDetailRoute />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/queue"
+            element={
+              <RoleRoute allowedRoles={["IT_STAFF", "ADMINISTRATOR"]}>
+                <TicketQueueRoute categories={categories} />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <RoleRoute allowedRoles={["ADMINISTRATOR"]}>
+                <UserManagement />
+              </RoleRoute>
+            }
+          />
+
+          {/* Catch-all 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </>
+  );
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <MainApp />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </AuthProvider>
   );
 }

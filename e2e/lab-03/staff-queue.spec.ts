@@ -8,6 +8,10 @@ test.describe('IT Staff Ticket Queue', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     
+    // Wait for login to complete and navigate to /queue
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto('/queue');
+    
     // Wait for the queue to load
     await expect(page.locator('h2', { hasText: 'Ticket Queue' })).toBeVisible();
   });

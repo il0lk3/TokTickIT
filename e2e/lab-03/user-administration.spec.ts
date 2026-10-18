@@ -21,7 +21,9 @@ test.describe('User Administration', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
 
-    // Admin lands directly on User Management
+    // Wait for login to complete and navigate to /admin/users
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto('/admin/users');
     await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
   });
 
