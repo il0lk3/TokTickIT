@@ -171,19 +171,27 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     await loginUser(page, STAFF_EMAIL);
 
     await page.goto('/tickets/2');
-    await expect(page.getByTestId('actions-taken-section')).toBeVisible();
+    const actionsSection = page.getByTestId('actions-taken-section');
+    await actionsSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
 
     // 1. Desktop Viewport (1280px)
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-desktop-table.png', fullPage: true });
+    await actionsSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-desktop-table.png' });
 
     // 2. Tablet Viewport (768px)
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-tablet.png', fullPage: true });
+    await actionsSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-tablet.png' });
 
     // 3. Mobile Viewport (375px)
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-mobile-cards.png', fullPage: true });
+    await actionsSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-mobile-cards.png' });
 
     // Verify 0 horizontal scrolling at 375px
     const isOverflowing = await page.evaluate(() => {
@@ -194,15 +202,20 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     // 4. Create Form & Validation Error Screenshots
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.click('button:has-text("+ Log Action Taken")');
+    await page.waitForTimeout(300);
     await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-create-form.png' });
 
     // Trigger validation error
     await page.click('button:has-text("Log Action")');
+    await page.waitForTimeout(300);
     await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-validation-error.png' });
 
     // 5. Terminal Locked Screenshot on Ticket 3
     await page.goto('/tickets/3');
     await expect(page.getByTestId('actions-taken-section')).toBeVisible();
+    const lockedSection = page.getByTestId('actions-taken-section');
+    await lockedSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
     await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-terminal-locked.png' });
 
     // 6. Requester Read-Only Screenshot
@@ -210,6 +223,9 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     await loginUser(page, REQUESTER_EMAIL);
     await page.goto('/tickets/2');
     await expect(page.getByTestId('actions-taken-section')).toBeVisible();
+    const reqSection = page.getByTestId('actions-taken-section');
+    await reqSection.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
     await page.screenshot({ path: '/Users/karn/Downloads/toktickit/artifacts/lab-04/screenshots/actions-taken/actions-taken-requester-readonly.png' });
   });
 });

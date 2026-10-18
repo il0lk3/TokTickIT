@@ -332,36 +332,48 @@ export function ActionsTakenSection({
   return (
     <div className="glass-panel overflow-hidden mb-4 p-4 p-md-5 animate-enter" data-testid="actions-taken-section">
       {/* Header with Title, Count Badge, and Trigger Button */}
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div className="d-flex align-items-center gap-2">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-zen-primary"
+      <div className="d-flex flex-wrap justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-3 border-bottom border-light-subtle">
+        <div className="d-flex align-items-center gap-3">
+          <div
+            className="p-2 rounded-3 bg-success bg-opacity-10 text-zen-primary border border-success border-opacity-20 d-flex align-items-center justify-content-center flex-shrink-0"
+            style={{ width: 44, height: 44 }}
             aria-hidden="true"
           >
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-          </svg>
-          <h2 className="h4 fw-bold text-zen-primary mb-0">Actions Taken</h2>
-          <span
-            className="badge bg-secondary rounded-pill ms-1"
-            data-testid="actions-count-badge"
-          >
-            {actions.length}
-          </span>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+          </div>
+          <div>
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <h2 className="h4 fw-bold text-zen-primary mb-0">Actions Taken</h2>
+              <span
+                className="badge rounded-pill bg-success bg-opacity-15 text-zen-primary border border-success border-opacity-25 px-2 py-1 small fw-semibold"
+                data-testid="actions-count-badge"
+              >
+                {actions.length}
+              </span>
+            </div>
+            <p className="text-muted small mb-0">
+              Technical diagnostics, hardware checks, and resolution actions performed.
+            </p>
+          </div>
         </div>
 
         {/* Action Controls for Staff/Admin */}
         {isStaffOrAdmin && (
           <div>
             {isTerminal ? (
-              <span className="badge badge-zen-secondary px-3 py-2 fw-semibold">
+              <span className="badge badge-zen-secondary px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Ticket is {ticketStatus} (Actions locked)
               </span>
             ) : (
@@ -634,8 +646,16 @@ export function ActionsTakenSection({
           </button>
         </div>
       ) : actions.length === 0 ? (
-        <div className="text-center py-4 px-3 border rounded-4 bg-light bg-opacity-50">
-          <p className="text-muted mb-0 small">
+        <div className="text-center py-5 px-3 border rounded-3 bg-light bg-opacity-40">
+          <div className="p-3 rounded-circle bg-success bg-opacity-10 text-zen-primary d-inline-flex mb-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h3 className="h6 fw-bold text-dark mb-1">No Actions Recorded Yet</h3>
+          <p className="text-muted mb-0 small" style={{ maxWidth: 440, margin: "0 auto" }}>
             {isStaffOrAdmin
               ? "No actions have been recorded yet. Log the first technical action using the button above."
               : "No actions have been recorded yet."}
@@ -643,275 +663,349 @@ export function ActionsTakenSection({
         </div>
       ) : (
         /* Single-DOM Responsive Table / Cards Container */
-        <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0 actions-table-responsive">
-            <caption className="visually-hidden">Actions taken history for this ticket</caption>
-            <thead>
-              <tr className="border-bottom text-muted small fw-bold">
-                <th scope="col" className="py-3 ps-3">Date / Time</th>
-                <th scope="col" className="py-3">Description</th>
-                <th scope="col" className="py-3">Result</th>
-                <th scope="col" className="py-3">Performed By</th>
-                <th scope="col" className="py-3">Follow-Up</th>
-                <th scope="col" className="py-3">Notes</th>
-                {isStaffOrAdmin && !isTerminal && <th scope="col" className="py-3 pe-3 text-end">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {actions.map((act) => {
-                const isEditingThis = typeof activeMode === "object" && activeMode.type === "edit" && activeMode.actionId === act.id;
+        <div className="card border rounded-3 overflow-hidden shadow-sm bg-white">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0 actions-table-responsive">
+              <caption className="visually-hidden">Actions taken history for this ticket</caption>
+              <thead className="table-light">
+                <tr className="border-bottom text-muted small fw-bold">
+                  <th scope="col" className="py-3 ps-3 text-nowrap" style={{ width: "16%" }}>
+                    <div className="d-flex align-items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span>Date / Time</span>
+                    </div>
+                  </th>
+                  <th scope="col" className="py-3" style={{ width: "24%" }}>
+                    <div className="d-flex align-items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <span>Description</span>
+                    </div>
+                  </th>
+                  <th scope="col" className="py-3" style={{ width: "24%" }}>
+                    <div className="d-flex align-items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>Result / Outcome</span>
+                    </div>
+                  </th>
+                  <th scope="col" className="py-3 text-nowrap" style={{ width: "13%" }}>
+                    <div className="d-flex align-items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <span>Performed By</span>
+                    </div>
+                  </th>
+                  <th scope="col" className="py-3 text-nowrap" style={{ width: "9%" }}>
+                    <div className="d-flex align-items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                      <span>Follow-Up</span>
+                    </div>
+                  </th>
+                  <th scope="col" className="py-3" style={{ width: "14%" }}>
+                    <div className="d-flex align-items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      <span>Notes & Files</span>
+                    </div>
+                  </th>
+                  {isStaffOrAdmin && !isTerminal && (
+                    <th scope="col" className="py-3 pe-3 text-end text-nowrap" style={{ width: "8%" }}>
+                      Actions
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {actions.map((act) => {
+                  const isEditingThis = typeof activeMode === "object" && activeMode.type === "edit" && activeMode.actionId === act.id;
 
-                if (isEditingThis) {
-                  return (
-                    <tr key={`edit-${act.id}`} className="action-edit-row border-top border-bottom bg-light bg-opacity-75" data-testid="inline-edit-form">
-                      <td colSpan={isStaffOrAdmin && !isTerminal ? 7 : 6} className="p-4">
-                        <h4 className="h6 fw-bold text-zen-primary mb-3">
-                          Edit Action Taken #{act.id}
-                        </h4>
-                        <form onSubmit={(e) => handleSubmitEdit(act.id, e)} noValidate>
-                          <div className="row g-3">
-                            <div className="col-12 col-md-6">
-                              <label className="form-label small fw-bold text-muted mb-1">
-                                Action Date / Time
-                              </label>
-                              <input
-                                type="text"
-                                className="form-control bg-light text-muted border-light"
-                                value={formatDisplayDateTime(editActionAt)}
-                                readOnly
-                                aria-readonly="true"
-                              />
-                              <div className="form-text small text-muted">Action timestamp is immutable after logging</div>
-                            </div>
-
-                            <div className="col-12 col-md-6">
-                              <label className="form-label small fw-bold text-muted mb-1">
-                                Recorded By
-                              </label>
-                              <input
-                                type="text"
-                                className="form-control bg-light text-muted border-light"
-                                value={`${act.performedBy?.name || "Staff"} (${act.performedBy?.role || "IT_STAFF"})`}
-                                readOnly
-                                aria-readonly="true"
-                              />
-                            </div>
-
-                            <div className="col-12">
-                              <div className="d-flex justify-content-between align-items-center mb-1">
-                                <label htmlFor={`edit-desc-${act.id}`} className="form-label small fw-bold text-muted mb-0">
-                                  Description <span className="text-danger">*</span>
+                  if (isEditingThis) {
+                    return (
+                      <tr key={`edit-${act.id}`} className="action-edit-row border-top border-bottom bg-light bg-opacity-75" data-testid="inline-edit-form">
+                        <td colSpan={isStaffOrAdmin && !isTerminal ? 7 : 6} className="p-4">
+                          <h4 className="h6 fw-bold text-zen-primary mb-3">
+                            Edit Action Taken #{act.id}
+                          </h4>
+                          <form onSubmit={(e) => handleSubmitEdit(act.id, e)} noValidate>
+                            <div className="row g-3">
+                              <div className="col-12 col-md-6">
+                                <label className="form-label small fw-bold text-muted mb-1">
+                                  Action Date / Time
                                 </label>
-                                <span className="small text-muted">
-                                  {editDescription.length} / 1000
-                                </span>
-                              </div>
-                              <textarea
-                                ref={editDescRef}
-                                id={`edit-desc-${act.id}`}
-                                rows={3}
-                                maxLength={1000}
-                                className={`form-control ${formFieldErrors.description ? "is-invalid" : ""}`}
-                                value={editDescription}
-                                onChange={(e) => setEditDescription(e.target.value)}
-                                aria-describedby={formFieldErrors.description ? `edit-desc-err-${act.id}` : undefined}
-                                aria-invalid={Boolean(formFieldErrors.description)}
-                                required
-                              />
-                              {formFieldErrors.description && (
-                                <div id={`edit-desc-err-${act.id}`} className="invalid-feedback">
-                                  {formFieldErrors.description}
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="col-12">
-                              <div className="d-flex justify-content-between align-items-center mb-1">
-                                <label htmlFor={`edit-result-${act.id}`} className="form-label small fw-bold text-muted mb-0">
-                                  Result <span className="text-danger">*</span>
-                                </label>
-                                <span className="small text-muted">
-                                  {editResult.length} / 1000
-                                </span>
-                              </div>
-                              <textarea
-                                ref={editResultRef}
-                                id={`edit-result-${act.id}`}
-                                rows={2}
-                                maxLength={1000}
-                                className={`form-control ${formFieldErrors.result ? "is-invalid" : ""}`}
-                                value={editResult}
-                                onChange={(e) => setEditResult(e.target.value)}
-                                aria-describedby={formFieldErrors.result ? `edit-result-err-${act.id}` : undefined}
-                                aria-invalid={Boolean(formFieldErrors.result)}
-                                required
-                              />
-                              {formFieldErrors.result && (
-                                <div id={`edit-result-err-${act.id}`} className="invalid-feedback">
-                                  {formFieldErrors.result}
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="col-12">
-                              <div className="form-check">
                                 <input
-                                  type="checkbox"
-                                  id={`edit-follow-up-check-${act.id}`}
-                                  className="form-check-input"
-                                  checked={editFollowUpRequired}
-                                  onChange={(e) => {
-                                    setEditFollowUpRequired(e.target.checked);
-                                    if (!e.target.checked) setEditFollowUpNote("");
-                                  }}
-                                  aria-expanded={editFollowUpRequired}
+                                  type="text"
+                                  className="form-control bg-light text-muted border-light"
+                                  value={formatDisplayDateTime(editActionAt)}
+                                  readOnly
+                                  aria-readonly="true"
                                 />
-                                <label htmlFor={`edit-follow-up-check-${act.id}`} className="form-check-label fw-medium text-dark">
-                                  Follow-Up Required
-                                </label>
+                                <div className="form-text small text-muted">Action timestamp is immutable after logging</div>
                               </div>
-                            </div>
 
-                            {editFollowUpRequired && (
+                              <div className="col-12 col-md-6">
+                                <label className="form-label small fw-bold text-muted mb-1">
+                                  Recorded By
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control bg-light text-muted border-light"
+                                  value={`${act.performedBy?.name || "Staff"} (${act.performedBy?.role || "IT_STAFF"})`}
+                                  readOnly
+                                  aria-readonly="true"
+                                />
+                              </div>
+
                               <div className="col-12">
                                 <div className="d-flex justify-content-between align-items-center mb-1">
-                                  <label htmlFor={`edit-follow-up-note-${act.id}`} className="form-label small fw-bold text-muted mb-0">
-                                    Follow-up Note <span className="text-danger">*</span>
+                                  <label htmlFor={`edit-desc-${act.id}`} className="form-label small fw-bold text-muted mb-0">
+                                    Description <span className="text-danger">*</span>
                                   </label>
                                   <span className="small text-muted">
-                                    {editFollowUpNote.length} / 1000
+                                    {editDescription.length} / 1000
                                   </span>
                                 </div>
                                 <textarea
-                                  ref={editNoteRef}
-                                  id={`edit-follow-up-note-${act.id}`}
-                                  rows={2}
+                                  ref={editDescRef}
+                                  id={`edit-desc-${act.id}`}
+                                  rows={3}
                                   maxLength={1000}
-                                  className={`form-control ${formFieldErrors.followUpNote ? "is-invalid" : ""}`}
-                                  value={editFollowUpNote}
-                                  onChange={(e) => setEditFollowUpNote(e.target.value)}
-                                  aria-describedby={formFieldErrors.followUpNote ? `edit-note-err-${act.id}` : undefined}
-                                  aria-invalid={Boolean(formFieldErrors.followUpNote)}
-                                  required={editFollowUpRequired}
+                                  className={`form-control ${formFieldErrors.description ? "is-invalid" : ""}`}
+                                  value={editDescription}
+                                  onChange={(e) => setEditDescription(e.target.value)}
+                                  aria-describedby={formFieldErrors.description ? `edit-desc-err-${act.id}` : undefined}
+                                  aria-invalid={Boolean(formFieldErrors.description)}
+                                  required
                                 />
-                                {formFieldErrors.followUpNote && (
-                                  <div id={`edit-note-err-${act.id}`} className="invalid-feedback">
-                                    {formFieldErrors.followUpNote}
+                                {formFieldErrors.description && (
+                                  <div id={`edit-desc-err-${act.id}`} className="invalid-feedback">
+                                    {formFieldErrors.description}
                                   </div>
                                 )}
                               </div>
-                            )}
 
-                            <div className="col-12">
-                              <div className="d-flex justify-content-between align-items-center mb-1">
-                                <label htmlFor={`edit-attachment-notes-${act.id}`} className="form-label small fw-bold text-muted mb-0">
-                                  Attachment Notes
-                                </label>
-                                <span className="small text-muted">
-                                  {editAttachmentNotes.length} / 500
-                                </span>
+                              <div className="col-12">
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                  <label htmlFor={`edit-result-${act.id}`} className="form-label small fw-bold text-muted mb-0">
+                                    Result <span className="text-danger">*</span>
+                                  </label>
+                                  <span className="small text-muted">
+                                    {editResult.length} / 1000
+                                  </span>
+                                </div>
+                                <textarea
+                                  ref={editResultRef}
+                                  id={`edit-result-${act.id}`}
+                                  rows={2}
+                                  maxLength={1000}
+                                  className={`form-control ${formFieldErrors.result ? "is-invalid" : ""}`}
+                                  value={editResult}
+                                  onChange={(e) => setEditResult(e.target.value)}
+                                  aria-describedby={formFieldErrors.result ? `edit-result-err-${act.id}` : undefined}
+                                  aria-invalid={Boolean(formFieldErrors.result)}
+                                  required
+                                />
+                                {formFieldErrors.result && (
+                                  <div id={`edit-result-err-${act.id}`} className="invalid-feedback">
+                                    {formFieldErrors.result}
+                                  </div>
+                                )}
                               </div>
-                              <textarea
-                                id={`edit-attachment-notes-${act.id}`}
-                                rows={2}
-                                maxLength={500}
-                                className={`form-control ${formFieldErrors.attachmentNotes ? "is-invalid" : ""}`}
-                                value={editAttachmentNotes}
-                                onChange={(e) => setEditAttachmentNotes(e.target.value)}
-                              />
-                            </div>
 
-                            <div className="col-12 d-flex justify-content-end gap-2 pt-2">
-                              <button
-                                type="button"
-                                onClick={() => handleCancelEdit(act.id)}
-                                disabled={isSubmitting}
-                                className="btn btn-outline-secondary btn-sm px-3"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="btn btn-success btn-sm px-4 fw-bold shadow-sm"
-                              >
-                                {isSubmitting ? "Saving..." : "Save Changes"}
-                              </button>
+                              <div className="col-12">
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    id={`edit-follow-up-check-${act.id}`}
+                                    className="form-check-input"
+                                    checked={editFollowUpRequired}
+                                    onChange={(e) => {
+                                      setEditFollowUpRequired(e.target.checked);
+                                      if (!e.target.checked) setEditFollowUpNote("");
+                                    }}
+                                    aria-expanded={editFollowUpRequired}
+                                  />
+                                  <label htmlFor={`edit-follow-up-check-${act.id}`} className="form-check-label fw-medium text-dark">
+                                    Follow-Up Required
+                                  </label>
+                                </div>
+                              </div>
+
+                              {editFollowUpRequired && (
+                                <div className="col-12">
+                                  <div className="d-flex justify-content-between align-items-center mb-1">
+                                    <label htmlFor={`edit-follow-up-note-${act.id}`} className="form-label small fw-bold text-muted mb-0">
+                                      Follow-up Note <span className="text-danger">*</span>
+                                    </label>
+                                    <span className="small text-muted">
+                                      {editFollowUpNote.length} / 1000
+                                    </span>
+                                  </div>
+                                  <textarea
+                                    ref={editNoteRef}
+                                    id={`edit-follow-up-note-${act.id}`}
+                                    rows={2}
+                                    maxLength={1000}
+                                    className={`form-control ${formFieldErrors.followUpNote ? "is-invalid" : ""}`}
+                                    value={editFollowUpNote}
+                                    onChange={(e) => setEditFollowUpNote(e.target.value)}
+                                    aria-describedby={formFieldErrors.followUpNote ? `edit-note-err-${act.id}` : undefined}
+                                    aria-invalid={Boolean(formFieldErrors.followUpNote)}
+                                    required={editFollowUpRequired}
+                                  />
+                                  {formFieldErrors.followUpNote && (
+                                    <div id={`edit-note-err-${act.id}`} className="invalid-feedback">
+                                      {formFieldErrors.followUpNote}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="col-12">
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                  <label htmlFor={`edit-attachment-notes-${act.id}`} className="form-label small fw-bold text-muted mb-0">
+                                    Attachment Notes
+                                  </label>
+                                  <span className="small text-muted">
+                                    {editAttachmentNotes.length} / 500
+                                  </span>
+                                </div>
+                                <textarea
+                                  id={`edit-attachment-notes-${act.id}`}
+                                  rows={2}
+                                  maxLength={500}
+                                  className={`form-control ${formFieldErrors.attachmentNotes ? "is-invalid" : ""}`}
+                                  value={editAttachmentNotes}
+                                  onChange={(e) => setEditAttachmentNotes(e.target.value)}
+                                />
+                              </div>
+
+                              <div className="col-12 d-flex justify-content-end gap-2 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelEdit(act.id)}
+                                  disabled={isSubmitting}
+                                  className="btn btn-outline-secondary btn-sm px-3"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={isSubmitting}
+                                  className="btn btn-success btn-sm px-4 fw-bold shadow-sm"
+                                >
+                                  {isSubmitting ? "Saving..." : "Save Changes"}
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </form>
+                          </form>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return (
+                    <tr key={act.id} className="action-row border-bottom border-light-subtle" data-testid={`action-row-${act.id}`}>
+                      <td data-label="Date / Time" className="py-3 ps-3 text-nowrap small text-muted">
+                        <div className="d-inline-flex align-items-center gap-2">
+                          <span className="p-1 rounded bg-light text-muted d-flex align-items-center justify-content-center" style={{ width: 24, height: 24 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                          </span>
+                          <span className="fw-medium text-dark">{formatDisplayDateTime(act.actionAt)}</span>
+                        </div>
                       </td>
+                      <td data-label="Description" className="py-3 text-dark text-break">
+                        <span className="fw-semibold text-dark">{act.description}</span>
+                      </td>
+                      <td data-label="Result" className="py-3 text-break">
+                        <div className="p-2 rounded-2 bg-light border border-light-subtle small text-dark">
+                          <div className="d-flex align-items-center gap-1 text-success fw-bold mb-1" style={{ fontSize: "0.72rem" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Outcome</span>
+                          </div>
+                          <span className="text-secondary">{act.result}</span>
+                        </div>
+                      </td>
+                      <td data-label="Performed By" className="py-3 text-nowrap">
+                        <div className="d-inline-flex align-items-center gap-2 px-2 py-1 rounded-pill bg-light border border-light-subtle">
+                          <div className="rounded-circle bg-success bg-opacity-15 text-zen-primary d-flex align-items-center justify-content-center" style={{ width: 22, height: 22 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                          </div>
+                          <span className="small fw-medium text-dark">{act.performedBy?.name || "Staff"}</span>
+                        </div>
+                      </td>
+                      <td data-label="Follow-Up" className="py-3 text-nowrap">
+                        {act.followUpRequired ? (
+                          <span className="badge rounded-pill bg-warning bg-opacity-15 text-warning-emphasis border border-warning border-opacity-30 px-2 py-1 d-inline-flex align-items-center gap-1 small fw-semibold">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                              <line x1="12" y1="9" x2="12" y2="13" />
+                              <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            <span>Yes</span>
+                          </span>
+                        ) : (
+                          <span className="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-2 py-1 d-inline-flex align-items-center gap-1 small">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            <span>No</span>
+                          </span>
+                        )}
+                      </td>
+                      <td data-label="Notes" className="py-3 small text-break">
+                        {act.followUpNote && (
+                          <div className="p-2 mb-1 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 small text-dark">
+                            <div className="fw-semibold text-warning-emphasis d-flex align-items-center gap-1 mb-1" style={{ fontSize: "0.72rem" }}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                <line x1="4" y1="22" x2="4" y2="15" />
+                              </svg>
+                              <span>Follow-Up Note:</span>
+                            </div>
+                            <span>{act.followUpNote}</span>
+                          </div>
+                        )}
+                        {act.attachmentNotes && (
+                          <div className="p-1 px-2 rounded bg-light border border-light-subtle small text-muted d-flex align-items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 text-secondary">
+                              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                            <span className="fst-italic text-truncate" title={act.attachmentNotes}>{act.attachmentNotes}</span>
+                          </div>
+                        )}
+                        {!act.followUpNote && !act.attachmentNotes && <span className="text-muted small">-</span>}
+                      </td>
+                      {isStaffOrAdmin && !isTerminal && (
+                        <td data-label="Actions" className="py-3 pe-3 text-end text-nowrap">
+                          <button
+                            ref={(el) => {
+                              if (el) editButtonRefs.current.set(act.id, el);
+                              else editButtonRefs.current.delete(act.id);
+                            }}
+                            type="button"
+                            onClick={() => handleOpenEdit(act)}
+                            className="btn btn-outline-secondary btn-sm px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1 shadow-sm bg-white"
+                            aria-label={`Edit action logged at ${formatDisplayDateTime(act.actionAt)}`}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            <span>Edit</span>
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
-                }
-
-                return (
-                  <tr key={act.id} className="action-row" data-testid={`action-row-${act.id}`}>
-                    <td data-label="Date / Time" className="py-3 ps-3 text-nowrap small text-muted">
-                      {formatDisplayDateTime(act.actionAt)}
-                    </td>
-                    <td data-label="Description" className="py-3 fw-medium text-dark text-break">
-                      {act.description}
-                    </td>
-                    <td data-label="Result" className="py-3 text-muted text-break">
-                      {act.result}
-                    </td>
-                    <td data-label="Performed By" className="py-3 text-nowrap">
-                      <span className="badge rounded-pill bg-light text-dark border px-2 py-1 small">
-                        {act.performedBy?.name || "Staff"}
-                      </span>
-                    </td>
-                    <td data-label="Follow-Up" className="py-3 text-nowrap">
-                      {act.followUpRequired ? (
-                        <span className="badge badge-zen-warning px-2 py-1">
-                          <span aria-hidden="true">⚠️ </span>Yes
-                        </span>
-                      ) : (
-                        <span className="badge badge-zen-secondary px-2 py-1">
-                          No
-                        </span>
-                      )}
-                    </td>
-                    <td data-label="Notes" className="py-3 small text-break">
-                      {act.followUpNote && (
-                        <div className="mb-1">
-                          <strong className="text-muted d-block" style={{ fontSize: "0.75rem" }}>
-                            Follow-Up Note:
-                          </strong>
-                          <span>{act.followUpNote}</span>
-                        </div>
-                      )}
-                      {act.attachmentNotes && (
-                        <div>
-                          <strong className="text-muted d-block" style={{ fontSize: "0.75rem" }}>
-                            Attachment:
-                          </strong>
-                          <span className="fst-italic text-muted">{act.attachmentNotes}</span>
-                        </div>
-                      )}
-                      {!act.followUpNote && !act.attachmentNotes && <span className="text-muted">-</span>}
-                    </td>
-                    {isStaffOrAdmin && !isTerminal && (
-                      <td data-label="Actions" className="py-3 pe-3 text-end text-nowrap">
-                        <button
-                          ref={(el) => {
-                            if (el) editButtonRefs.current.set(act.id, el);
-                            else editButtonRefs.current.delete(act.id);
-                          }}
-                          type="button"
-                          onClick={() => handleOpenEdit(act)}
-                          className="btn btn-outline-secondary btn-sm px-2 py-1"
-                          aria-label={`Edit action logged at ${formatDisplayDateTime(act.actionAt)}`}
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
