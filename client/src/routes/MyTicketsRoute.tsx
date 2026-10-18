@@ -69,11 +69,6 @@ export function MyTicketsRoute({ categories }: MyTicketsRouteProps) {
     <MyTickets
       categories={categories}
       onSelectTicket={(id: number) => navigate(`/tickets/${id}`)}
-      initialStatus={filters.status}
-      initialRequestedPriority={filters.requestedPriority}
-      initialSearch={filters.search}
-      initialCategoryId={filters.categoryId}
-      initialPage={filters.page}
       status={filters.status}
       requestedPriority={filters.requestedPriority}
       search={filters.search}

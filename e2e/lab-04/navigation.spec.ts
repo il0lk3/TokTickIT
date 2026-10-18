@@ -123,7 +123,7 @@ test.describe('Lab 4 Issue 5: Client Routing and Role-aware Application Shell (E
     }
 
     // 3. Click a ticket row
-    const ticketRow = page.locator('tr, div.card', { hasText: 'TKT-2026-' }).first();
+    const ticketRow = page.locator('tbody tr').first();
     await ticketRow.click();
 
     await expect(page).toHaveURL(/\/tickets\/\d+/);

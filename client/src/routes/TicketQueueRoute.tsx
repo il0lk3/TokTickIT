@@ -84,13 +84,6 @@ export function TicketQueueRoute({ categories }: TicketQueueRouteProps) {
     <TicketQueue
       categories={categories}
       onSelectTicket={(id: number) => navigate(`/tickets/${id}`)}
-      initialStatus={filters.status}
-      initialOwnerId={filters.ownerId}
-      initialItPriority={filters.itPriority}
-      initialRequestedPriority={filters.requestedPriority}
-      initialSearch={filters.search}
-      initialCategoryId={filters.categoryId}
-      initialPage={filters.page}
       status={filters.status}
       ownerId={filters.ownerId}
       itPriority={filters.itPriority}

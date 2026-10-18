@@ -13,13 +13,6 @@ interface TicketQueueProps {
   categoryId?: string;
   search?: string;
   page?: number;
-  initialStatus?: string;
-  initialOwnerId?: string;
-  initialItPriority?: string;
-  initialRequestedPriority?: string;
-  initialCategoryId?: string;
-  initialSearch?: string;
-  initialPage?: number;
   onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
 
@@ -39,13 +32,6 @@ export function TicketQueue({
   categoryId: propCategoryId,
   search: propSearch,
   page: propPage,
-  initialStatus,
-  initialOwnerId,
-  initialItPriority,
-  initialRequestedPriority,
-  initialCategoryId,
-  initialSearch,
-  initialPage,
   onFilterChange
 }: TicketQueueProps) {
   const { user } = useAuth();
@@ -58,51 +44,44 @@ export function TicketQueue({
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
-  // Filters
-  const [search, setSearch] = useState(propSearch ?? initialSearch ?? "");
-  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? initialSearch ?? "");
-  const [categoryId, setCategoryId] = useState(propCategoryId ?? initialCategoryId ?? "");
-  const [requestedPriority, setRequestedPriority] = useState(propRequestedPriority ?? initialRequestedPriority ?? "");
-  const [itPriority, setItPriority] = useState(propItPriority ?? initialItPriority ?? "");
-  const [status, setStatus] = useState(propStatus ?? initialStatus ?? "");
-  const [ownerId, setOwnerId] = useState(propOwnerId ?? initialOwnerId ?? "");
+  // Uncontrolled fallback state
+  const [localSearch, setLocalSearch] = useState(propSearch ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? "");
+  const [localCategoryId, setLocalCategoryId] = useState(propCategoryId ?? "");
+  const [localRequestedPriority, setLocalRequestedPriority] = useState(propRequestedPriority ?? "");
+  const [localItPriority, setLocalItPriority] = useState(propItPriority ?? "");
+  const [localStatus, setLocalStatus] = useState(propStatus ?? "");
+  const [localOwnerId, setLocalOwnerId] = useState(propOwnerId ?? "");
+  const [localPage, setLocalPage] = useState(propPage ?? 1);
   
-  // Pagination
-  const [page, setPage] = useState(propPage ?? initialPage ?? 1);
+  // Effective filter values (Controlled if prop passed, otherwise fallback to local state)
+  const status = propStatus !== undefined ? propStatus : localStatus;
+  const ownerId = propOwnerId !== undefined ? propOwnerId : localOwnerId;
+  const itPriority = propItPriority !== undefined ? propItPriority : localItPriority;
+  const requestedPriority = propRequestedPriority !== undefined ? propRequestedPriority : localRequestedPriority;
+  const categoryId = propCategoryId !== undefined ? propCategoryId : localCategoryId;
+  const page = propPage !== undefined ? propPage : localPage;
+  const search = localSearch;
+
+  // Pagination totals
   const [totalPages, setTotalPages] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
 
-  // Sync prop changes into state
-  useEffect(() => {
-    if (propStatus !== undefined) setStatus(propStatus);
-  }, [propStatus]);
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const next = typeof updater === "function" ? updater(page) : updater;
+    setLocalPage(next);
+    if (onFilterChange) {
+      onFilterChange({ page: next });
+    }
+  };
 
+  // Sync external search prop (e.g. Back/Forward navigation)
   useEffect(() => {
-    if (propOwnerId !== undefined) setOwnerId(propOwnerId);
-  }, [propOwnerId]);
-
-  useEffect(() => {
-    if (propItPriority !== undefined) setItPriority(propItPriority);
-  }, [propItPriority]);
-
-  useEffect(() => {
-    if (propRequestedPriority !== undefined) setRequestedPriority(propRequestedPriority);
-  }, [propRequestedPriority]);
-
-  useEffect(() => {
-    if (propCategoryId !== undefined) setCategoryId(propCategoryId);
-  }, [propCategoryId]);
-
-  useEffect(() => {
-    if (propSearch !== undefined) {
-      setSearch(propSearch);
+    if (propSearch !== undefined && propSearch !== localSearch) {
+      setLocalSearch(propSearch);
       setDebouncedSearch(propSearch);
     }
   }, [propSearch]);
-
-  useEffect(() => {
-    if (propPage !== undefined) setPage(propPage);
-  }, [propPage]);
 
   // Fetch IT staff for owner filter dropdown
   useEffect(() => {
@@ -112,14 +91,13 @@ export function TicketQueue({
   // Debounce search input and notify parent
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-      if (onFilterChange && search !== (propSearch ?? "")) {
-        onFilterChange({ search, page: 1 });
+      setDebouncedSearch(localSearch);
+      if (onFilterChange && localSearch !== (propSearch ?? "")) {
+        onFilterChange({ search: localSearch, page: 1 });
       }
     }, 300);
     return () => clearTimeout(handler);
-  }, [search]);
+  }, [localSearch]);
 
   const fetchTickets = useCallback(async () => {
     if (!user) return;
@@ -231,12 +209,12 @@ export function TicketQueue({
 
   const activeFilters = useMemo(() => {
     const filters = [];
-    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
-    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
-    if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => { setRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
-    if (itPriority) filters.push({ label: `IT Priority: ${itPriority}`, clear: () => { setItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); } });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
-    if (ownerId) filters.push({ label: `Owner: ${ownerId === 'unassigned' ? 'Unassigned' : ownerMap[Number(ownerId)] || ownerId}`, clear: () => { setOwnerId(""); onFilterChange?.({ ownerId: "", page: 1 }); } });
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setLocalSearch(""); setDebouncedSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setLocalCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
+    if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
+    if (itPriority) filters.push({ label: `IT Priority: ${itPriority}`, clear: () => { setLocalItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); } });
+    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
+    if (ownerId) filters.push({ label: `Owner: ${ownerId === 'unassigned' ? 'Unassigned' : ownerMap[Number(ownerId)] || ownerId}`, clear: () => { setLocalOwnerId(""); onFilterChange?.({ ownerId: "", page: 1 }); } });
     return filters;
   }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, categoryMap, ownerMap, onFilterChange]);
 
@@ -283,12 +261,12 @@ export function TicketQueue({
                 className="form-control border-start-0 ps-0" 
                 placeholder="Search ticket number or summary..." 
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </div>
           </div>
           <div className="col-4 col-md-2">
-            <select className="form-select" value={status} onChange={handleFilterChange("status", setStatus)}>
+            <select className="form-select" value={status} onChange={handleFilterChange("status", setLocalStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
               <option value="Open">Open</option>
@@ -300,13 +278,13 @@ export function TicketQueue({
             </select>
           </div>
           <div className="col-4 col-md-2">
-            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setCategoryId)}>
+            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setLocalCategoryId)}>
               <option value="">Category</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setRequestedPriority)}>
+            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setLocalRequestedPriority)}>
               <option value="">Req Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -314,7 +292,7 @@ export function TicketQueue({
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={itPriority} onChange={handleFilterChange("itPriority", setItPriority)}>
+            <select className="form-select" value={itPriority} onChange={handleFilterChange("itPriority", setLocalItPriority)}>
               <option value="">IT Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -322,7 +300,7 @@ export function TicketQueue({
             </select>
           </div>
           <div className="col-6 col-md-3">
-            <select className="form-select" value={ownerId} onChange={handleFilterChange("ownerId", setOwnerId)}>
+            <select className="form-select" value={ownerId} onChange={handleFilterChange("ownerId", setLocalOwnerId)}>
               <option value="">Owner</option>
               <option value="unassigned">Unassigned</option>
               {staffUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -342,12 +320,13 @@ export function TicketQueue({
             <button 
               className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
               onClick={() => {
-                setSearch("");
-                setCategoryId("");
-                setRequestedPriority("");
-                setItPriority("");
-                setStatus("");
-                setOwnerId("");
+                setLocalSearch("");
+                setDebouncedSearch("");
+                setLocalCategoryId("");
+                setLocalRequestedPriority("");
+                setLocalItPriority("");
+                setLocalStatus("");
+                setLocalOwnerId("");
                 setPage(1);
                 onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", itPriority: "", status: "", ownerId: "", page: 1 });
               }}

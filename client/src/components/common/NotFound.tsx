@@ -5,7 +5,7 @@ export function NotFound() {
   return (
     <div data-testid="not-found-screen" className="d-flex flex-column align-items-center justify-content-center py-5 my-4 text-center">
       <div className="glass-panel p-5 rounded-4 shadow-sm border border-success border-opacity-25" style={{ maxWidth: "520px" }}>
-        <div className="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3">
+        <div className="d-inline-flex p-3 rounded-circle bg-secondary bg-opacity-10 text-muted mb-3">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>

@@ -11,11 +11,6 @@ interface MyTicketsProps {
   categoryId?: string;
   search?: string;
   page?: number;
-  initialStatus?: string;
-  initialRequestedPriority?: string;
-  initialCategoryId?: string;
-  initialSearch?: string;
-  initialPage?: number;
   onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
 
@@ -27,11 +22,6 @@ export function MyTickets({
   categoryId: propCategoryId,
   search: propSearch,
   page: propPage,
-  initialStatus,
-  initialRequestedPriority,
-  initialCategoryId,
-  initialSearch,
-  initialPage,
   onFilterChange
 }: MyTicketsProps) {
   const { user } = useAuth();
@@ -41,53 +31,51 @@ export function MyTickets({
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
-  // Filters
-  const [search, setSearch] = useState(propSearch ?? initialSearch ?? "");
-  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? initialSearch ?? "");
-  const [categoryId, setCategoryId] = useState(propCategoryId ?? initialCategoryId ?? "");
-  const [requestedPriority, setRequestedPriority] = useState(propRequestedPriority ?? initialRequestedPriority ?? "");
-  const [status, setStatus] = useState(propStatus ?? initialStatus ?? "");
-  
-  // Pagination
-  const [page, setPage] = useState(propPage ?? initialPage ?? 1);
+  // Uncontrolled fallback state
+  const [localSearch, setLocalSearch] = useState(propSearch ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? "");
+  const [localCategoryId, setLocalCategoryId] = useState(propCategoryId ?? "");
+  const [localRequestedPriority, setLocalRequestedPriority] = useState(propRequestedPriority ?? "");
+  const [localStatus, setLocalStatus] = useState(propStatus ?? "");
+  const [localPage, setLocalPage] = useState(propPage ?? 1);
+
+  // Effective filter values (Controlled if prop passed, otherwise fallback to local state)
+  const status = propStatus !== undefined ? propStatus : localStatus;
+  const requestedPriority = propRequestedPriority !== undefined ? propRequestedPriority : localRequestedPriority;
+  const categoryId = propCategoryId !== undefined ? propCategoryId : localCategoryId;
+  const page = propPage !== undefined ? propPage : localPage;
+  const search = localSearch;
+
+  // Pagination totals
   const [totalPages, setTotalPages] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
 
-  // Sync prop changes into state
-  useEffect(() => {
-    if (propStatus !== undefined) setStatus(propStatus);
-  }, [propStatus]);
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const next = typeof updater === "function" ? updater(page) : updater;
+    setLocalPage(next);
+    if (onFilterChange) {
+      onFilterChange({ page: next });
+    }
+  };
 
+  // Sync external search prop (e.g. Back/Forward navigation)
   useEffect(() => {
-    if (propRequestedPriority !== undefined) setRequestedPriority(propRequestedPriority);
-  }, [propRequestedPriority]);
-
-  useEffect(() => {
-    if (propCategoryId !== undefined) setCategoryId(propCategoryId);
-  }, [propCategoryId]);
-
-  useEffect(() => {
-    if (propSearch !== undefined) {
-      setSearch(propSearch);
+    if (propSearch !== undefined && propSearch !== localSearch) {
+      setLocalSearch(propSearch);
       setDebouncedSearch(propSearch);
     }
   }, [propSearch]);
 
-  useEffect(() => {
-    if (propPage !== undefined) setPage(propPage);
-  }, [propPage]);
-
   // Debounce search input and notify parent
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-      if (onFilterChange && search !== (propSearch ?? "")) {
-        onFilterChange({ search, page: 1 });
+      setDebouncedSearch(localSearch);
+      if (onFilterChange && localSearch !== (propSearch ?? "")) {
+        onFilterChange({ search: localSearch, page: 1 });
       }
     }, 300);
     return () => clearTimeout(handler);
-  }, [search]);
+  }, [localSearch]);
 
   const fetchTickets = useCallback(async () => {
     if (!user) return;
@@ -185,10 +173,10 @@ export function MyTickets({
 
   const activeFilters = useMemo(() => {
     const filters = [];
-    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
-    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
-    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => { setRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setLocalSearch(""); setDebouncedSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setLocalCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
+    if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
+    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
     return filters;
   }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap, onFilterChange]);
 
@@ -220,18 +208,18 @@ export function MyTickets({
                 className="form-control border-start-0 ps-0" 
                 placeholder="Search tickets..." 
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </div>
           </div>
           <div className="col-12 col-md-3">
-            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setCategoryId)}>
+            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setLocalCategoryId)}>
               <option value="">All Categories</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setRequestedPriority)}>
+            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setLocalRequestedPriority)}>
               <option value="">Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -239,7 +227,7 @@ export function MyTickets({
             </select>
           </div>
           <div className="col-6 col-md-3">
-            <select className="form-select" value={status} onChange={handleFilterChange("status", setStatus)}>
+            <select className="form-select" value={status} onChange={handleFilterChange("status", setLocalStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
               <option value="InProgress">In Progress</option>
@@ -260,10 +248,11 @@ export function MyTickets({
             <button 
               className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
               onClick={() => {
-                setSearch("");
-                setCategoryId("");
-                setRequestedPriority("");
-                setStatus("");
+                setLocalSearch("");
+                setDebouncedSearch("");
+                setLocalCategoryId("");
+                setLocalRequestedPriority("");
+                setLocalStatus("");
                 setPage(1);
                 onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", status: "", page: 1 });
               }}
