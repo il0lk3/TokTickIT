@@ -668,45 +668,27 @@ export function ActionsTakenSection({
             <table className="table table-hover align-middle mb-0 actions-table-responsive">
               <caption className="visually-hidden">Actions taken history for this ticket</caption>
               <thead className="table-light">
-                <tr className="border-bottom text-muted small fw-bold">
-                  <th scope="col" className="py-3 ps-3 text-nowrap" style={{ width: "16%" }}>
-                    <div className="d-flex align-items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      <span>Date / Time</span>
-                    </div>
+                <tr className="border-bottom text-secondary small fw-bold">
+                  <th scope="col" className="py-3 px-3 text-nowrap border-end border-light-subtle" style={{ width: "16%" }}>
+                    Date / Time
                   </th>
-                  <th scope="col" className="py-3" style={{ width: "24%" }}>
-                    <div className="d-flex align-items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                      <span>Description</span>
-                    </div>
+                  <th scope="col" className="py-3 px-3 border-end border-light-subtle" style={{ width: "24%" }}>
+                    Description
                   </th>
-                  <th scope="col" className="py-3" style={{ width: "24%" }}>
-                    <div className="d-flex align-items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><polyline points="20 6 9 17 4 12"/></svg>
-                      <span>Result / Outcome</span>
-                    </div>
+                  <th scope="col" className="py-3 px-3 border-end border-light-subtle" style={{ width: "24%" }}>
+                    Result / Outcome
                   </th>
-                  <th scope="col" className="py-3 text-nowrap" style={{ width: "13%" }}>
-                    <div className="d-flex align-items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      <span>Performed By</span>
-                    </div>
+                  <th scope="col" className="py-3 px-3 text-nowrap border-end border-light-subtle" style={{ width: "13%" }}>
+                    Performed By
                   </th>
-                  <th scope="col" className="py-3 text-nowrap" style={{ width: "9%" }}>
-                    <div className="d-flex align-items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                      <span>Follow-Up</span>
-                    </div>
+                  <th scope="col" className="py-3 px-3 text-nowrap border-end border-light-subtle" style={{ width: "9%" }}>
+                    Follow-Up
                   </th>
-                  <th scope="col" className="py-3" style={{ width: "14%" }}>
-                    <div className="d-flex align-items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                      <span>Notes & Files</span>
-                    </div>
+                  <th scope="col" className="py-3 px-3 border-end border-light-subtle" style={{ width: "14%" }}>
+                    Notes & Files
                   </th>
                   {isStaffOrAdmin && !isTerminal && (
-                    <th scope="col" className="py-3 pe-3 text-end text-nowrap" style={{ width: "8%" }}>
+                    <th scope="col" className="py-3 px-3 text-end text-nowrap" style={{ width: "8%" }}>
                       Actions
                     </th>
                   )}
@@ -902,7 +884,7 @@ export function ActionsTakenSection({
 
                   return (
                     <tr key={act.id} className="action-row border-bottom border-light-subtle" data-testid={`action-row-${act.id}`}>
-                      <td data-label="Date / Time" className="py-3 ps-3 text-nowrap small text-muted">
+                      <td data-label="Date / Time" className="py-3 px-3 text-nowrap small text-muted border-end border-light-subtle">
                         <div className="d-inline-flex align-items-center gap-2">
                           <span className="p-1 rounded bg-light text-muted d-flex align-items-center justify-content-center" style={{ width: 24, height: 24 }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -913,10 +895,10 @@ export function ActionsTakenSection({
                           <span className="fw-medium text-dark">{formatDisplayDateTime(act.actionAt)}</span>
                         </div>
                       </td>
-                      <td data-label="Description" className="py-3 text-dark text-break">
+                      <td data-label="Description" className="py-3 px-3 text-dark text-break border-end border-light-subtle">
                         <span className="fw-semibold text-dark">{act.description}</span>
                       </td>
-                      <td data-label="Result" className="py-3 text-break">
+                      <td data-label="Result" className="py-3 px-3 text-break border-end border-light-subtle">
                         <div className="p-2 rounded-2 bg-light border border-light-subtle small text-dark">
                           <div className="d-flex align-items-center gap-1 text-success fw-bold mb-1" style={{ fontSize: "0.72rem" }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -927,7 +909,7 @@ export function ActionsTakenSection({
                           <span className="text-secondary">{act.result}</span>
                         </div>
                       </td>
-                      <td data-label="Performed By" className="py-3 text-nowrap">
+                      <td data-label="Performed By" className="py-3 px-3 text-nowrap border-end border-light-subtle">
                         <div className="d-inline-flex align-items-center gap-2 px-2 py-1 rounded-pill bg-light border border-light-subtle">
                           <div className="rounded-circle bg-success bg-opacity-15 text-zen-primary d-flex align-items-center justify-content-center" style={{ width: 22, height: 22 }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -938,7 +920,7 @@ export function ActionsTakenSection({
                           <span className="small fw-medium text-dark">{act.performedBy?.name || "Staff"}</span>
                         </div>
                       </td>
-                      <td data-label="Follow-Up" className="py-3 text-nowrap">
+                      <td data-label="Follow-Up" className="py-3 px-3 text-nowrap border-end border-light-subtle">
                         {act.followUpRequired ? (
                           <span className="badge rounded-pill bg-warning bg-opacity-15 text-warning-emphasis border border-warning border-opacity-30 px-2 py-1 d-inline-flex align-items-center gap-1 small fw-semibold">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -957,7 +939,7 @@ export function ActionsTakenSection({
                           </span>
                         )}
                       </td>
-                      <td data-label="Notes" className="py-3 small text-break">
+                      <td data-label="Notes" className="py-3 px-3 small text-break border-end border-light-subtle">
                         {act.followUpNote && (
                           <div className="p-2 mb-1 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 small text-dark">
                             <div className="fw-semibold text-warning-emphasis d-flex align-items-center gap-1 mb-1" style={{ fontSize: "0.72rem" }}>
@@ -981,7 +963,7 @@ export function ActionsTakenSection({
                         {!act.followUpNote && !act.attachmentNotes && <span className="text-muted small">-</span>}
                       </td>
                       {isStaffOrAdmin && !isTerminal && (
-                        <td data-label="Actions" className="py-3 pe-3 text-end text-nowrap">
+                        <td data-label="Actions" className="py-3 px-3 text-end text-nowrap">
                           <button
                             ref={(el) => {
                               if (el) editButtonRefs.current.set(act.id, el);

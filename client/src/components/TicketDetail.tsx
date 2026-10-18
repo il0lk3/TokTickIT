@@ -288,7 +288,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
         </button>
       </div>
 
-      <div className="glass-panel overflow-hidden">
+      <div className="glass-panel overflow-hidden mb-4">
         <div className="p-4 p-md-5">
           <div className="row g-4">
             {/* Row 1 */}

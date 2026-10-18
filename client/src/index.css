@@ -470,6 +470,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     align-items: flex-start;
     padding: 0.5rem 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-right: none !important;
   }
 
   .actions-table-responsive td[data-label]:last-child {
