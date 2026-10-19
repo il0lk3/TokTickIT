@@ -117,11 +117,11 @@ A living document tracking the code review process. Reviews run in both directio
 
 ---
 
-### PR TBD — Issue 7: Ticket Workflow UI and Resolution Feedback
+### PR #75 — Issue 7: Ticket Workflow UI and Resolution Feedback
 
 | Field | Detail |
 |---|---|
-| **PR Link** | PR to be opened for Issue 7 (`feature/lab4-ticket-workflow-ui` -> `lab4-staging`) |
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/75](https://github.com/il0lk3/TokTickIT/pull/75) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Verdict** | Pending Review |
 | **Key Deliverables** | 1. **Single Source of Truth Transitions**: UI consumes `ticket.allowedTransitions` directly from backend response; client transition matrix copies completely removed.<br>2. **Resolution Gate Feedback**: When `ticket.resolutionGate.met === false`, Resolve button is `aria-disabled="true"` with `aria-describedby` pointing to `#resolution-gate-reason`. Banner provides non-color alert icon and actionable shortcut buttons (`Assign Owner` focuses `#ownerSelect`; `Log Action` scrolls/focuses `#actions-taken-section`).<br>3. **Unified In-State Optimistic Concurrency**: All ticket mutation handlers pass `expectedVersion: ticket.version` and update state `version` directly from response without full page reload. Concurrency 409 collisions display accessible dialog with server status/version and "Reload Ticket" button.<br>4. **Unified Accessible Dialog (`AccessibleDialog`)**: Single reusable component for destructive confirmation (`Cancelled`, `Closed`), 409 conflict, and requester advisory confirmation with body scroll lock, focus trap, `inert` root, initial focus on safe button, and keyboard `Esc` handling.<br>5. **Requester Advisory Signal**: Requester sees "Problem Appears Resolved" on non-terminal states; confirming signal posts advisory audit comment and sets `appearsResolved`. Staff sees green advisory banner with smooth scroll button to Actions Taken; transitioning status automatically resets advisory.<br>6. **Terminal State Locking**: Closed/Cancelled tickets lock IT Owner dropdown, Claim button, and IT Priority dropdown. Closed tickets permit only Reopen transition.<br>7. **Clean Graphic Aesthetics**: Zero emojis; clean SVG icons and Bootstrap styling used throughout.<br>8. **Exhaustive Automated Test Coverage**: 22/22 unit tests (`TicketWorkflow.test.tsx`), 4/4 Playwright E2E tests (`ticket-resolution.spec.ts`), 101/101 total client tests, and 165/165 server tests passed. |
