@@ -347,10 +347,16 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
     // Check shortcut to Assign Owner
     const assignOwnerShortcut = screen.getByRole('button', { name: /assign owner/i });
     expect(assignOwnerShortcut).toBeInTheDocument();
+    fireEvent.click(assignOwnerShortcut);
+    expect(document.activeElement?.id).toBe('ownerSelect');
 
     // Check shortcut to Log Action
     const logActionShortcut = screen.getByRole('button', { name: /^log action$/i });
     expect(logActionShortcut).toBeInTheDocument();
+    fireEvent.click(logActionShortcut);
+    await waitFor(() => {
+      expect(screen.getByTestId('create-action-form')).toBeInTheDocument();
+    });
   });
 
   // ==========================================
@@ -972,6 +978,57 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
     expect(screen.getByLabelText(/it priority/i)).toBeDisabled();
     // Claim button must not be visible or disabled
     expect(screen.queryByRole('button', { name: /claim ticket/i })).not.toBeInTheDocument();
+    // Comments must be locked on Closed tickets
+    expect(screen.getByText(/further comments cannot be added/i)).toBeInTheDocument();
+  });
+
+  it('UI-WKF-16b: on Resolved tickets, comments and notes are locked (isCommentLocked) while workflow controls remain operational', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string, options?: any) => {
+      const method = options?.method || 'GET';
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockStaffUser) });
+      }
+      if (url.includes('/api/it-staff')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockItStaffList) });
+      }
+      if (url.includes('/api/staff/tickets/1') && method === 'GET') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createMockTicket({
+            currentStatus: 'Resolved',
+            allowedTransitions: ['Closed', 'Reopened'],
+          })),
+        });
+      }
+      if (url.includes('/api/tickets/1/actions-taken')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }));
+
+    render(
+      <AuthProvider>
+        <TicketDetail ticketId={1} onBack={mockOnBack} />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Ticket Details')).toBeInTheDocument();
+    });
+
+    // Workflow controls must NOT be locked for Resolved tickets (isWorkflowLocked is false)
+    expect(screen.getByLabelText(/owner/i)).not.toBeDisabled();
+    expect(screen.getByLabelText(/it priority/i)).not.toBeDisabled();
+
+    // Comments must be locked for Resolved tickets (isCommentLocked is true)
+    expect(screen.getByText(/ticket is resolved\. further comments cannot be added\./i)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/type a comment\.\.\./i)).not.toBeInTheDocument();
+
+    // Internal notes must also be locked
+    const internalNotesTab = screen.getByRole('button', { name: /internal notes/i });
+    fireEvent.click(internalNotesTab);
+    expect(screen.getByText(/ticket is resolved\. further notes cannot be added\./i)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/type a private internal note\.\.\./i)).not.toBeInTheDocument();
   });
 
   // ==========================================
@@ -1135,6 +1192,8 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
 
     const reviewLink = screen.getByRole('button', { name: /review actions taken|view actions/i });
     expect(reviewLink).toBeInTheDocument();
+    fireEvent.click(reviewLink);
+    expect(document.activeElement?.id).toBe('actions-taken-section');
   });
 
   // ==========================================

@@ -35,6 +35,13 @@ export function AccessibleDialog({
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const isSubmittingRef = useRef(isSubmitting);
+  isSubmittingRef.current = isSubmitting;
+  const initialFocusSafeRef = useRef(initialFocusSafe);
+  initialFocusSafeRef.current = initialFocusSafe;
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -49,7 +56,7 @@ export function AccessibleDialog({
 
     // Set initial focus to safe button or confirm button
     const timer = setTimeout(() => {
-      if (initialFocusSafe && safeButtonRef.current) {
+      if (initialFocusSafeRef.current && safeButtonRef.current) {
         safeButtonRef.current.focus();
       } else if (confirmButtonRef.current) {
         confirmButtonRef.current.focus();
@@ -60,9 +67,9 @@ export function AccessibleDialog({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (!isSubmitting) {
+        if (!isSubmittingRef.current) {
           e.preventDefault();
-          onClose();
+          onCloseRef.current();
         }
         return;
       }
@@ -107,7 +114,7 @@ export function AccessibleDialog({
         previouslyFocusedElement.current.focus();
       }
     };
-  }, [isOpen, isSubmitting, onClose, initialFocusSafe]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -14,7 +14,7 @@ import {
   ApiError
 } from "../api.js";
 import { useAuth } from "../contexts/AuthContext";
-import { ActionsTakenSection } from "./ticket/ActionsTakenSection";
+import { ActionsTakenSection, ActionsTakenSectionHandle } from "./ticket/ActionsTakenSection";
 import { TicketWorkflowActions } from "./ticket/TicketWorkflowActions";
 import { AccessibleDialog } from "./common/AccessibleDialog";
 
@@ -47,6 +47,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ownerSelectRef = useRef<HTMLSelectElement>(null);
+  const actionsTakenRef = useRef<ActionsTakenSectionHandle>(null);
 
   const isStaff = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
 
@@ -340,7 +341,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   };
 
   const activeAttachments = ticket.attachments.filter(a => !a.isRemoved).length;
-  const isTerminal = ["Closed", "Cancelled"].includes(ticket.currentStatus);
+  const isWorkflowLocked = ["Closed", "Cancelled"].includes(ticket.currentStatus);
+  const isCommentLocked = ["Resolved", "Closed", "Cancelled"].includes(ticket.currentStatus);
 
   // Status transitions available
   const fallbackTransitions = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"].filter(s => s !== ticket.currentStatus);
@@ -389,10 +391,14 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
               type="button"
               className="btn btn-sm btn-outline-success px-3 py-1 rounded-pill fw-bold text-nowrap"
               onClick={() => {
-                const el = document.getElementById("actions-taken-section");
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                  el.focus();
+                if (actionsTakenRef.current) {
+                  actionsTakenRef.current.focusSection();
+                } else {
+                  const el = document.getElementById("actions-taken-section");
+                  if (el) {
+                    if (typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth' });
+                    el.focus();
+                  }
                 }
               }}
             >
@@ -446,9 +452,9 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                       ref={ownerSelectRef}
                       aria-label="Ticket Owner"
                       className="form-select bg-white border"
-                      style={{ cursor: isTerminal ? 'not-allowed' : 'pointer' }}
+                      style={{ cursor: isWorkflowLocked ? 'not-allowed' : 'pointer' }}
                       value={ticket.owner?.id || ticket.ownerId || ""}
-                      disabled={isTerminal || updating}
+                      disabled={isWorkflowLocked || updating}
                       onChange={(e) => performTicketUpdate({ ownerId: e.target.value ? parseInt(e.target.value, 10) : null })}
                     >
                       <option value="">-- Unassigned --</option>
@@ -456,7 +462,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                         <option key={staff.id} value={staff.id}>{staff.name}</option>
                       ))}
                     </select>
-                    {!isTerminal && ((ticket.owner?.id || ticket.ownerId) !== user.id) && (
+                    {!isWorkflowLocked && ((ticket.owner?.id || ticket.ownerId) !== user.id) && (
                       <button
                         type="button"
                         className="btn btn-outline-primary text-nowrap px-2 py-1 small"
@@ -492,9 +498,9 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                     <select
                       aria-label="Current Status"
                       className="form-select fw-bold bg-white text-dark border small"
-                      style={{ cursor: isTerminal ? 'not-allowed' : 'pointer' }}
+                      style={{ cursor: isWorkflowLocked ? 'not-allowed' : 'pointer' }}
                       value={ticket.currentStatus}
-                      disabled={isTerminal || updating}
+                      disabled={isWorkflowLocked || updating}
                       onChange={(e) => requestUpdate({ status: e.target.value })}
                     >
                       <option value={ticket.currentStatus}>{ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}</option>
@@ -514,15 +520,23 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                       onTransition={(targetStatus) => performTicketUpdate({ status: targetStatus })}
                       onAssignOwnerShortcut={() => {
                         if (ownerSelectRef.current) {
+                          if (typeof ownerSelectRef.current.scrollIntoView === 'function') {
+                            ownerSelectRef.current.scrollIntoView({ behavior: 'smooth' });
+                          }
                           ownerSelectRef.current.focus();
                         }
                       }}
                       onLogActionShortcut={() => {
-                        const logBtn = document.querySelector('button[aria-label="+ Log Action Taken"], button:has-text("+ Log Action Taken")') as HTMLElement;
-                        if (logBtn) {
-                          logBtn.scrollIntoView({ behavior: 'smooth' });
-                          logBtn.focus();
-                          logBtn.click();
+                        if (actionsTakenRef.current) {
+                          actionsTakenRef.current.openCreateForm();
+                        } else {
+                          const el = document.getElementById("actions-taken-section");
+                          if (el) {
+                            if (typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth' });
+                            el.focus();
+                          }
+                          const logBtn = document.querySelector<HTMLButtonElement>('[data-testid="log-action-btn"]');
+                          logBtn?.click();
                         }
                       }}
                     />
@@ -568,9 +582,9 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                     id="itPrioritySelect"
                     aria-label="IT Priority"
                     className="form-select bg-white fw-medium border"
-                    style={{ cursor: isTerminal ? 'not-allowed' : 'pointer' }}
+                    style={{ cursor: isWorkflowLocked ? 'not-allowed' : 'pointer' }}
                     value={ticket.itPriority}
-                    disabled={isTerminal || updating}
+                    disabled={isWorkflowLocked || updating}
                     onChange={(e) => performTicketUpdate({ itPriority: e.target.value })}
                   >
                     <option value="LOW">Low</option>
@@ -609,6 +623,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
 
         {/* Actions Taken Section */}
         <ActionsTakenSection
+          ref={actionsTakenRef}
           ticketId={ticketId}
           ticketStatus={ticket.currentStatus}
           onActionChanged={reloadTicket}
@@ -670,7 +685,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                         )}
                       </div>
 
-                      {isTerminal ? (
+                      {isCommentLocked ? (
                         <div className="bg-light p-3 rounded border text-center text-muted fst-italic">
                           Ticket is {ticket.currentStatus}. Further comments cannot be added.
                         </div>
@@ -720,7 +735,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                         )}
                       </div>
 
-                      {isTerminal ? (
+                      {isCommentLocked ? (
                         <div className="bg-light p-3 rounded border text-center text-muted fst-italic">
                           Ticket is {ticket.currentStatus}. Further notes cannot be added.
                         </div>
