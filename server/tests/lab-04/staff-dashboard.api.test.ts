@@ -365,14 +365,56 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
     expect(Array.isArray(myRecentTickets)).toBe(true);
     for (const t of myRecentTickets) {
       expect(t.owner?.id).toBe(staff1.id);
+      expect(t.owner?.name).toBeDefined();
+      expect(t.category?.id).toBeDefined();
+      expect(t.category?.name).toBeDefined();
+      expect(t.requester?.id).toBeDefined();
+      expect(t.requester?.name).toBeDefined();
       expect(["Closed", "Cancelled"]).not.toContain(t.currentStatus);
     }
 
     expect(Array.isArray(urgentTickets)).toBe(true);
-    for (const t of urgentTickets) {
+    for (let i = 0; i < urgentTickets.length; i++) {
+      const t = urgentTickets[i];
       expect(t.itPriority).toBe("HIGH");
+      expect(t.category?.id).toBeDefined();
+      expect(t.category?.name).toBeDefined();
+      expect(t.requester?.id).toBeDefined();
+      expect(t.requester?.name).toBeDefined();
       expect(["Closed", "Cancelled"]).not.toContain(t.currentStatus);
+
+      // Verify recency ordering: updatedAt DESC, id DESC
+      if (i > 0) {
+        const prev = urgentTickets[i - 1];
+        const prevTime = new Date(prev.updatedAt).getTime();
+        const currTime = new Date(t.updatedAt).getTime();
+        expect(prevTime >= currTime).toBe(true);
+        if (prevTime === currTime) {
+          expect(prev.id > t.id).toBe(true);
+        }
+      }
     }
+  });
+
+  it("API-DSH-16b: Composition of status and active=true filters does not overwrite status", async () => {
+    // Calling with both status=Open and active=true must return only Open tickets
+    const res = await request(app)
+      .get("/api/staff/tickets?status=Open&active=true")
+      .set("Cookie", staff1Cookie);
+
+    expect(res.status).toBe(200);
+    for (const t of res.body.data) {
+      expect(t.currentStatus).toBe("Open");
+    }
+
+    // Calling with status=Closed and active=true must return 0 tickets (empty subset)
+    const resClosed = await request(app)
+      .get("/api/staff/tickets?status=Closed&active=true")
+      .set("Cookie", staff1Cookie);
+
+    expect(resClosed.status).toBe(200);
+    expect(resClosed.body.meta.total).toBe(0);
+    expect(resClosed.body.data).toEqual([]);
   });
 
   // ==========================================

@@ -62,6 +62,7 @@ router.get("/tickets", async (req: Request, res: Response) => {
 
     const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
     const where: Prisma.TicketWhereInput = {};
+    const statusConditions: Prisma.TicketWhereInput[] = [];
 
     if (status) {
       const statusList = (status as string).split(",").map(s => s.trim()).filter(Boolean);
@@ -71,10 +72,20 @@ router.get("/tickets", async (req: Request, res: Response) => {
         }
       }
       if (statusList.length === 1) {
-        where.currentStatus = statusList[0] as TicketStatus;
+        statusConditions.push({ currentStatus: statusList[0] as TicketStatus });
       } else if (statusList.length > 1) {
-        where.currentStatus = { in: statusList as TicketStatus[] };
+        statusConditions.push({ currentStatus: { in: statusList as TicketStatus[] } });
       }
+    }
+
+    if (active === "true") {
+      statusConditions.push({ currentStatus: { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] } });
+    }
+
+    if (statusConditions.length === 1) {
+      where.currentStatus = statusConditions[0].currentStatus;
+    } else if (statusConditions.length > 1) {
+      where.AND = statusConditions;
     }
 
     const validPriorities = ["LOW", "MEDIUM", "HIGH"];
@@ -117,10 +128,6 @@ router.get("/tickets", async (req: Request, res: Response) => {
           return res.status(400).json({ error: "Invalid ownerId parameter", code: "INVALID_OWNER_ID" });
         }
       }
-    }
-
-    if (active === "true") {
-      where.currentStatus = { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] };
     }
 
     if (appearsResolved === "true") {

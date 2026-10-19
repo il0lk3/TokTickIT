@@ -359,6 +359,8 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
       where.requestedPriority = String(requestedPriority) as import("@prisma/client").TicketPriority;
     }
     
+    const statusConditions: import("@prisma/client").Prisma.TicketWhereInput[] = [];
+
     if (status) {
       const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
       const statusList = String(status).split(",").map(s => s.trim()).filter(Boolean);
@@ -368,14 +370,20 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
         }
       }
       if (statusList.length === 1) {
-        where.currentStatus = statusList[0] as import("@prisma/client").TicketStatus;
+        statusConditions.push({ currentStatus: statusList[0] as import("@prisma/client").TicketStatus });
       } else if (statusList.length > 1) {
-        where.currentStatus = { in: statusList as import("@prisma/client").TicketStatus[] };
+        statusConditions.push({ currentStatus: { in: statusList as import("@prisma/client").TicketStatus[] } });
       }
     }
 
     if (active === "true") {
-      where.currentStatus = { notIn: ["Closed", "Cancelled"] as import("@prisma/client").TicketStatus[] };
+      statusConditions.push({ currentStatus: { notIn: ["Closed", "Cancelled"] as import("@prisma/client").TicketStatus[] } });
+    }
+
+    if (statusConditions.length === 1) {
+      where.currentStatus = statusConditions[0].currentStatus;
+    } else if (statusConditions.length > 1) {
+      where.AND = statusConditions;
     }
 
     if (updatedSince) {

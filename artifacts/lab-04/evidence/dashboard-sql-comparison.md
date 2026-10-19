@@ -15,11 +15,12 @@ Automated verification is enforced via:
 - **Formula:** Active tickets owned by the requester with status `New`, `Open`, or `Reopened`.
 - **Prisma Application Query:**
   ```typescript
-  prisma.ticket.groupBy({
-    by: ['currentStatus'],
-    where: { requesterId }
+  prisma.ticket.count({
+    where: {
+      requesterId,
+      currentStatus: { in: [TicketStatus.New, TicketStatus.Open, TicketStatus.Reopened] }
+    }
   });
-  // openRequests = statusMap['New'] + statusMap['Open'] + statusMap['Reopened']
   ```
 - **Direct Raw SQL:**
   ```sql
@@ -34,7 +35,12 @@ Automated verification is enforced via:
 - **Formula:** Tickets owned by the requester currently undergoing active work (`InProgress`).
 - **Prisma Application Query:**
   ```typescript
-  // inProgress = statusMap['InProgress']
+  prisma.ticket.count({
+    where: {
+      requesterId,
+      currentStatus: TicketStatus.InProgress
+    }
+  });
   ```
 - **Direct Raw SQL:**
   ```sql
@@ -49,7 +55,12 @@ Automated verification is enforced via:
 - **Formula:** Tickets where IT Staff requested user feedback or clarification (`WaitingForRequester`).
 - **Prisma Application Query:**
   ```typescript
-  // waitingForRequester = statusMap['WaitingForRequester']
+  prisma.ticket.count({
+    where: {
+      requesterId,
+      currentStatus: TicketStatus.WaitingForRequester
+    }
+  });
   ```
 - **Direct Raw SQL:**
   ```sql
@@ -87,7 +98,12 @@ Automated verification is enforced via:
 - **Formula:** Tickets in terminal `Closed` status.
 - **Prisma Application Query:**
   ```typescript
-  // closed = statusMap['Closed']
+  prisma.ticket.count({
+    where: {
+      requesterId,
+      currentStatus: TicketStatus.Closed
+    }
+  });
   ```
 - **Direct Raw SQL:**
   ```sql

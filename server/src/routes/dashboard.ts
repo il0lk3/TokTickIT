@@ -102,7 +102,7 @@ router.get(
             currentStatus: true,
             appearsResolved: true,
             updatedAt: true,
-            category: { select: { name: true } },
+            category: { select: { id: true, name: true } },
           },
         }),
         prisma.ticket.findMany({
@@ -119,7 +119,7 @@ router.get(
             currentStatus: true,
             appearsResolved: true,
             updatedAt: true,
-            category: { select: { name: true } },
+            category: { select: { id: true, name: true } },
           },
         }),
       ]);
@@ -243,15 +243,16 @@ router.get(
             currentStatus: true,
             itPriority: true,
             appearsResolved: true,
-            requester: { select: { name: true } },
+            category: { select: { id: true, name: true } },
+            requester: { select: { id: true, name: true } },
             owner: { select: { id: true, name: true } },
             updatedAt: true,
           },
         }),
-        // 8. Urgent Tickets (active, HIGH priority, unassigned first)
+        // 8. Urgent Tickets (active, HIGH priority, recency ordered)
         prisma.ticket.findMany({
           where: { ...activeWhere, itPriority: "HIGH" },
-          orderBy: [{ ownerId: "asc" }, { updatedAt: "desc" }, { id: "desc" }],
+          orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
           take: 5,
           select: {
             id: true,
@@ -260,7 +261,8 @@ router.get(
             currentStatus: true,
             itPriority: true,
             appearsResolved: true,
-            requester: { select: { name: true } },
+            category: { select: { id: true, name: true } },
+            requester: { select: { id: true, name: true } },
             owner: { select: { id: true, name: true } },
             updatedAt: true,
           },

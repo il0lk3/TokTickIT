@@ -312,6 +312,18 @@ describe("Lab 4 Issue 8: Requester Dashboard API (API-DSH-01 to API-DSH-10)", ()
       path: "/tickets",
       query: { status: "Closed" },
     });
+
+    // Assert shape: category includes id and name
+    expect(res.body.recentTickets.length).toBeGreaterThan(0);
+    for (const t of res.body.recentTickets) {
+      expect(t.category).toHaveProperty("id");
+      expect(t.category).toHaveProperty("name");
+    }
+    expect(res.body.attentionTickets.length).toBeGreaterThan(0);
+    for (const t of res.body.attentionTickets) {
+      expect(t.category).toHaveProperty("id");
+      expect(t.category).toHaveProperty("name");
+    }
   });
 
   // ==========================================
@@ -500,6 +512,25 @@ describe("Lab 4 Issue 8: Requester Dashboard API (API-DSH-01 to API-DSH-10)", ()
       expect(listRes.status).toBe(200);
       expect(listRes.body.meta.total).toBe(card.count);
     }
+  });
+
+  it("API-DSH-09b: Composition of status and active=true filters does not overwrite status on GET /api/tickets", async () => {
+    const res = await request(app)
+      .get("/api/tickets?status=Open&active=true")
+      .set("Cookie", requesterACookie);
+
+    expect(res.status).toBe(200);
+    for (const t of res.body.data) {
+      expect(t.currentStatus).toBe("Open");
+    }
+
+    const resClosed = await request(app)
+      .get("/api/tickets?status=Closed&active=true")
+      .set("Cookie", requesterACookie);
+
+    expect(resClosed.status).toBe(200);
+    expect(resClosed.body.meta.total).toBe(0);
+    expect(resClosed.body.data).toEqual([]);
   });
 
   // ==========================================
