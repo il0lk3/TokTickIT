@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import {
   ActionTaken,
   getActionsTaken,
@@ -7,6 +7,11 @@ import {
   ApiError,
 } from "../../api";
 import { useAuth } from "../../contexts/AuthContext";
+
+export interface ActionsTakenSectionHandle {
+  openCreateForm: () => void;
+  focusSection: () => void;
+}
 
 export interface ActionsTakenSectionProps {
   ticketId: number;
@@ -46,11 +51,12 @@ function sortActions(list: any): ActionTaken[] {
   });
 }
 
-export function ActionsTakenSection({
-  ticketId,
-  ticketStatus,
-  onActionChanged,
-}: ActionsTakenSectionProps) {
+export const ActionsTakenSection = forwardRef<ActionsTakenSectionHandle, ActionsTakenSectionProps>(
+  function ActionsTakenSection({
+    ticketId,
+    ticketStatus,
+    onActionChanged,
+  }, ref) {
   const { user } = useAuth();
   const [actions, setActions] = useState<ActionTaken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +101,30 @@ export function ActionsTakenSection({
 
   const isStaffOrAdmin = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
   const isTerminal = ticketStatus === "Closed" || ticketStatus === "Cancelled";
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    openCreateForm: () => {
+      if (containerRef.current) {
+        if (typeof containerRef.current.scrollIntoView === 'function') {
+          containerRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        containerRef.current.focus();
+      }
+      if (!isTerminal) {
+        handleOpenCreate();
+      }
+    },
+    focusSection: () => {
+      if (containerRef.current) {
+        if (typeof containerRef.current.scrollIntoView === 'function') {
+          containerRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        containerRef.current.focus();
+      }
+    },
+  }));
 
   useEffect(() => {
     if (activeMode === "none" && pendingFocusRef.current) {
@@ -330,7 +360,14 @@ export function ActionsTakenSection({
   };
 
   return (
-    <div className="glass-panel overflow-hidden mb-4 p-4 p-md-5 animate-enter" data-testid="actions-taken-section">
+    <div
+      ref={containerRef}
+      id="actions-taken-section"
+      tabIndex={-1}
+      className="glass-panel overflow-hidden mb-4 p-4 p-md-5 animate-enter"
+      data-testid="actions-taken-section"
+      style={{ outline: 'none' }}
+    >
       {/* Header with Title, Count Badge, and Trigger Button */}
       <div className="d-flex flex-wrap justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-3 border-bottom border-light-subtle">
         <div className="d-flex align-items-center gap-3">
@@ -380,6 +417,9 @@ export function ActionsTakenSection({
               activeMode === "none" && (
                 <button
                   ref={logButtonRef}
+                  id="log-action-btn"
+                  data-testid="log-action-btn"
+                  aria-label="+ Log Action Taken"
                   type="button"
                   onClick={handleOpenCreate}
                   className="btn btn-outline-success btn-sm fw-bold d-inline-flex align-items-center gap-1 shadow-sm bg-white"
@@ -992,6 +1032,6 @@ export function ActionsTakenSection({
       )}
     </div>
   );
-}
+});
 
 export default ActionsTakenSection;

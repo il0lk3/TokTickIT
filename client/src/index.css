@@ -45,6 +45,11 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   letter-spacing: 0.02em;
 }
 
+.badge-zen-primary {
+  background-color: rgba(0, 107, 60, 0.1);
+  color: var(--zen-primary);
+  border: 1px solid rgba(0, 107, 60, 0.25);
+}
 .badge-zen-success {
   background-color: var(--zen-pale);
   color: var(--zen-primary);
