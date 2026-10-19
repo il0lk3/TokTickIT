@@ -325,6 +325,8 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
       categoryId, 
       requestedPriority, 
       status, 
+      active,
+      updatedSince,
       page = "1", 
       limit = "10", 
       sortBy = "createdAt", 
@@ -359,10 +361,28 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
     
     if (status) {
       const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
-      if (!validStatuses.includes(String(status))) {
-        return res.status(400).json({ error: "Invalid status parameter" });
+      const statusList = String(status).split(",").map(s => s.trim()).filter(Boolean);
+      for (const s of statusList) {
+        if (!validStatuses.includes(s)) {
+          return res.status(400).json({ error: "Invalid status parameter" });
+        }
       }
-      where.currentStatus = String(status) as import("@prisma/client").TicketStatus;
+      if (statusList.length === 1) {
+        where.currentStatus = statusList[0] as import("@prisma/client").TicketStatus;
+      } else if (statusList.length > 1) {
+        where.currentStatus = { in: statusList as import("@prisma/client").TicketStatus[] };
+      }
+    }
+
+    if (active === "true") {
+      where.currentStatus = { notIn: ["Closed", "Cancelled"] as import("@prisma/client").TicketStatus[] };
+    }
+
+    if (updatedSince) {
+      const date = new Date(String(updatedSince));
+      if (!isNaN(date.getTime())) {
+        where.updatedAt = { gte: date };
+      }
     }
 
     // Ensure valid sort fields
@@ -379,7 +399,7 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
         where,
         skip,
         take: limitNum,
-        orderBy: { [sortField]: sortDir },
+        orderBy: [{ [sortField]: sortDir }, { id: 'desc' }],
         include: {
           category: true,
           relatedSystem: true

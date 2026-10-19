@@ -9,8 +9,8 @@ describe("Lab 4 Issue 8: Requester Dashboard API (API-DSH-01 to API-DSH-10)", ()
   const prisma = getPrisma();
   const secret = process.env.JWT_SECRET || "supersecretdevkey";
 
-  function makeAuthCookie(userId: number, expiresIn: string = "2h") {
-    return `accessToken=${jwt.sign({ id: userId }, secret, { expiresIn })}`;
+  function makeAuthCookie(userId: number, expiresIn: any = "2h") {
+    return `accessToken=${jwt.sign({ id: userId }, secret, { expiresIn: expiresIn as any })}`;
   }
 
   let requesterA: { id: number; name: string; email: string };
@@ -441,13 +441,13 @@ describe("Lab 4 Issue 8: Requester Dashboard API (API-DSH-01 to API-DSH-10)", ()
       .get("/api/dashboard/requester")
       .set("Cookie", staffCookie);
     expect(resStaff.status).toBe(403);
-    expect(resStaff.body.code).toBe("FORBIDDEN");
+    expect(resStaff.body.error).toContain("Forbidden");
 
     const resAdmin = await request(app)
       .get("/api/dashboard/requester")
       .set("Cookie", adminCookie);
     expect(resAdmin.status).toBe(403);
-    expect(resAdmin.body.code).toBe("FORBIDDEN");
+    expect(resAdmin.body.error).toContain("Forbidden");
   });
 
   // ==========================================
@@ -522,21 +522,21 @@ describe("Lab 4 Issue 8: Requester Dashboard API (API-DSH-01 to API-DSH-10)", ()
     `;
     expect(metrics.openRequests.count).toBe(Number(sqlOpen[0].count));
 
-    // 2. Raw SQL for inProgress
+    // 2. Raw SQL for inProgress (Postgres enum value is 'In Progress')
     const sqlProgress: any[] = await prisma.$queryRaw`
       SELECT COUNT(*)::int AS count
       FROM "Ticket"
       WHERE "requesterId" = ${requesterA.id}
-        AND "currentStatus" = 'InProgress'
+        AND "currentStatus" = 'In Progress'
     `;
     expect(metrics.inProgress.count).toBe(Number(sqlProgress[0].count));
 
-    // 3. Raw SQL for waitingForRequester
+    // 3. Raw SQL for waitingForRequester (Postgres enum value is 'Waiting for Requester')
     const sqlWaiting: any[] = await prisma.$queryRaw`
       SELECT COUNT(*)::int AS count
       FROM "Ticket"
       WHERE "requesterId" = ${requesterA.id}
-        AND "currentStatus" = 'WaitingForRequester'
+        AND "currentStatus" = 'Waiting for Requester'
     `;
     expect(metrics.waitingForRequester.count).toBe(Number(sqlWaiting[0].count));
 

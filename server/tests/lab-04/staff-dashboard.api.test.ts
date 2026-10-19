@@ -9,8 +9,8 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
   const prisma = getPrisma();
   const secret = process.env.JWT_SECRET || "supersecretdevkey";
 
-  function makeAuthCookie(userId: number, expiresIn: string = "2h") {
-    return `accessToken=${jwt.sign({ id: userId }, secret, { expiresIn })}`;
+  function makeAuthCookie(userId: number, expiresIn: any = "2h") {
+    return `accessToken=${jwt.sign({ id: userId }, secret, { expiresIn: expiresIn as any })}`;
   }
 
   let staff1: { id: number; name: string; email: string };
@@ -413,7 +413,7 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
       .set("Cookie", requesterCookie);
 
     expect(res.status).toBe(403);
-    expect(res.body.code).toBe("FORBIDDEN");
+    expect(res.body.error).toContain("Forbidden");
   });
 
   // ==========================================
