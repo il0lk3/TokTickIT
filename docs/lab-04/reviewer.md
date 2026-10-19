@@ -33,7 +33,10 @@ A living document tracking the code review process. Reviews run in both directio
 | [#71](https://github.com/il0lk3/TokTickIT/pull/71) | Issue 3 — Actions Taken API and Authorization (TDD) | `feature/lab4-actions-taken-api` | Approved & Merged |
 | [#72](https://github.com/il0lk3/TokTickIT/pull/72) | Issue 4 — Ticket Workflow Rules and Conflict Handling (API) | `feature/lab4-ticket-workflow-api` | Approved & Merged |
 | [#73](https://github.com/il0lk3/TokTickIT/pull/73) | Issue 5 — Client Routing and Role-aware Application Shell | `feature/lab4-client-routing-shell` | Approved & Merged |
-| [#74](https://github.com/il0lk3/TokTickIT/pull/74) | Issue 6 — Actions Taken UI on Ticket Detail | `feature/lab4-actions-taken-ui` | Pending Review |
+| [#74](https://github.com/il0lk3/TokTickIT/pull/74) | Issue 6 — Actions Taken UI on Ticket Detail | `feature/lab4-actions-taken-ui` | Approved & Merged |
+| [#75](https://github.com/il0lk3/TokTickIT/pull/75) | Issue 7 — Ticket Workflow UI and Resolution Feedback | `feature/lab4-ticket-workflow-ui` | Approved & Merged |
+| [#76](https://github.com/il0lk3/TokTickIT/pull/76) | Issue 8 — Dashboard APIs (Requester and IT Staff) | `feature/lab4-dashboard-api` | Approved & Merged |
+| [#77](https://github.com/il0lk3/TokTickIT/pull/77) | Issue 9 — Dashboard UIs, Navigation, and Drill-down | `feature/lab4-dashboard-ui` | Pending Review |
 
 > *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
 
@@ -139,7 +142,59 @@ A living document tracking the code review process. Reviews run in both directio
 | **Review Verdict** | Changes Requested ([Review #5571550643](https://github.com/il0lk3/TokTickIT/pull/76#pullrequestreview-5571550643)), addressed |
 | **Review Feedback** | 1. **`urgentTickets` ordering contradicts contract**: `dashboard.ts` sorted by `ownerId ASC` first instead of `updatedAt DESC, id DESC`. Dropped `ownerId` and added ordering assertions in `API-DSH-16`.<br>2. **`active=true` overwrote `status` filter**: `where.currentStatus` was reassigned when `active=true`, discarding the `status` filter. Composed with `AND` array in `staff.ts` and `tickets.ts`.<br>3. **Internal spec consistency**: `specification.md` FR-07/FR-08 still used `openTickets`, staff `waitingForRequester`, and `Asia/Bangkok`. Aligned with `api-spec.md` (`openRequests`, `appearsResolved`, rolling UTC intervals).<br>4. **Response shape drift**: Staff lists lacked `category` and `requester.id`; requester lists lacked `category.id`. Selected complete objects matching spec.<br>5. **Evidence snippets alignment**: Updated `dashboard-sql-comparison.md` to reflect actual `prisma.ticket.count` queries instead of `groupBy`. |
 | **My Response / Actions Taken** | 1. **Urgent Tickets Recency Sorting**: Updated `dashboard.ts:254` to sort strictly by `[{ updatedAt: "desc" }, { id: "desc" }]`. Added ordering assertions in `API-DSH-16` verifying chronological descent with secondary tiebreaker.<br>2. **Filter Composition with `where.AND`**: Refactored `staff.ts` and `tickets.ts` using `statusConditions` array so filtering with both `status` and `active=true` composes cleanly with `where.AND`. Added tests `API-DSH-16b` and `API-DSH-09b` verifying `?status=Open&active=true` and `?status=Closed&active=true`.<br>3. **Full Spec Synchronization**: Updated `docs/lab-04/specification.md` FR-07, FR-08, Section 6.1, and Section 11 to match `api-spec.md` (`openRequests`, `appearsResolved`, `myRecentTickets`, `urgentTickets`, and deterministic UTC millisecond rolling boundaries).<br>4. **Response Shape Precision**: Added `category: { select: { id: true, name: true } }` and `requester: { select: { id: true, name: true } }` to `myRecentTickets` and `urgentTickets`; added `category.id` to Requester `attentionTickets` and `recentTickets`.<br>5. **Evidence Documentation Polish**: Updated `artifacts/lab-04/evidence/dashboard-sql-comparison.md` application query snippets to reflect `prisma.ticket.count`.<br>6. **Suite Verification**: 191/191 server tests passed (26/26 dashboard tests), 102/102 client tests passed, and 0 TypeScript errors on client and server. |
-| **Outcome** | Pushed fixes to `feature/lab4-dashboard-api`; posted review reply comment on PR #76 requesting re-review. |
+| **Outcome** | Approved and merged into `lab4-staging` by @Achikan (commit `6cf6524`) |
+
+---
+
+### PR #77 — Issue 9: Dashboard UIs, Navigation, and Drill-down
+
+| Field | Detail |
+|---|---|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/77](https://github.com/il0lk3/TokTickIT/pull/77) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Verdict** | Pending Review |
+| **Review Scope** | Requester & Staff/Admin Dashboard UIs, 1-to-1 Metric Drill-Down Parity (DoD-6), Active Filter Chips, Accessibility, Visual Evidence |
+| **Key Deliverables** | 1. `DashboardRoute.tsx`: Role-aware dispatcher rendering `RequesterDashboard` or `StaffDashboard`.<br>2. `RequesterDashboard.tsx`: 5 operational metric cards, attention tickets list, recent activity list, empty state with Create Ticket CTA, live refresh.<br>3. `StaffDashboard.tsx`: 4 operational cards, semantic status chip group (8 statuses), priority chip group (LOW, MEDIUM, HIGH, UNSET), admin user counts, urgent active tickets, my recent tickets.<br>4. `MetricCard.tsx` & `StatusChipGroup.tsx`: Reusable accessible components with complete accessible names.<br>5. `DashboardForbidden.tsx`: Dedicated accessible 403 Forbidden view preventing data leakage.<br>6. `MyTickets.tsx` & `TicketQueue.tsx`: Active Filter Chips bar with remove buttons (`X`), "Clear all filters" CTA, and `data-testid="list-total-count"` ensuring dynamic 1-to-1 card-to-list count equality.<br>7. `server/src/routes/staff.ts`: Added `itPriority=UNSET` query filtering (`where.itPriority = null`) to support drill-down on unset priority tickets.<br>8. Permanent removal of `DashboardPlaceholder.tsx` and `DashboardShell.tsx`. |
+
+#### Reviewer Verification Commands
+
+```bash
+# 1. Verify Unit & Integration Tests (100% Pass)
+cd /Users/karn/Downloads/toktickit/server && npm test
+# Expected: 19 test files, 193 passed (100%)
+
+cd /Users/karn/Downloads/toktickit/client && npm test
+# Expected: 15 test files, 138 passed (100%)
+
+# 2. Verify Playwright End-to-End Tests
+cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/dashboards.spec.ts
+# Expected: 7 passed (100%) - covers E2E-DSH-01 to E2E-DSH-07
+
+cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/navigation.spec.ts
+# Expected: 6 passed (100%) - covers routing and RBAC
+
+# 3. Verify Zero Residual References to DashboardPlaceholder / DashboardShell
+git grep "DashboardPlaceholder" client/src/
+git grep "DashboardShell" client/src/
+# Expected: 0 matches
+
+# 4. Verify Zero Emojis in Workspace Code & Docs
+git grep -P "[\x{1F300}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]" client/src/ docs/lab-04/
+# Expected: 0 matches
+```
+
+#### Screenshot Evidence Cross-Reference
+
+| Viewport | State | Requester Dashboard | Staff / Admin Dashboard |
+|---|---|---|---|
+| Desktop (1280px) | Populated | `artifacts/lab-04/screenshots/requester-dashboard/desktop-populated.png` | `artifacts/lab-04/screenshots/staff-dashboard/desktop-populated.png` |
+| Tablet (768px) | Populated | `artifacts/lab-04/screenshots/requester-dashboard/tablet-populated.png` | `artifacts/lab-04/screenshots/staff-dashboard/tablet-populated.png` |
+| Mobile (375px) | Populated | `artifacts/lab-04/screenshots/requester-dashboard/mobile-populated.png` | `artifacts/lab-04/screenshots/staff-dashboard/mobile-populated.png` |
+| Desktop (1280px) | Empty | `artifacts/lab-04/screenshots/requester-dashboard/desktop-empty.png` | N/A (Admin seed has tickets) |
+| Mobile (375px) | Empty | `artifacts/lab-04/screenshots/requester-dashboard/mobile-empty.png` | N/A |
+| Desktop (1280px) | Error | `artifacts/lab-04/screenshots/requester-dashboard/desktop-error.png` | `artifacts/lab-04/screenshots/staff-dashboard/desktop-error.png` |
+| Desktop (1280px) | Forbidden | N/A | `artifacts/lab-04/screenshots/staff-dashboard/desktop-forbidden.png` |
+
 
 
 

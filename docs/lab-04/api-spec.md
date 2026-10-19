@@ -507,7 +507,7 @@ Both `/api/tickets` and `/api/staff/tickets` accept structured drill-down parame
 - `active`: `"true"` filters out `Closed` and `Cancelled` tickets.
 - `appearsResolved`: `"true"` filters tickets where requester submitted advisory confirmation.
 - `updatedSince`: ISO 8601 timestamp string (`updatedAt >= date`).
-- `itPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
+- `itPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`, `UNSET`). When `UNSET`, queries active tickets where `itPriority` is null.
 - `requestedPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
 - `categoryId`: Integer ID.
 - `search`: Case-insensitive search on ticketNumber or summary.
