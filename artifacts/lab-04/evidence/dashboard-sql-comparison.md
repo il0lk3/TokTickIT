@@ -179,7 +179,7 @@ Automated verification is enforced via:
 - **Equivalence Status:** Verified identical count in API-DSH-21.
 
 ### 2.4 Breakdown By Priority (`byPriority`)
-- **Formula:** Active tickets grouped by `itPriority`, with `UNSET` mapped for tickets without explicit IT priority assignment.
+- **Formula:** Active tickets grouped by `itPriority` (`LOW`, `MEDIUM`, `HIGH`).
 - **Prisma Application Query:**
   ```typescript
   prisma.ticket.groupBy({

@@ -288,18 +288,15 @@ router.get(
         }
       }
 
-      // Normalize byPriority map (LOW, MEDIUM, HIGH, UNSET guaranteed with numbers >= 0)
+      // Normalize byPriority map (LOW, MEDIUM, HIGH guaranteed with numbers >= 0)
       const byPriority: Record<string, number> = {
         LOW: 0,
         MEDIUM: 0,
         HIGH: 0,
-        UNSET: 0,
       };
       for (const pg of priorityGroups) {
         if (pg.itPriority && byPriority[pg.itPriority] !== undefined) {
           byPriority[pg.itPriority] = pg._count.id;
-        } else {
-          byPriority.UNSET += pg._count.id;
         }
       }
 

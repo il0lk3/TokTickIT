@@ -226,7 +226,7 @@ export function TicketQueue({
     if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
     if (itPriority) {
       filters.push({
-        label: itPriority === 'UNSET' ? 'Priority: Unset' : `Priority: ${itPriority}`,
+        label: `Priority: ${itPriority}`,
         clear: () => { setLocalItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); }
       });
     }

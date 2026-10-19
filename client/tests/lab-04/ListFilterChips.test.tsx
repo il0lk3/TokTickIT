@@ -129,9 +129,9 @@ describe('List Filter Chips and Count Parity (UI-FLT-01 to UI-FLT-06)', () => {
     expect(screen.getByText(/New, Open, Reopened|Open Requests/i)).toBeInTheDocument();
   });
 
-  it('UI-FLT-02: TicketQueue displays active filter chips for ownerId=unassigned, active=true, itPriority=UNSET', async () => {
+  it('UI-FLT-02: TicketQueue displays active filter chips for ownerId=unassigned, active=true, itPriority=HIGH', async () => {
     render(
-      <MemoryRouter initialEntries={['/queue?ownerId=unassigned&active=true&itPriority=UNSET']}>
+      <MemoryRouter initialEntries={['/queue?ownerId=unassigned&active=true&itPriority=HIGH']}>
         <AuthProvider>
           <TicketQueueRoute categories={mockCategories} />
         </AuthProvider>
@@ -145,7 +145,7 @@ describe('List Filter Chips and Count Parity (UI-FLT-01 to UI-FLT-06)', () => {
     const chips = screen.getByTestId('active-filter-chips');
     expect(chips).toHaveTextContent(/Owner: Unassigned/i);
     expect(chips).toHaveTextContent(/Active Only/i);
-    expect(chips).toHaveTextContent(/Priority: Unset/i);
+    expect(chips).toHaveTextContent(/Priority: HIGH/i);
   });
 
   it('UI-FLT-03: clicking remove on a filter chip clears that filter', async () => {

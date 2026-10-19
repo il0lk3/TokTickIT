@@ -141,6 +141,7 @@ export function RequesterDashboard() {
 
   const attentionTickets = data?.attentionTickets || [];
   const recentTickets = data?.recentTickets || [];
+  const hasNoTickets = totalCount === 0 && recentTickets.length === 0;
 
   return (
     <div className="container-xl py-4 animate-enter">
@@ -149,7 +150,7 @@ export function RequesterDashboard() {
         {liveStatus}
       </div>
 
-      {/* Header and Refresh Action */}
+      {/* Header and Quick Actions */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h1 className="h3 fw-bold mb-1 text-dark">Requester Dashboard</h1>
@@ -158,7 +159,27 @@ export function RequesterDashboard() {
           </h2>
         </div>
 
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          {!hasNoTickets && (
+            <>
+              <Link
+                to="/tickets/new"
+                className="btn btn-zen-primary rounded-pill px-3 py-2 small d-flex align-items-center gap-1 shadow-sm fw-medium"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Create Ticket</span>
+              </Link>
+              <Link
+                to="/tickets"
+                className="btn btn-outline-secondary rounded-pill px-3 py-2 small d-flex align-items-center gap-1 shadow-sm fw-medium"
+              >
+                <span>View My Tickets</span>
+              </Link>
+            </>
+          )}
           <button
             ref={refreshButtonRef}
             type="button"
@@ -205,7 +226,7 @@ export function RequesterDashboard() {
       )}
 
       {/* Empty State when zero total tickets exist */}
-      {totalCount === 0 ? (
+      {hasNoTickets ? (
         <div className="glass-panel p-5 text-center rounded-4 shadow-sm mb-4">
           <div className="mb-3 text-zen-primary" aria-hidden="true">
             <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

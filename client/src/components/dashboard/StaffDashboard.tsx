@@ -126,23 +126,20 @@ export function StaffDashboard() {
     unassigned: { count: 0, drillDown: { path: "/queue", query: { ownerId: "unassigned", active: "true" } } },
     ownedByMe: { count: 0, drillDown: { path: "/queue", query: { ownerId: "me", active: "true" } } },
     appearsResolved: { count: 0, drillDown: { path: "/queue", query: { appearsResolved: "true", active: "true" } } },
-    recentlyUpdated: { count: 0, drillDown: { path: "/queue", query: { active: "true" } } },
+    recentlyUpdated: { count: 0, drillDown: { path: "/queue", query: { active: "true", updatedSince: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() } } },
     byStatus: { New: 0, Open: 0, InProgress: 0, WaitingForRequester: 0, Resolved: 0, Closed: 0, Reopened: 0, Cancelled: 0 },
-    byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0, UNSET: 0 },
+    byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0 },
     adminUserCounts: null,
   };
 
-  const totalActiveQueue =
-    metrics.unassigned.count +
-    metrics.ownedByMe.count +
-    metrics.appearsResolved.count +
-    metrics.recentlyUpdated.count;
-
   const myRecentTickets = data?.myRecentTickets || [];
   const urgentTickets = data?.urgentTickets || [];
-  const byStatus = metrics.byStatus || {};
-  const byPriority = metrics.byPriority || { LOW: 0, MEDIUM: 0, HIGH: 0, UNSET: 0 };
+  const byStatus: Record<string, number> = metrics.byStatus || {};
+  const byPriority = metrics.byPriority || { LOW: 0, MEDIUM: 0, HIGH: 0 };
   const adminUserCounts = metrics.adminUserCounts;
+
+  const activeStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Reopened"];
+  const totalActiveTickets = activeStatuses.reduce((acc, st) => acc + (byStatus[st] || 0), 0);
 
   const statusChips = [
     { key: "New", label: "New", count: byStatus.New || 0, to: "/queue?status=New&active=true", badgeClass: "bg-zen-info text-white" },
@@ -159,7 +156,6 @@ export function StaffDashboard() {
     { key: "LOW", label: "Low", count: byPriority.LOW || 0, to: "/queue?itPriority=LOW&active=true", badgeClass: "bg-zen-success text-white" },
     { key: "MEDIUM", label: "Medium", count: byPriority.MEDIUM || 0, to: "/queue?itPriority=MEDIUM&active=true", badgeClass: "bg-zen-warning text-white" },
     { key: "HIGH", label: "High", count: byPriority.HIGH || 0, to: "/queue?itPriority=HIGH&active=true", badgeClass: "bg-danger text-white" },
-    { key: "UNSET", label: "Unset", count: byPriority.UNSET || 0, to: "/queue?itPriority=UNSET&active=true", badgeClass: "bg-secondary text-white" },
   ];
 
   return (
@@ -169,7 +165,7 @@ export function StaffDashboard() {
         {liveStatus}
       </div>
 
-      {/* Header and Refresh Action */}
+      {/* Header and Quick Actions */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h1 className="h3 fw-bold mb-1 text-dark">
@@ -180,7 +176,29 @@ export function StaffDashboard() {
           </h2>
         </div>
 
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          <Link
+            to="/tickets/new"
+            className="btn btn-zen-primary rounded-pill px-3 py-2 small d-flex align-items-center gap-1 shadow-sm fw-medium"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Create Ticket</span>
+          </Link>
+          <Link
+            to="/queue"
+            className="btn btn-outline-secondary rounded-pill px-3 py-2 small d-flex align-items-center gap-1 shadow-sm fw-medium"
+          >
+            <span>Search Tickets</span>
+          </Link>
+          <Link
+            to="/queue?ownerId=me&active=true"
+            className="btn btn-outline-secondary rounded-pill px-3 py-2 small d-flex align-items-center gap-1 shadow-sm fw-medium"
+          >
+            <span>My Queue</span>
+          </Link>
           <button
             ref={refreshButtonRef}
             type="button"
@@ -227,7 +245,7 @@ export function StaffDashboard() {
       )}
 
       {/* Empty State when queue has zero active tickets */}
-      {totalActiveQueue === 0 && myRecentTickets.length === 0 && urgentTickets.length === 0 ? (
+      {totalActiveTickets === 0 ? (
         <div className="glass-panel p-5 text-center rounded-4 shadow-sm mb-4">
           <div className="mb-3 text-zen-primary" aria-hidden="true">
             <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

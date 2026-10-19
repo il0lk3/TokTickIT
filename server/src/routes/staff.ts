@@ -92,7 +92,7 @@ router.get("/tickets", async (req: Request, res: Response) => {
     if (requestedPriority && !validRequestedPriorities.includes(requestedPriority as string)) {
       return res.status(400).json({ error: "Invalid requestedPriority parameter", code: "INVALID_PRIORITY" });
     }
-    const validItPriorities = ["LOW", "MEDIUM", "HIGH", "UNSET"];
+    const validItPriorities = ["LOW", "MEDIUM", "HIGH"];
     if (itPriority && !validItPriorities.includes(itPriority as string)) {
       return res.status(400).json({ error: "Invalid itPriority parameter", code: "INVALID_PRIORITY" });
     }
@@ -106,9 +106,7 @@ router.get("/tickets", async (req: Request, res: Response) => {
     }
 
     if (requestedPriority) where.requestedPriority = requestedPriority as TicketPriority;
-    if (itPriority === "UNSET") {
-      where.itPriority = { in: [] };
-    } else if (itPriority) {
+    if (itPriority) {
       where.itPriority = itPriority as TicketPriority;
     }
     

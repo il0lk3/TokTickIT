@@ -36,7 +36,7 @@ const mockStaffDashboardData = {
     appearsResolved: { count: 3, drillDown: { path: '/queue', query: { appearsResolved: 'true', active: 'true' } } },
     recentlyUpdated: { count: 12, drillDown: { path: '/queue', query: { updatedSince: '2026-10-18T10:00:00.000Z', active: 'true' } } },
     byStatus: { New: 4, Open: 6, InProgress: 8, WaitingForRequester: 2, Resolved: 10, Closed: 15, Reopened: 1, Cancelled: 0 },
-    byPriority: { LOW: 5, MEDIUM: 12, HIGH: 3, UNSET: 0 },
+    byPriority: { LOW: 5, MEDIUM: 12, HIGH: 3 },
     adminUserCounts: null,
   },
   myRecentTickets: [],

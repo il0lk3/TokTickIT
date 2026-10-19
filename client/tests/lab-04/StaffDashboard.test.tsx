@@ -80,7 +80,6 @@ const mockStaffDashboardData = {
       LOW: 5,
       MEDIUM: 12,
       HIGH: 3,
-      UNSET: 0,
     },
     adminUserCounts: null,
   },
@@ -221,7 +220,7 @@ describe('Staff & Administrator Dashboard (UI-DSH-11 to UI-DSH-26)', () => {
     expect(inProgressChip).toHaveAttribute('href', '/queue?status=InProgress&active=true');
   });
 
-  it('UI-DSH-14: priority chips render LOW, MEDIUM, HIGH, UNSET with links to /queue?itPriority=...&active=true', async () => {
+  it('UI-DSH-14: priority chips render LOW, MEDIUM, HIGH with links to /queue?itPriority=...&active=true', async () => {
     renderStaffDashboard();
 
     await waitFor(() => {
@@ -231,8 +230,8 @@ describe('Staff & Administrator Dashboard (UI-DSH-11 to UI-DSH-26)', () => {
     const lowChip = screen.getByRole('link', { name: /low.*5/i });
     expect(lowChip).toHaveAttribute('href', '/queue?itPriority=LOW&active=true');
 
-    const unsetChip = screen.getByRole('link', { name: /unset.*0/i });
-    expect(unsetChip).toHaveAttribute('href', '/queue?itPriority=UNSET&active=true');
+    const highChip = screen.getByRole('link', { name: /high.*3/i });
+    expect(highChip).toHaveAttribute('href', '/queue?itPriority=HIGH&active=true');
   });
 
   it('UI-DSH-15: terminal status chips (Closed, Cancelled) link to /queue?status=... WITHOUT active=true', async () => {
@@ -339,6 +338,8 @@ describe('Staff & Administrator Dashboard (UI-DSH-11 to UI-DSH-26)', () => {
         ownedByMe: { count: 0, drillDown: { path: '/queue', query: { ownerId: 'me', active: 'true' } } },
         appearsResolved: { count: 0, drillDown: { path: '/queue', query: { appearsResolved: 'true', active: 'true' } } },
         recentlyUpdated: { count: 0, drillDown: { path: '/queue', query: { updatedSince: '2026-10-18T10:00:00.000Z', active: 'true' } } },
+        byStatus: { New: 0, Open: 0, InProgress: 0, WaitingForRequester: 0, Resolved: 0, Closed: 0, Reopened: 0, Cancelled: 0 },
+        byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0 },
       },
       myRecentTickets: [],
       urgentTickets: [],

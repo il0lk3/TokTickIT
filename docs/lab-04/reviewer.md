@@ -152,19 +152,21 @@ A living document tracking the code review process. Reviews run in both directio
 |---|---|
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/77](https://github.com/il0lk3/TokTickIT/pull/77) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
-| **Review Verdict** | Pending Review |
+| **Review Verdict** | Changes Requested ([Review #5574123342](https://github.com/il0lk3/TokTickIT/pull/77#pullrequestreview-5574123342)), addressed |
 | **Review Scope** | Requester & Staff/Admin Dashboard UIs, 1-to-1 Metric Drill-Down Parity (DoD-6), Active Filter Chips, Accessibility, Visual Evidence |
-| **Key Deliverables** | 1. `DashboardRoute.tsx`: Role-aware dispatcher rendering `RequesterDashboard` or `StaffDashboard`.<br>2. `RequesterDashboard.tsx`: 5 operational metric cards, attention tickets list, recent activity list, empty state with Create Ticket CTA, live refresh.<br>3. `StaffDashboard.tsx`: 4 operational cards, semantic status chip group (8 statuses), priority chip group (LOW, MEDIUM, HIGH, UNSET), admin user counts, urgent active tickets, my recent tickets.<br>4. `MetricCard.tsx` & `StatusChipGroup.tsx`: Reusable accessible components with complete accessible names.<br>5. `DashboardForbidden.tsx`: Dedicated accessible 403 Forbidden view preventing data leakage.<br>6. `MyTickets.tsx` & `TicketQueue.tsx`: Active Filter Chips bar with remove buttons (`X`), "Clear all filters" CTA, and `data-testid="list-total-count"` ensuring dynamic 1-to-1 card-to-list count equality.<br>7. `server/src/routes/staff.ts`: Added `itPriority=UNSET` query filtering (`where.itPriority = null`) to support drill-down on unset priority tickets.<br>8. Permanent removal of `DashboardPlaceholder.tsx` and `DashboardShell.tsx`. |
+| **Review Feedback** | 1. **False empty states (both dashboards)**: `RequesterDashboard.tsx` computed "no tickets" by summing subset metrics excluding Cancelled and older Resolved tickets; `StaffDashboard.tsx` used overlapping subset metrics which hid the queue breakdown when active tickets existed.<br>2. **`UNSET` priority is a dead control**: `itPriority` is non-nullable (`TicketPriority @default(LOW)`). `byPriority.UNSET` was always 0 and filter was vacuous.<br>3. **Quick Actions missing**: Populated dashboards lacked Quick Action navigation buttons required by handout mockups and `specification.md`.<br>4. **`ui-spec.md` Attention Needed mismatch**: Stated `appearsResolved` but API returns only `WaitingForRequester`.<br>5. **Staff `recentlyUpdated` fallback drill-down**: Omitted `updatedSince`. |
+| **My Response / Actions Taken** | 1. **Correct Empty State Criteria**: In `RequesterDashboard.tsx`, empty state is gated on `totalCount === 0 && recentTickets.length === 0`, ensuring requesters with cancelled or older resolved tickets retain full access to their ticket history and recent list. Added test `UI-DSH-05b`. In `StaffDashboard.tsx`, empty queue state is computed from active non-terminal statuses (`New`, `Open`, `InProgress`, `WaitingForRequester`, `Resolved`, `Reopened`) in `byStatus`, guaranteeing active tickets are never hidden.<br>2. **Dropped Dead `UNSET` Priority Control**: Removed `UNSET` priority across UI, API, test suites, and documentation per handout §7. Simplified `validItPriorities` to `["LOW", "MEDIUM", "HIGH"]` in `staff.ts`, normalized `byPriority` to `LOW`, `MEDIUM`, `HIGH` in `dashboard.ts`, removed obsolete `staff-queue-unset.api.test.ts`, and updated chip configurations.<br>3. **Added Quick Actions**: Integrated Quick Action navigation buttons in headers: Requester Dashboard (`+ Create Ticket` -> `/tickets/new`, `View My Tickets` -> `/tickets`); Staff Dashboard (`+ Create Ticket` -> `/tickets/new`, `Search Tickets` -> `/queue`, `My Queue` -> `/queue?ownerId=me&active=true`).<br>4. **Aligned `ui-spec.md`**: Corrected Attention Needed definition to `WaitingForRequester` requiring requester response.<br>5. **Added `updatedSince` Fallback**: Updated `recentlyUpdated` fallback query in `StaffDashboard.tsx` to include `updatedSince: ISO`.<br>6. **Full Suite Verification**: 191/191 server tests passed (18 files), 139/139 client tests passed (15 files), 7/7 Playwright dashboard E2E tests passed, 6/6 navigation E2E tests passed, and 0 TypeScript compilation errors on client and server. |
+| **Outcome** | Changes addressed and pushed to `feature/lab4-dashboard-ui`. Reply posted on PR #77 requesting re-review. |
 
 #### Reviewer Verification Commands
 
 ```bash
 # 1. Verify Unit & Integration Tests (100% Pass)
 cd /Users/karn/Downloads/toktickit/server && npm test
-# Expected: 19 test files, 193 passed (100%)
+# Expected: 18 test files, 191 passed (100%)
 
 cd /Users/karn/Downloads/toktickit/client && npm test
-# Expected: 15 test files, 138 passed (100%)
+# Expected: 15 test files, 139 passed (100%)
 
 # 2. Verify Playwright End-to-End Tests
 cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/dashboards.spec.ts

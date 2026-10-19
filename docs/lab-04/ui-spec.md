@@ -89,6 +89,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 - **Header Section**:
   - `<h1>`: "IT Support Dashboard" (for IT Staff) or "IT Administration Dashboard" (for Administrator).
   - `<h2>`: Subtitle `Welcome back, {User Name} — operational workload and support queue health.` with styling `text-muted mb-0 small fs-6 fw-normal`.
+  - **Quick Actions**: Quick navigation buttons linking to **+ Create Ticket** (`/tickets/new`), **Search Tickets** (`/queue`), and **My Queue** (`/queue?ownerId=me&active=true`).
   - **Refresh Action**: Accessible button with sync SVG icon. Disabled with `aria-busy="true"` and spinning animation while in-flight. Rapid repeated clicks are ignored while in-flight.
 - **Accessible Live Region**:
   - Hidden element with `role="status"` and `aria-live="polite"` announcing `"Dashboard loaded"` or `"Dashboard updated"`.
@@ -98,14 +99,14 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
     1. **Unassigned**: Active tickets needing triage -> `/queue?ownerId=unassigned&active=true` (Warning variant).
     2. **Assigned to Me**: Active tickets assigned to current user -> `/queue?ownerId=me&active=true` (Primary variant).
     3. **Appears Resolved**: Active tickets with requester advisory signals -> `/queue?appearsResolved=true&active=true` (Success variant).
-    4. **Updated in 24h**: Operational activity in last 24 hours -> `/queue?active=true` (Info variant).
+    4. **Updated in 24h**: Operational activity in last 24 hours -> `/queue?active=true&updatedSince={ISO}` (Info variant).
   - Card components include SVG decorative icons with `aria-hidden="true"`, large bold count numeral (`.display-6`), subtitle, and full accessible names (e.g., `aria-label="Unassigned, 8 tickets, view in Ticket Queue"`).
 - **Admin User Management Summary (Administrator only)**:
   - Banner container visible strictly to `ADMINISTRATOR` users, displaying total users count, active breakdown, and drill-down link to `/admin/users`.
   - Safe-failure tolerance: If `adminUserCounts` is null, cleanly falls back without crashing.
 - **Queue Breakdown Sections**:
   - **Status Chip Group**: Renders all 8 status chips (`New`, `Open`, `InProgress`, `WaitingForRequester`, `Resolved`, `Closed`, `Reopened`, `Cancelled`). Terminal states (`Closed`, `Cancelled`) link to `/queue?status={status}` without `active=true`, while non-terminal states link to `/queue?status={status}&active=true`.
-  - **Priority Chip Group**: Renders `LOW`, `MEDIUM`, `HIGH`, and `UNSET` chips with non-negative counts and drill-down to `/queue?itPriority={priority}&active=true`.
+  - **Priority Chip Group**: Renders `LOW`, `MEDIUM`, and `HIGH` chips with non-negative counts and drill-down to `/queue?itPriority={priority}&active=true`.
 - **Activity Sections**:
   - **Urgent Active Tickets**: Top 5 active tickets with `itPriority === 'HIGH'`, sorted by `updatedAt DESC, id DESC`, with direct detail links to `/tickets/:id`.
   - **My Recent Tickets**: Top 5 active tickets owned by logged-in staff, sorted by `updatedAt DESC, id DESC`, with direct detail links to `/tickets/:id`.
@@ -126,6 +127,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 - **Header Section**:
   - `<h1>`: "Requester Dashboard".
   - `<h2>`: Subtitle `Welcome back, {User Name} — track and manage your support requests.`
+  - **Quick Actions**: Navigation buttons linking to **+ Create Ticket** (`/tickets/new`) and **View My Tickets** (`/tickets`).
   - **Refresh Action**: Sync button with live status region announcement.
 - **5 Top Metric Cards**:
   - Reflows across breakpoints (5 columns on desktop, 2-3 on tablet, 1 on mobile).
@@ -136,9 +138,8 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
     4. **Recently Resolved**: Count of `Resolved` within past 7 days -> `/tickets?status=Resolved&updatedSince={ISO}`.
     5. **Closed**: Count of `Closed` -> `/tickets?status=Closed`.
 - **Activity Sections**:
-  - **Attention Needed**: Tickets with status `WaitingForRequester` or `appearsResolved === true`.
+  - **Attention Needed**: Tickets with status `WaitingForRequester` requiring requester response.
   - **My Recent Requests**: Up to 5 most recently updated tickets owned by user, with links to `/tickets/:id`.
-  - **Quick Action**: Prominent button linking to `/tickets/new`.
 
 ### 4.2 UI States
 - **Loading State**: Shimmer skeleton blocks matching card layout.

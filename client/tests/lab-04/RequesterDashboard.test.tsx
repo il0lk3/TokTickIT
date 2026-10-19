@@ -211,6 +211,49 @@ describe('Requester Dashboard (UI-DSH-01 to UI-DSH-10)', () => {
     expect(createBtn).toHaveAttribute('href', '/tickets/new');
   });
 
+  it('UI-DSH-05b: requester with only cancelled or older resolved tickets sees normal dashboard with recent tickets (not empty state)', async () => {
+    const olderResolvedOnlyData = {
+      metrics: {
+        openRequests: { count: 0, drillDown: { path: '/tickets', query: { status: 'New,Open,Reopened' } } },
+        inProgress: { count: 0, drillDown: { path: '/tickets', query: { status: 'InProgress' } } },
+        waitingForRequester: { count: 0, drillDown: { path: '/tickets', query: { status: 'WaitingForRequester' } } },
+        recentlyResolved: { count: 0, drillDown: { path: '/tickets', query: { status: 'Resolved' } } },
+        closed: { count: 0, drillDown: { path: '/tickets', query: { status: 'Closed' } } },
+      },
+      attentionTickets: [],
+      recentTickets: [
+        {
+          id: 99,
+          ticketNumber: 'TKT-2026-000099',
+          summary: 'Old resolved ticket',
+          currentStatus: 'Resolved',
+          updatedAt: '2026-09-01T00:00:00.000Z',
+          category: { id: 1, name: 'General' },
+        },
+      ],
+      generatedAt: '2026-10-19T10:00:00.000Z',
+    };
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRequesterUser) });
+      }
+      if (url.includes('/api/dashboard/requester')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(olderResolvedOnlyData) });
+      }
+      return Promise.reject(new Error(`Unhandled URL: ${url}`));
+    }));
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText('TKT-2026-000099')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('heading', { name: /no tickets yet/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Open Requests')).toBeInTheDocument();
+  });
+
   it('UI-DSH-06: skeleton loader displays during initial loading', async () => {
     // Delay resolution
     let resolveDashboard: any;

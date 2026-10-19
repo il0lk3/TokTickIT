@@ -446,8 +446,7 @@ Provides system-wide operational metrics, normalized status/priority maps, user 
       "byPriority": {
         "LOW": 5,
         "MEDIUM": 12,
-        "HIGH": 3,
-        "UNSET": 0
+        "HIGH": 3
       },
       "adminUserCounts": {
         "total": 35,
@@ -491,7 +490,7 @@ Provides system-wide operational metrics, normalized status/priority maps, user 
   - `appearsResolved`: Active tickets where `appearsResolved === true`.
   - `recentlyUpdated`: Active tickets where `updatedAt >= (now - 24 rolling hours)`.
   - `byStatus`: Complete normalized map containing all 8 lifecycle statuses (all values >= 0).
-  - `byPriority`: Count of active tickets grouped by `itPriority` (`LOW`, `MEDIUM`, `HIGH`, `UNSET`).
+  - `byPriority`: Count of active tickets grouped by `itPriority` (`LOW`, `MEDIUM`, `HIGH`).
   - `adminUserCounts`: User statistics returned if authenticated user is `ADMINISTRATOR`, otherwise `null` for IT Staff.
   - `myRecentTickets`: Top 5 active tickets owned by the authenticated staff user ordered by `updatedAt DESC, id DESC`.
   - `urgentTickets`: Top 5 active tickets across system with `itPriority = 'HIGH'` ordered by `updatedAt DESC, id DESC`.
@@ -507,7 +506,7 @@ Both `/api/tickets` and `/api/staff/tickets` accept structured drill-down parame
 - `active`: `"true"` filters out `Closed` and `Cancelled` tickets.
 - `appearsResolved`: `"true"` filters tickets where requester submitted advisory confirmation.
 - `updatedSince`: ISO 8601 timestamp string (`updatedAt >= date`).
-- `itPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`, `UNSET`). When `UNSET`, queries active tickets where `itPriority` is null.
+- `itPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
 - `requestedPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
 - `categoryId`: Integer ID.
 - `search`: Case-insensitive search on ticketNumber or summary.
