@@ -144,19 +144,22 @@ describe('Staff & Administrator Dashboard (UI-DSH-11 to UI-DSH-26)', () => {
     vi.restoreAllMocks();
   });
 
-  function renderStaffDashboard(user: any = mockStaffUser) {
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
-      if (url.includes('/api/auth/me')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(user) });
-      }
-      if (url.includes('/api/dashboard/staff')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(user.role === 'ADMINISTRATOR' ? mockAdminDashboardData : mockStaffDashboardData),
-        });
-      }
-      return Promise.reject(new Error(`Unhandled URL: ${url}`));
-    }));
+  function renderStaffDashboard(user?: any, customData?: any) {
+    if (user || customData) {
+      const activeUser = user || mockStaffUser;
+      vi.stubGlobal('fetch', vi.fn((url: string) => {
+        if (url.includes('/api/auth/me')) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(activeUser) });
+        }
+        if (url.includes('/api/dashboard/staff')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(customData || (activeUser.role === 'ADMINISTRATOR' ? mockAdminDashboardData : mockStaffDashboardData)),
+          });
+        }
+        return Promise.reject(new Error(`Unhandled URL: ${url}`));
+      }));
+    }
 
     return render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -174,13 +177,17 @@ describe('Staff & Administrator Dashboard (UI-DSH-11 to UI-DSH-26)', () => {
       expect(screen.getByText('Unassigned')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('8')).toBeInTheDocument();
-    expect(screen.getByText('Assigned to Me')).toBeInTheDocument();
-    expect(screen.getByText('16')).toBeInTheDocument();
-    expect(screen.getByText('Appears Resolved')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('Updated in 24h')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
+    const unassignedCard = screen.getByRole('link', { name: /Unassigned.*8.*tickets/i });
+    expect(unassignedCard).toBeInTheDocument();
+
+    const assignedCard = screen.getByRole('link', { name: /Assigned to Me.*16.*tickets/i });
+    expect(assignedCard).toBeInTheDocument();
+
+    const appearsCard = screen.getByRole('link', { name: /Appears Resolved.*3.*tickets/i });
+    expect(appearsCard).toBeInTheDocument();
+
+    const updatedCard = screen.getByRole('link', { name: /Updated in 24h.*12.*tickets/i });
+    expect(updatedCard).toBeInTheDocument();
   });
 
   it('UI-DSH-12: operational cards link to exact /queue query destinations', async () => {
@@ -356,7 +363,7 @@ describe('Staff & Administrator Dashboard (UI-DSH-11 to UI-DSH-26)', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/queue is all clear|no active tickets/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /queue is all clear/i })).toBeInTheDocument();
     });
   });
 

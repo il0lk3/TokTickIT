@@ -142,9 +142,10 @@ describe('List Filter Chips and Count Parity (UI-FLT-01 to UI-FLT-06)', () => {
       expect(screen.getByTestId('active-filter-chips')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Unassigned/i)).toBeInTheDocument();
-    expect(screen.getByText(/Active Only/i)).toBeInTheDocument();
-    expect(screen.getByText(/Priority: Unset|Unset Priority/i)).toBeInTheDocument();
+    const chips = screen.getByTestId('active-filter-chips');
+    expect(chips).toHaveTextContent(/Owner: Unassigned/i);
+    expect(chips).toHaveTextContent(/Active Only/i);
+    expect(chips).toHaveTextContent(/Priority: Unset/i);
   });
 
   it('UI-FLT-03: clicking remove on a filter chip clears that filter', async () => {
@@ -160,11 +161,11 @@ describe('List Filter Chips and Count Parity (UI-FLT-01 to UI-FLT-06)', () => {
       expect(screen.getByTestId('active-filter-chips')).toBeInTheDocument();
     });
 
-    const removeUnassignedBtn = screen.getByRole('button', { name: /remove filter.*unassigned/i });
+    const removeUnassignedBtn = screen.getByRole('button', { name: /Remove filter: Owner: Unassigned/i });
     fireEvent.click(removeUnassignedBtn);
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /remove filter.*unassigned/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Remove filter: Owner: Unassigned/i })).not.toBeInTheDocument();
     });
   });
 

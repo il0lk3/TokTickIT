@@ -8,7 +8,7 @@ import { UserManagement } from "./components/UserManagement";
 import { NotFound } from "./components/common/NotFound";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import { RoleRoute } from "./components/common/RoleRoute";
-import { DashboardPlaceholder } from "./components/dashboard/DashboardPlaceholder";
+import { DashboardRoute } from "./components/dashboard/DashboardRoute";
 import { MyTicketsRoute } from "./routes/MyTicketsRoute";
 import { CreateTicketRoute } from "./routes/CreateTicketRoute";
 import { TicketQueueRoute } from "./routes/TicketQueueRoute";
@@ -363,7 +363,7 @@ function AppRoutes() {
             path="/dashboard"
             element={
               <RoleRoute allowedRoles={["REQUESTER", "IT_STAFF", "ADMINISTRATOR"]}>
-                <DashboardPlaceholder />
+                <DashboardRoute />
               </RoleRoute>
             }
           />

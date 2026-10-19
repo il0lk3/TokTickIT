@@ -10,7 +10,7 @@ interface TicketQueueRouteProps {
 const VALID_STATUSES = new Set([
   "New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"
 ]);
-const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH"]);
+const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH", "UNSET"]);
 
 export function TicketQueueRoute({ categories }: TicketQueueRouteProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,6 +46,14 @@ export function TicketQueueRoute({ categories }: TicketQueueRouteProps) {
       requestedPriority = rawRequestedPriority;
     }
 
+    const rawActive = searchParams.get("active");
+    const active = rawActive === "true" ? "true" : "";
+
+    const rawAppearsResolved = searchParams.get("appearsResolved");
+    const appearsResolved = rawAppearsResolved === "true" ? "true" : "";
+
+    const updatedSince = searchParams.get("updatedSince") || "";
+
     const search = searchParams.get("search") || "";
     const categoryId = searchParams.get("categoryId") || "";
     const page = parseInt(searchParams.get("page") || "1", 10) || 1;
@@ -57,7 +65,10 @@ export function TicketQueueRoute({ categories }: TicketQueueRouteProps) {
       requestedPriority,
       search,
       categoryId,
-      page
+      page,
+      active,
+      appearsResolved,
+      updatedSince
     };
   }, [searchParams]);
 
@@ -91,9 +102,13 @@ export function TicketQueueRoute({ categories }: TicketQueueRouteProps) {
       search={filters.search}
       categoryId={filters.categoryId}
       page={filters.page}
+      active={filters.active}
+      appearsResolved={filters.appearsResolved}
+      updatedSince={filters.updatedSince}
       onFilterChange={handleFilterChange}
     />
   );
 }
 
 export default TicketQueueRoute;
+

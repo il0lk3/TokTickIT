@@ -10,6 +10,8 @@ interface MyTicketsProps {
   requestedPriority?: string;
   categoryId?: string;
   search?: string;
+  active?: string;
+  updatedSince?: string;
   page?: number;
   onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
@@ -21,6 +23,8 @@ export function MyTickets({
   requestedPriority: propRequestedPriority,
   categoryId: propCategoryId,
   search: propSearch,
+  active: propActive,
+  updatedSince: propUpdatedSince,
   page: propPage,
   onFilterChange
 }: MyTicketsProps) {
@@ -43,6 +47,8 @@ export function MyTickets({
   const status = propStatus !== undefined ? propStatus : localStatus;
   const requestedPriority = propRequestedPriority !== undefined ? propRequestedPriority : localRequestedPriority;
   const categoryId = propCategoryId !== undefined ? propCategoryId : localCategoryId;
+  const active = propActive !== undefined ? propActive : "";
+  const updatedSince = propUpdatedSince !== undefined ? propUpdatedSince : "";
   const page = propPage !== undefined ? propPage : localPage;
   const search = localSearch;
 
@@ -87,6 +93,8 @@ export function MyTickets({
         categoryId,
         requestedPriority,
         status,
+        active: active === "true" ? "true" : undefined,
+        updatedSince: updatedSince || undefined,
         page,
         limit: 10,
         sortBy,
@@ -100,7 +108,7 @@ export function MyTickets({
     } finally {
       setLoading(false);
     }
-  }, [user, debouncedSearch, categoryId, requestedPriority, status, page, sortBy, sortOrder]);
+  }, [user, debouncedSearch, categoryId, requestedPriority, status, active, updatedSince, page, sortBy, sortOrder]);
 
   const isMobile = useMediaQuery('(max-width: 767.98px)');
 
@@ -176,9 +184,18 @@ export function MyTickets({
     if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setLocalSearch(""); setDebouncedSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
     if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setLocalCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
     if (requestedPriority) filters.push({ label: `Priority: ${requestedPriority === 'InProgress' ? 'In Progress' : requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
+    if (status) {
+      const statusDisplay = status === 'New,Open,Reopened' ? 'New, Open, Reopened' : (status === 'InProgress' ? 'In Progress' : status);
+      filters.push({ label: `Status: ${statusDisplay}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
+    }
+    if (active === "true") {
+      filters.push({ label: "Active Only", clear: () => onFilterChange?.({ active: "", page: 1 }) });
+    }
+    if (updatedSince) {
+      filters.push({ label: "Recently Updated", clear: () => onFilterChange?.({ updatedSince: "", page: 1 }) });
+    }
     return filters;
-  }, [debouncedSearch, categoryId, requestedPriority, status, categoryMap, onFilterChange]);
+  }, [debouncedSearch, categoryId, requestedPriority, status, active, updatedSince, categoryMap, onFilterChange]);
 
   return (
     <div className="animate-enter">
@@ -188,7 +205,7 @@ export function MyTickets({
           <p className="text-muted mb-0 small">Manage and track your support requests</p>
         </div>
         <div className="d-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm border border-light">
-          <span className="fw-bold text-zen-primary">{totalTickets}</span>
+          <span data-testid="list-total-count" className="fw-bold text-zen-primary">{totalTickets}</span>
           <span className="text-muted small fw-medium">Total Tickets</span>
         </div>
       </div>
@@ -237,12 +254,12 @@ export function MyTickets({
         </div>
 
         {activeFilters.length > 0 && (
-          <div className="d-flex align-items-center gap-2 mt-3 flex-wrap">
+          <div data-testid="active-filter-chips" className="d-flex align-items-center gap-2 mt-3 flex-wrap">
             <span className="small text-muted me-1 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Filters:</span>
             {activeFilters.map((f, i) => (
               <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
                 {f.label}
-                <button type="button" aria-label="Clear filter" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+                <button type="button" aria-label={`Remove filter: ${f.label}`} className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
               </span>
             ))}
             <button 
@@ -254,7 +271,7 @@ export function MyTickets({
                 setLocalRequestedPriority("");
                 setLocalStatus("");
                 setPage(1);
-                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", status: "", page: 1 });
+                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", status: "", active: "", updatedSince: "", page: 1 });
               }}
             >
               Clear All

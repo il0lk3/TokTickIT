@@ -182,13 +182,26 @@ export interface TicketListResponse {
 }
 
 export async function getTickets(
-  params: { search?: string, categoryId?: string, requestedPriority?: string, status?: string, page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc' }
+  params: {
+    search?: string;
+    categoryId?: string;
+    requestedPriority?: string;
+    status?: string;
+    active?: boolean | string;
+    updatedSince?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }
 ): Promise<TicketListResponse> {
   const query = new URLSearchParams();
   if (params.search) query.append("search", params.search);
   if (params.categoryId) query.append("categoryId", params.categoryId);
   if (params.requestedPriority) query.append("requestedPriority", params.requestedPriority);
   if (params.status) query.append("status", params.status);
+  if (params.active !== undefined && params.active !== null) query.append("active", String(params.active));
+  if (params.updatedSince) query.append("updatedSince", params.updatedSince);
   if (params.page) query.append("page", params.page.toString());
   if (params.limit) query.append("limit", params.limit.toString());
   if (params.sortBy) query.append("sortBy", params.sortBy);
@@ -211,6 +224,9 @@ export async function getStaffTickets(params: {
   itPriority?: string;
   categoryId?: number | string;
   ownerId?: string | number;
+  active?: boolean | string;
+  appearsResolved?: boolean | string;
+  updatedSince?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }): Promise<TicketListResponse> {
@@ -223,6 +239,9 @@ export async function getStaffTickets(params: {
   if (params.itPriority) query.append("itPriority", params.itPriority);
   if (params.categoryId) query.append("categoryId", params.categoryId.toString());
   if (params.ownerId) query.append("ownerId", params.ownerId.toString());
+  if (params.active !== undefined && params.active !== null) query.append("active", String(params.active));
+  if (params.appearsResolved !== undefined && params.appearsResolved !== null) query.append("appearsResolved", String(params.appearsResolved));
+  if (params.updatedSince) query.append("updatedSince", params.updatedSince);
   if (params.sortBy) query.append("sortBy", params.sortBy);
   if (params.sortOrder) query.append("sortOrder", params.sortOrder);
 
@@ -565,4 +584,97 @@ export async function updateActionTaken(ticketId: number, actionId: number, payl
   }
   return res.json();
 }
+
+// --- DASHBOARD API ---
+export interface MetricDrillDown {
+  path: string;
+  query: Record<string, string>;
+}
+
+export interface DashboardMetric {
+  count: number;
+  drillDown: MetricDrillDown;
+}
+
+export interface DashboardRecentTicket {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  currentStatus: string;
+  appearsResolved?: boolean;
+  itPriority?: string;
+  updatedAt: string;
+  category: { id: number; name: string };
+  owner?: { id: number; name: string } | null;
+  requester?: { id: number; name: string } | null;
+}
+
+export interface RequesterDashboardResponse {
+  metrics: {
+    openRequests: DashboardMetric;
+    inProgress: DashboardMetric;
+    waitingForRequester: DashboardMetric;
+    recentlyResolved: DashboardMetric;
+    closed: DashboardMetric;
+  };
+  attentionTickets: DashboardRecentTicket[];
+  recentTickets: DashboardRecentTicket[];
+  generatedAt: string;
+}
+
+export interface AdminUserCounts {
+  total: number;
+  active?: number;
+  requesters: number;
+  staff: number;
+  admins: number;
+  unassignedStaff?: number;
+}
+
+export interface StaffDashboardResponse {
+  metrics: {
+    unassigned: DashboardMetric;
+    ownedByMe: DashboardMetric;
+    appearsResolved: DashboardMetric;
+    recentlyUpdated: DashboardMetric;
+    byStatus: Record<string, number>;
+    byPriority: {
+      LOW: number;
+      MEDIUM: number;
+      HIGH: number;
+      UNSET: number;
+    };
+    adminUserCounts?: AdminUserCounts | null;
+  };
+  myRecentTickets: DashboardRecentTicket[];
+  urgentTickets: DashboardRecentTicket[];
+  generatedAt: string;
+}
+
+export async function getRequesterDashboard(signal?: AbortSignal): Promise<RequesterDashboardResponse> {
+  const res = await fetch(`${API_URL}/api/dashboard/requester`, {
+    method: "GET",
+    credentials: "include",
+    signal
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to fetch requester dashboard", res.status, errorData.code);
+  }
+  return res.json();
+}
+
+export async function getStaffDashboard(signal?: AbortSignal): Promise<StaffDashboardResponse> {
+  const res = await fetch(`${API_URL}/api/dashboard/staff`, {
+    method: "GET",
+    credentials: "include",
+    signal
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to fetch staff dashboard", res.status, errorData.code);
+  }
+  return res.json();
+}
+
 

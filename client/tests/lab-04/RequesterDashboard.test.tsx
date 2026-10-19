@@ -204,7 +204,7 @@ describe('Requester Dashboard (UI-DSH-01 to UI-DSH-10)', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/no tickets yet|all caught up/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /no tickets yet/i })).toBeInTheDocument();
     });
 
     const createBtn = screen.getByRole('link', { name: /create ticket/i });
@@ -255,6 +255,22 @@ describe('Requester Dashboard (UI-DSH-01 to UI-DSH-10)', () => {
   });
 
   it('UI-DSH-08: refresh button re-fetches data, disables during in-flight, retains focus', async () => {
+    let resolveRefresh: any;
+    let callCount = 0;
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRequesterUser) });
+      }
+      if (url.includes('/api/dashboard/requester')) {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(mockRequesterDashboardData) });
+        }
+        return new Promise(r => { resolveRefresh = r; });
+      }
+      return Promise.reject(new Error('error'));
+    }));
+
     renderDashboard();
 
     await waitFor(() => {
@@ -267,6 +283,9 @@ describe('Requester Dashboard (UI-DSH-01 to UI-DSH-10)', () => {
 
     fireEvent.click(refreshBtn);
     expect(refreshBtn).toHaveAttribute('aria-busy', 'true');
+    expect(refreshBtn).toBeDisabled();
+
+    resolveRefresh({ ok: true, json: () => Promise.resolve(mockRequesterDashboardData) });
 
     await waitFor(() => {
       expect(refreshBtn).toHaveAttribute('aria-busy', 'false');
@@ -301,7 +320,7 @@ describe('Requester Dashboard (UI-DSH-01 to UI-DSH-10)', () => {
     fireEvent.click(refreshBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/could not refresh dashboard/i)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent(/could not refresh dashboard/i);
     });
 
     // Existing metrics must remain visible!
