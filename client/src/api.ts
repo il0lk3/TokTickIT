@@ -146,7 +146,7 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
   return res.json();
 }
 
-export async function updateTicket(ticketId: number, updates: any, isStaff?: boolean): Promise<TicketResponse> {
+export async function updateTicket(ticketId: number, updates: any, isStaff?: boolean): Promise<TicketDetailResponse> {
   const url = isStaff ? `${API_URL}/api/staff/tickets/${ticketId}` : `${API_URL}/api/tickets/${ticketId}`;
   const res = await fetch(url, {
     method: "PATCH",
@@ -156,7 +156,16 @@ export async function updateTicket(ticketId: number, updates: any, isStaff?: boo
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || "Failed to update ticket");
+    throw new ApiError(
+      errorData.error || "Failed to update ticket",
+      res.status,
+      errorData.code,
+      errorData.fields,
+      errorData.details,
+      errorData.currentStatus,
+      errorData.currentVersion,
+      errorData.updatedAt
+    );
   }
   return res.json();
 }
@@ -254,18 +263,27 @@ export interface InternalNote {
   };
 }
 
+export interface ResolutionGateInfo {
+  met: boolean;
+  hasActiveOwner: boolean;
+  validActionCount: number;
+  missing: string[];
+}
+
 export interface TicketDetailResponse extends TicketResponse {
   description: string;
   category: Category;
   relatedSystem: RelatedSystem;
   requester: Requester;
-  owner?: { id: number, name: string, email: string } | null;
+  owner?: { id: number, name: string, email: string, isActive?: boolean, role?: string } | null;
   ownerId?: number | null;
   attachments: Attachment[];
   publicComments: PublicComment[];
   internalNotes?: InternalNote[]; // Only if Staff
   ownerName?: string;
   resolutionSummary?: string;
+  allowedTransitions?: string[];
+  resolutionGate?: ResolutionGateInfo;
 }
 
 export async function getTicketDetail(id: number, isStaff?: boolean): Promise<TicketDetailResponse> {
@@ -354,7 +372,13 @@ export async function markAppearsResolved(ticketId: number): Promise<{ ticket: T
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || "Failed to mark as resolved");
+    throw new ApiError(
+      errorData.error || "Failed to mark as resolved",
+      res.status,
+      errorData.code,
+      errorData.fields,
+      errorData.details
+    );
   }
   return res.json();
 }
@@ -474,13 +498,30 @@ export class ApiError extends Error {
   status: number;
   code?: string;
   fields?: Record<string, string>;
+  details?: string[];
+  currentStatus?: string;
+  currentVersion?: number;
+  updatedAt?: string;
 
-  constructor(message: string, status: number, code?: string, fields?: Record<string, string>) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    fields?: Record<string, string>,
+    details?: string[],
+    currentStatus?: string,
+    currentVersion?: number,
+    updatedAt?: string
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.fields = fields;
+    this.details = details;
+    this.currentStatus = currentStatus;
+    this.currentVersion = currentVersion;
+    this.updatedAt = updatedAt;
   }
 }
 
