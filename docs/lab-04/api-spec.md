@@ -315,69 +315,139 @@ Allows an active IT Staff member to claim ownership of an existing ticket.
 ## 4. Operational Dashboard APIs
 
 ### 4.1 Requester Dashboard
-Provides summary statistics and recent ticket history strictly for the authenticated Requester.
+Provides summary statistics, urgent attention tickets, and recent ticket history strictly for the authenticated Requester.
 
 - **Method / Path**: `GET /api/dashboard/requester`
 - **Access**: `REQUESTER` only (Staff/Admin calling this receives `403 Forbidden`).
+- **Headers**:
+  - `Cache-Control: no-store`
 - **Success Response (200 OK)**:
   ```json
   {
     "metrics": {
-      "openTickets": 3,
-      "inProgress": 2,
-      "waitingForRequester": 1,
-      "recentlyResolved": 5,
-      "closed": 12
+      "openRequests": {
+        "count": 3,
+        "drillDown": {
+          "path": "/tickets",
+          "query": { "status": "New,Open,Reopened" }
+        }
+      },
+      "inProgress": {
+        "count": 2,
+        "drillDown": {
+          "path": "/tickets",
+          "query": { "status": "InProgress" }
+        }
+      },
+      "waitingForRequester": {
+        "count": 1,
+        "drillDown": {
+          "path": "/tickets",
+          "query": { "status": "WaitingForRequester" }
+        }
+      },
+      "recentlyResolved": {
+        "count": 5,
+        "drillDown": {
+          "path": "/tickets",
+          "query": { "status": "Resolved", "updatedSince": "2026-10-12T00:00:00.000Z" }
+        }
+      },
+      "closed": {
+        "count": 12,
+        "drillDown": {
+          "path": "/tickets",
+          "query": { "status": "Closed" }
+        }
+      }
     },
-    "drillDown": {
-      "openTickets": "/tickets?status=New,Open,Reopened",
-      "inProgress": "/tickets?status=InProgress",
-      "waitingForRequester": "/tickets?status=WaitingForRequester",
-      "recentlyResolved": "/tickets?status=Resolved",
-      "closed": "/tickets?status=Closed"
-    },
+    "attentionTickets": [
+      {
+        "id": 18,
+        "ticketNumber": "TKT-2026-000018",
+        "summary": "Need confirmation for software install",
+        "currentStatus": "WaitingForRequester",
+        "updatedAt": "2026-10-19T08:00:00.000Z",
+        "category": { "id": 2, "name": "Software" }
+      }
+    ],
     "recentTickets": [
       {
         "id": 24,
         "ticketNumber": "TKT-2026-000024",
         "summary": "Laptop battery drains quickly",
         "currentStatus": "InProgress",
-        "updatedAt": "2026-10-17T09:14:00.000Z",
-        "category": { "name": "Hardware" }
+        "updatedAt": "2026-10-19T09:14:00.000Z",
+        "category": { "id": 1, "name": "Hardware" }
       }
     ]
   }
   ```
 - **Metric Definitions**:
-  - `openTickets`: Tickets owned by Requester where status $\in$ `['New', 'Open', 'Reopened']`.
+  - `openRequests`: Tickets owned by Requester where status in `['New', 'Open', 'Reopened']`.
   - `inProgress`: Tickets owned by Requester where status = `'InProgress'`.
   - `waitingForRequester`: Tickets owned by Requester where status = `'WaitingForRequester'` (requires requester attention).
-  - `recentlyResolved`: Tickets owned by Requester where status = `'Resolved'` and `updatedAt >= (now - 7 days)`.
+  - `recentlyResolved`: Tickets owned by Requester where status = `'Resolved'` and `updatedAt >= (now - 7 rolling days)`.
   - `closed`: Tickets owned by Requester where status = `'Closed'`.
-  - `recentTickets`: Top 5 tickets owned by Requester ordered by `updatedAt DESC`.
+  - `attentionTickets`: Active tickets owned by Requester with status = `'WaitingForRequester'`, ordered by `updatedAt DESC, id DESC` (limit 5).
+  - `recentTickets`: Top 5 tickets owned by Requester ordered by `updatedAt DESC, id DESC`.
 
 ---
 
 ### 4.2 IT Staff & Administrator Dashboard
-Provides system-wide operational metrics, queue counts, and drill-down links.
+Provides system-wide operational metrics, normalized status/priority maps, user counts (admin-only), and drill-down links.
 
 - **Method / Path**: `GET /api/dashboard/staff`
 - **Access**: `IT_STAFF`, `ADMINISTRATOR` (Requesters return `403 Forbidden`).
+- **Headers**:
+  - `Cache-Control: no-store`
 - **Success Response (200 OK)**:
   ```json
   {
     "metrics": {
-      "unassigned": 8,
-      "ownedByMe": 16,
-      "newTickets": 14,
-      "openTickets": 23,
-      "inProgress": 18,
-      "waitingForRequester": 7,
-      "recentlyUpdated": 12,
+      "unassigned": {
+        "count": 8,
+        "drillDown": {
+          "path": "/queue",
+          "query": { "ownerId": "unassigned", "active": "true" }
+        }
+      },
+      "ownedByMe": {
+        "count": 16,
+        "drillDown": {
+          "path": "/queue",
+          "query": { "ownerId": "me", "active": "true" }
+        }
+      },
+      "appearsResolved": {
+        "count": 3,
+        "drillDown": {
+          "path": "/queue",
+          "query": { "appearsResolved": "true", "active": "true" }
+        }
+      },
+      "recentlyUpdated": {
+        "count": 12,
+        "drillDown": {
+          "path": "/queue",
+          "query": { "updatedSince": "2026-10-18T10:00:00.000Z", "active": "true" }
+        }
+      },
+      "byStatus": {
+        "New": 4,
+        "Open": 6,
+        "InProgress": 8,
+        "WaitingForRequester": 2,
+        "Resolved": 10,
+        "Closed": 15,
+        "Reopened": 1,
+        "Cancelled": 0
+      },
       "byPriority": {
-        "LOW": 15,
-        "MEDIUM": 25,
-        "HIGH": 8
+        "LOW": 5,
+        "MEDIUM": 12,
+        "HIGH": 3,
+        "UNSET": 0
       },
       "adminUserCounts": {
         "total": 35,
@@ -387,26 +457,30 @@ Provides system-wide operational metrics, queue counts, and drill-down links.
         "admins": 3
       }
     },
-    "drillDown": {
-      "unassigned": "/queue?ownerId=unassigned",
-      "ownedByMe": "/queue?ownerId=me",
-      "newTickets": "/queue?status=New",
-      "openTickets": "/queue?status=Open",
-      "inProgress": "/queue?status=InProgress",
-      "waitingForRequester": "/queue?status=WaitingForRequester"
-    },
-    "recentTickets": [
+    "myRecentTickets": [
       {
         "id": 34,
         "ticketNumber": "TKT-2026-000034",
         "summary": "Core router rebooted unexpectedly",
         "currentStatus": "InProgress",
         "itPriority": "HIGH",
-        "owner": {
-          "id": 2,
-          "name": "Michael Staff"
-        },
-        "updatedAt": "2026-10-17T09:14:00.000Z"
+        "owner": { "id": 2, "name": "Michael Staff" },
+        "requester": { "id": 10, "name": "Alice Requester" },
+        "category": { "id": 3, "name": "Network" },
+        "updatedAt": "2026-10-19T09:14:00.000Z"
+      }
+    ],
+    "urgentTickets": [
+      {
+        "id": 35,
+        "ticketNumber": "TKT-2026-000035",
+        "summary": "Production database latency spike",
+        "currentStatus": "Open",
+        "itPriority": "HIGH",
+        "owner": null,
+        "requester": { "id": 11, "name": "Bob Requester" },
+        "category": { "id": 4, "name": "Database" },
+        "updatedAt": "2026-10-19T09:20:00.000Z"
       }
     ]
   }
@@ -414,38 +488,42 @@ Provides system-wide operational metrics, queue counts, and drill-down links.
 - **Metric Definitions**:
   - `unassigned`: Active tickets (`currentStatus` not in `['Closed', 'Cancelled']`) where `ownerId === null`.
   - `ownedByMe`: Active tickets where `ownerId === authenticatedUser.id`.
-  - `newTickets`: Tickets with `currentStatus = 'New'`.
-  - `openTickets`: Tickets with `currentStatus = 'Open'`.
-  - `inProgress`: Tickets with `currentStatus = 'InProgress'`.
-  - `waitingForRequester`: Tickets with `currentStatus = 'WaitingForRequester'`.
-  - `recentlyUpdated`: Active tickets where `updatedAt >= (now - 24 hours)`.
-  - `byPriority`: Count of active tickets grouped by `itPriority`.
-  - `adminUserCounts`: Returned if authenticated user is `ADMINISTRATOR`, otherwise `null`.
-  - `recentTickets`: Top 5 active tickets in system ordered by `updatedAt DESC`.
+  - `appearsResolved`: Active tickets where `appearsResolved === true`.
+  - `recentlyUpdated`: Active tickets where `updatedAt >= (now - 24 rolling hours)`.
+  - `byStatus`: Complete normalized map containing all 8 lifecycle statuses (all values >= 0).
+  - `byPriority`: Count of active tickets grouped by `itPriority` (`LOW`, `MEDIUM`, `HIGH`, `UNSET`).
+  - `adminUserCounts`: User statistics returned if authenticated user is `ADMINISTRATOR`, otherwise `null` for IT Staff.
+  - `myRecentTickets`: Top 5 active tickets owned by the authenticated staff user ordered by `updatedAt DESC, id DESC`.
+  - `urgentTickets`: Top 5 active tickets across system with `itPriority = 'HIGH'` ordered by `updatedAt DESC, id DESC`.
 
-### 4.3 Client-Side Filter & Drill-Down Query Parameters
-The frontend application shell synchronizes table and list filters directly with the URL `window.location.search`. This enables persistent state across page reloads and direct navigation from dashboard drill-down links.
+---
 
-#### Ticket Queue (`/queue`):
-- `status`: String matching valid Ticket status (`New`, `Open`, `InProgress`, `WaitingForRequester`, `Resolved`, `Closed`, `Reopened`, `Cancelled`).
-- `ownerId`: Integer string representing user ID or keyword `unassigned`.
+### 4.3 List & Queue Query Parameters (1-to-1 Drill-Down Consistency)
+Both `/api/tickets` and `/api/staff/tickets` accept structured drill-down parameters ensuring `meta.total` matches dashboard card counts exactly:
+
+#### Staff Queue (`GET /api/staff/tickets`):
+- `status`: Single status or comma-separated status list (e.g. `status=New,Open,Reopened`).
+- `ownerId`: Integer ID, `"unassigned"` (ownerId IS NULL), or `"me"` (ownerId === authenticated staff).
+- `active`: `"true"` filters out `Closed` and `Cancelled` tickets.
+- `appearsResolved`: `"true"` filters tickets where requester submitted advisory confirmation.
+- `updatedSince`: ISO 8601 timestamp string (`updatedAt >= date`).
 - `itPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
 - `requestedPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
-- `categoryId`: Integer string matching Category ID.
-- `search`: Text search string matched against summary/description.
-- `page`: Integer page number (default: 1).
-- `limit`: Integer page size (default: 10).
+- `categoryId`: Integer ID.
+- `search`: Case-insensitive search on ticketNumber or summary.
+- `page`, `limit`, `sortBy`, `sortOrder`.
 
-#### My Tickets (`/tickets`):
-- `status`: String matching valid Ticket status.
-- `categoryId`: Integer string matching Category ID.
+#### Requester My Tickets (`GET /api/tickets`):
+- `status`: Single status or comma-separated status list (e.g. `status=New,Open,Reopened`).
+- `active`: `"true"` filters out `Closed` and `Cancelled` tickets.
+- `updatedSince`: ISO 8601 timestamp string (`updatedAt >= date`).
 - `requestedPriority`: Priority level (`LOW`, `MEDIUM`, `HIGH`).
-- `search`: Text search string.
-- `page`: Integer page number.
-- `limit`: Integer page size.
+- `categoryId`: Integer ID.
+- `search`: Case-insensitive search.
+- `page`, `limit`, `sortBy`, `sortOrder`.
 
 ---
 
 ## 5. Date & Timezone Conventions
-- Timestamps sent and received over REST are in **ISO 8601** UTC string format (e.g. `2026-10-17T09:30:00.000Z`).
-- Date boundary aggregations (e.g., "within last 7 days", "past 24 hours") use the server timezone `Asia/Bangkok` (UTC+7) reference.
+- Timestamps sent and received over REST are in **ISO 8601** UTC string format (e.g. `2026-10-19T09:30:00.000Z`).
+- Time window boundaries (`recentlyResolved` 7 days, `recentlyUpdated` 24 hours) operate on deterministic rolling millisecond intervals (`Date.now() - durationMs`), maintaining UTC invariance and test reproducibility.

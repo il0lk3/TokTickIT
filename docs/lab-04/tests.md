@@ -64,11 +64,30 @@ cd e2e && npx playwright test lab-04
 | **API-WKF-09** | API | **BR-08** | Requester calls `/appears-resolved` | HTTP 200 OK; sets advisory flag; status unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
 | **API-WKF-10** | API | **AC-05, BR-10** | Reject PATCH with only `expectedVersion` and no operational fields | HTTP 400 Bad Request; `NO_FIELDS_TO_UPDATE` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
 | **API-WKF-11** | API | **BR-12** | Non-IT_STAFF (e.g. Administrator) attempts to claim ticket | HTTP 400 Bad Request; `ASSIGNEE_NOT_ELIGIBLE` | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
-| **API-DSH-01** | API | **AC-02, BR-15** | Requester retrieves dashboard metrics | HTTP 200 OK; returns only tickets and counts owned by user | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
-| **API-DSH-02** | API | **AC-08, BR-14** | Requester with zero tickets loads dashboard | HTTP 200 OK; all metric counters return 0; empty array | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
-| **API-DSH-03** | API | **BR-15** | Requester attempts to call Staff dashboard endpoint | HTTP 403 Forbidden | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
-| **API-DSH-04** | API | **AC-09, BR-14** | Staff retrieves operational dashboard metrics | HTTP 200 OK; metric counts match direct PostgreSQL queries | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
-| **API-DSH-05** | API | **BR-13** | Administrator retrieves Staff dashboard | HTTP 200 OK; includes `adminUserCounts` block | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
+| **API-DSH-01** | API | **AC-02, BR-14** | Requester retrieves dashboard metrics with structured drillDown and normalized counters | HTTP 200 OK; returns metrics, attentionTickets, recentTickets | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-02** | API | **AC-02** | Requester tenant isolation: user A sees 0 metrics or tickets belonging to user B | HTTP 200 OK; 0 cross-tenant data leaks | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-03** | API | **AC-08** | Requester with zero tickets receives all metric counts equal to 0, empty lists, and no nulls | HTTP 200 OK; empty arrays and 0 counters | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-04** | API | **BR-14** | Rolling 7-day boundary precision for recentlyResolved (6d 23h included, 7d 1h excluded) | Boundary tickets verified against rolling time window | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-05** | API | **AC-02** | attentionTickets list contains active tickets in WaitingForRequester status | HTTP 200 OK; contains active attention tickets | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-06** | API | **BR-15** | IT Staff and Administrator calling /api/dashboard/requester receive 403 Forbidden | HTTP 403 Forbidden | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-07** | API | **BR-15** | Unauthenticated or expired token request receives 401 Unauthorized | HTTP 401 Unauthorized | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-08** | API | **AC-02** | Isolation check: query parameter ?userId=<other> is strictly ignored | HTTP 200 OK; tickets belong strictly to authenticated requester | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-09** | API | **DoD-6** | Calling GET /api/tickets with drillDown.query params matches card count for every metric | HTTP 200 OK; list total strictly equals card count | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-10** | API | **Rubric-5** | Direct SQL comparison: metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-11** | API | **AC-09** | Staff retrieves operational dashboard metrics with complete byStatus and byPriority maps | HTTP 200 OK; normalized maps returned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-12** | API | **BR-14** | Closed and Cancelled tickets without owner are NOT counted in unassigned active metric | HTTP 200 OK; terminal tickets excluded from active unassigned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-13** | API | **AC-09** | byPriority contains LOW, MEDIUM, HIGH, and UNSET keys (all >= 0) even when counts are 0 | Normalized map has all keys defined | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-14** | API | **BR-14** | Rolling 24-hour boundary precision for recentlyUpdated (23h included, 25h excluded) | Boundary tickets verified against rolling time window | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-15** | API | **AC-09** | Staff sees appearsResolved metric counting active tickets flagged by requester | HTTP 200 OK; counts active flagged tickets | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-16** | API | **AC-09** | Recent lists include myRecentTickets (owned by staff) and urgentTickets (HIGH priority active) | Lists contain appropriate ticket subsets | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-17** | API | **BR-13** | Administrator receives adminUserCounts breakdown, while IT_STAFF receives null | Admin gets user breakdown; Staff gets null | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-18** | API | **BR-15** | Requester calling /api/dashboard/staff receives 403 Forbidden | HTTP 403 Forbidden | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-19** | API | **BR-15** | Unauthenticated or expired token request receives 401 Unauthorized | HTTP 401 Unauthorized | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-20** | API | **DoD-6** | Calling GET /api/staff/tickets with drillDown.query params matches card count for every metric | HTTP 200 OK; queue total strictly equals card count | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-21** | API | **Rubric-5** | Direct SQL comparison: staff metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-22** | API | **BR-14** | When updatedAt is identical, recent ticket items sort consistently by id DESC | Secondary tiebreaker deterministic sorting | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-23** | API | **BR-14** | Endpoint returns Cache-Control: no-store header | Cache-Control header present and strictly no-store | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-24** | API | **Sec-1** | Response objects expose only public user fields (id, name), omitting emails, roles, and passwordHash | No sensitive credentials leaked in dashboard response | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-MIG-01** | DB | **AC-11** | Database migration preserves Labs 1-3 records | Pre- and post-migration record counts for Users, Tickets, etc. are identical | `server/tests/lab-04/database-regression.test.ts` | Passed |
 | **API-MIG-02** | DB | **AC-11** | Seed script is idempotent when executed repeatedly | Database record counts remain unchanged after 2nd seed run | `server/tests/lab-04/database-regression.test.ts` | Passed |
 | **UI-ACT-01** | UI | **AC-01, AC-08, BR-16** | Actions Taken section renders list and empty state | Renders loading spinner, chronological table (`actionAt` ASC, `id` ASC), and empty alert when 0 actions | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
@@ -157,18 +176,18 @@ cd e2e && npx playwright test lab-04
 ## 4. Acceptance Criteria Verification Summary
 
 - **AC-01**: Verified by `API-ACT-01`, `UI-ACT-01`, `E2E-01`
-- **AC-02**: Verified by `API-DSH-01`, `UI-DSH-03`, `E2E-03`
+- **AC-02**: Verified by `API-DSH-01`, `API-DSH-02`, `API-DSH-05`, `API-DSH-08`, `API-DSH-09`, `API-DSH-10`, `UI-DSH-03`, `E2E-03`
 - **AC-03**: Verified by `API-ACT-02`, `API-ACT-03`, `UI-ACT-02`, `E2E-01`
 - **AC-04**: Verified by `API-ACT-05`, `UI-ACT-03`
 - **AC-05**: Verified by `API-WKF-02`, `UI-WKF-01`
 - **AC-06**: Verified by `API-WKF-03`, `API-WKF-04`, `API-WKF-05`, `UI-WKF-02`, `E2E-02`
 - **AC-07**: Verified by `API-WKF-06`, `UI-WKF-03`, `E2E-02`
-- **AC-08**: Verified by `API-ACT-08`, `API-DSH-02`, `UI-ACT-01`, `UI-DSH-04`
-- **AC-09**: Verified by `API-DSH-04`, `UI-DSH-01`, `E2E-03`
+- **AC-08**: Verified by `API-ACT-08`, `API-DSH-03`, `UI-ACT-01`, `UI-DSH-04`
+- **AC-09**: Verified by `API-DSH-11` through `API-DSH-24`, `UI-DSH-01`, `E2E-03`
 - **AC-10**: Verified by `API-ACT-11`, `UI-ACT-04`
 - **AC-11**: Verified by `API-MIG-01`, `API-MIG-02`
 - **AC-12**: Verified by `E2E-04`
-- **AC-13**: Verified by `REG-01` (165/165 server tests, 60/60 client tests, 100% pass)
+- **AC-13**: Verified by `REG-01` (189/189 server tests, 102/102 client tests, 100% pass)
 - **AC-14**: Verified by `UI-NAV-01` through `UI-NAV-11`, `UI-NAV-17`, `UI-NAV-18`, `E2E-NAV-01` through `E2E-NAV-04`, `E2E-NAV-06`
 - **AC-15**: Verified by `UI-NAV-12` through `UI-NAV-16`, `E2E-NAV-05`
 

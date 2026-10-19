@@ -26,6 +26,9 @@ app.use("/api/staff", staffRouter);
 import adminRouter from "./routes/admin.js";
 app.use("/api/admin", adminRouter);
 
+import dashboardRouter from "./routes/dashboard.js";
+app.use("/api/dashboard", dashboardRouter);
+
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
 // Make the test in tests/lab-01/health.test.ts pass.

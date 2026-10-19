@@ -34,6 +34,9 @@ router.get("/tickets", async (req: Request, res: Response) => {
       itPriority,
       categoryId,
       ownerId,
+      active,
+      appearsResolved,
+      updatedSince,
       sortBy = "createdAt",
       sortOrder = "desc"
     } = req.query;
@@ -58,8 +61,31 @@ router.get("/tickets", async (req: Request, res: Response) => {
     }
 
     const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
-    if (status && !validStatuses.includes(status as string)) {
-      return res.status(400).json({ error: "Invalid status parameter", code: "INVALID_STATUS" });
+    const where: Prisma.TicketWhereInput = {};
+    const statusConditions: Prisma.TicketWhereInput[] = [];
+
+    if (status) {
+      const statusList = (status as string).split(",").map(s => s.trim()).filter(Boolean);
+      for (const s of statusList) {
+        if (!validStatuses.includes(s)) {
+          return res.status(400).json({ error: "Invalid status parameter", code: "INVALID_STATUS" });
+        }
+      }
+      if (statusList.length === 1) {
+        statusConditions.push({ currentStatus: statusList[0] as TicketStatus });
+      } else if (statusList.length > 1) {
+        statusConditions.push({ currentStatus: { in: statusList as TicketStatus[] } });
+      }
+    }
+
+    if (active === "true") {
+      statusConditions.push({ currentStatus: { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] } });
+    }
+
+    if (statusConditions.length === 1) {
+      where.currentStatus = statusConditions[0].currentStatus;
+    } else if (statusConditions.length > 1) {
+      where.AND = statusConditions;
     }
 
     const validPriorities = ["LOW", "MEDIUM", "HIGH"];
@@ -70,8 +96,6 @@ router.get("/tickets", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid itPriority parameter", code: "INVALID_PRIORITY" });
     }
 
-    const where: Prisma.TicketWhereInput = {};
-
     if (search) {
       const searchStr = search as string;
       where.OR = [
@@ -80,7 +104,6 @@ router.get("/tickets", async (req: Request, res: Response) => {
       ];
     }
 
-    if (status) where.currentStatus = status as TicketStatus;
     if (requestedPriority) where.requestedPriority = requestedPriority as TicketPriority;
     if (itPriority) where.itPriority = itPriority as TicketPriority;
     
@@ -95,6 +118,8 @@ router.get("/tickets", async (req: Request, res: Response) => {
     if (ownerId) {
       if (ownerId === "unassigned") {
         where.ownerId = null;
+      } else if (ownerId === "me") {
+        where.ownerId = res.locals.user?.id;
       } else {
         const ownerIdNum = parseInt(ownerId as string, 10);
         if (!isNaN(ownerIdNum)) {
@@ -105,13 +130,24 @@ router.get("/tickets", async (req: Request, res: Response) => {
       }
     }
 
+    if (appearsResolved === "true") {
+      where.appearsResolved = true;
+    }
+
+    if (updatedSince) {
+      const date = new Date(updatedSince as string);
+      if (!isNaN(date.getTime())) {
+        where.updatedAt = { gte: date };
+      }
+    }
+
     const skip = (pageNum - 1) * limitNum;
     const prismaSortField = sortBy === "status" ? "currentStatus" : sortBy;
 
     const [tickets, total] = await Promise.all([
       prisma.ticket.findMany({
         where,
-        orderBy: { [prismaSortField as string]: sortOrder },
+        orderBy: [{ [prismaSortField as string]: sortOrder }, { id: 'desc' }],
         skip,
         take: limitNum,
         include: {
