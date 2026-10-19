@@ -199,35 +199,74 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ---
 
-## 6. Ticket Workflow Controls & Feedback
+## 6. Ticket Workflow Controls & Resolution Feedback (Issue 7)
 
-### 6.1 Status Transition Controls (IT Staff Detail)
-- Action Bar at top-right of Ticket Detail.
-- Dropdown or button group displaying **only** valid next transitions based on the current status and transition matrix.
-- **Resolution Gate Feedback**:
-  - If Ticket has no owner OR 0 Actions Taken with results:
-    - The "Resolve" button is disabled or accompanied by an inline alert:
-      `ℹ️ Ticket must have an assigned owner and at least one logged action before it can be resolved.`
-  - If a client attempts to bypass this, the API returns a 400 error which is displayed as a prominent danger alert.
-- **Confirmation for Irreversible States**:
-  - Transitioning to `Cancelled` or `Closed` requires confirming via a modal dialog with full keyboard focus trap and `Esc` to cancel.
+### 6.1 Status Transition Controls (`TicketWorkflowActions`)
+- **Location**: Rendered directly beneath the Current Status indicator on Ticket Detail (`TicketDetail.tsx`).
+- **Dynamic Action Button Row**:
+  - Consumes `ticket.allowedTransitions` directly from the backend as the single source of truth.
+  - Renders tailored SVG-icon action buttons for permitted transitions:
+    - `Open Ticket`: Outline Primary with folder/open SVG icon.
+    - `In Progress`: Outline Warning with clock/progress SVG icon.
+    - `Waiting for Requester`: Outline Info with user/chat SVG icon.
+    - `Resolve`: Solid Emerald Green (`btn-success`) when gate is satisfied, or disabled outline secondary with opacity when gate is incomplete.
+    - `Close Ticket`: Outline Secondary with lock/archive SVG icon.
+    - `Reopen`: Warning with reload/sync SVG icon.
+    - `Cancel Ticket`: Outline Danger with cancel/cross SVG icon.
+  - Buttons are disabled with loading state when mutations are in-flight.
+- **Accessible Live Region Announcer**:
+  - Live region with `role="status"` and `aria-live="polite"` announces status transitions (e.g. `Status changed to InProgress`).
+  - Focus smoothly recovers to `#ticket-summary-status` when triggering action button unmounts.
 
-### 6.2 Optimistic Concurrency Conflict Modal (409)
-- If another user updated the ticket while the current user had it open:
-  - The API responds with `409 Conflict`.
-  - The UI presents a clear modal dialog:
-    - Title: `⚠️ Conflict Detected`
-    - Body: `"This ticket has been updated by another team member since you loaded it. To prevent accidental overwrites, please reload the latest data."`
-    - Actions: **"Reload Ticket"** button (fetches latest state) and **"Dismiss"** button.
+### 6.2 Resolution Gate Feedback & Actionable Shortcuts
+- **Gate Blocking**:
+  - When `ticket.resolutionGate.met === false`, the `Resolve` action button is `aria-disabled="true"` and has `aria-describedby="resolution-gate-reason"`.
+  - Resolution Gate Banner (`#resolution-gate-reason`) displays below action buttons:
+    - Text: *"Resolution Gate Requirements: Ticket must have an assigned active IT Staff owner and at least one logged action taken with a result before it can be resolved."*
+    - Non-color cue: Alert warning icon SVG (circle with exclamation point).
+    - **Actionable Shortcut Buttons**:
+      - `Assign Owner` shortcut button: Automatically focuses `#ownerSelect` to assign an active staff member.
+      - `Log Action` shortcut button: Smoothly scrolls to `#actions-taken-section` and triggers the create action form.
+- **Gate Unblocking**:
+  - Once both requirements are satisfied (`hasActiveOwner === true` and `validActionCount >= 1`), the gate banner unmounts and the `Resolve` button becomes active.
 
-### 6.3 Requester Advisory Indication
-- On Requester Ticket Detail:
-  - Button: `"Problem Appears Resolved"`
-  - Below Current Status: Once clicked, displays an advisory banner:
-    `✓ You reported this problem appears resolved. IT Staff will verify and complete resolution.`
-  - The button is disabled after clicking.
-- On Staff Ticket Detail:
-  - A prominent notice badge appears: `🔔 Requester marked issue as resolved` to notify staff to verify work and close the ticket.
+### 6.3 Unified Accessible Dialog (`AccessibleDialog`)
+- **Modal Specifications**:
+  - Single reusable accessible modal component implementing WAI-ARIA Dialog and Alertdialog patterns.
+  - Supports role: `dialog` (standard modal) or `alertdialog` (concurrency collision, destructive confirmation).
+  - Background overlay with body scroll lock (`modal-open` class) and application root `inert` attribute.
+  - Focus trap keeps Tab and Shift+Tab traversal strictly inside the modal boundary.
+  - Initial focus safely defaults to the safe cancel button (`initialFocusSafe={true}`).
+  - `Esc` key dismisses modal; backdrop clicking dismisses unless `isSubmitting` is in-flight.
+  - Returning focus: Automatically restores focus to the previously active element upon unmounting.
+- **Use Cases**:
+  1. **Destructive State Confirmation (`Cancelled`, `Closed`)**:
+     - Warns staff of terminal transitions: *"Are you sure you want to cancel/close this ticket? This action is terminal and cannot be reversed."*
+     - Cancel button labeled *"Keep Ticket"*; Confirm button labeled *"Confirm Cancel"* or *"Confirm Closed"*.
+  2. **Optimistic Concurrency Conflict Dialog (HTTP 409)**:
+     - Catches 409 `STALE_VERSION_CONFLICT`.
+     - Displays server's current status and version: *"This ticket has been modified by another user. Current status is {status} (v{version}). Please reload latest changes to prevent accidental overwrites."*
+     - Primary action *"Reload Ticket"* fetches latest ticket state and bumps local state version.
+  3. **Requester Advisory Signal Confirmation**:
+     - Opened when requester clicks *"Problem Appears Resolved"*.
+     - Explains: *"This will notify IT Staff that your issue appears resolved and post an advisory audit comment. IT Staff will verify and complete the resolution."*
+     - Confirmation dispatches `PATCH /api/tickets/:id/appears-resolved`, appends audit comment, and updates badge.
+
+### 6.4 Requester Advisory & Staff Banner Feedback
+- **Requester View**:
+  - On `Open`, `InProgress`, or `WaitingForRequester` tickets, a *"Problem Appears Resolved"* button is available.
+  - Once signaled, button is replaced with Zen Success badge: *"You reported this problem appears resolved"*.
+- **Staff View**:
+  - Staff sees a prominent green advisory banner (`#requester-advisory-banner`):
+    - Bell SVG graphic + *"Requester marked issue as resolved — please verify actions taken and resolve ticket."*
+    - Direct action button: *"Review Actions Taken"* smoothly scrolls and focuses `#actions-taken-section`.
+  - When staff transitions the ticket status, `ticket.appearsResolved` is reset and the advisory banner automatically unmounts.
+
+### 6.5 Terminal State Locking
+- When ticket is `Closed` or `Cancelled`:
+  - `Ticket Owner` dropdown, `Claim Ticket` button, and `IT Priority` dropdown are strictly `disabled`.
+  - For `Closed` tickets, only the `Reopen` transition action is permitted.
+  - For `Cancelled` tickets, all workflow transitions are locked (`allowedTransitions = []`).
 
 ---
 

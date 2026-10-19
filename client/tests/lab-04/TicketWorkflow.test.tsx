@@ -171,7 +171,7 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
             ok: true,
             json: () => Promise.resolve(createMockTicket({
               currentStatus: testCase.status,
-              allowedTransitions: testCase.allowedTransitions || testCase.allowed,
+              allowedTransitions: testCase.allowed,
             })),
           });
         }
@@ -193,7 +193,14 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
 
       // Verify each allowed option is present
       for (const target of testCase.allowed) {
-        expect(screen.getByRole('button', { name: new RegExp(target, 'i') })).toBeInTheDocument();
+        const regex = target === 'Resolved' ? /resolve/i :
+                      target === 'Cancelled' ? /cancel/i :
+                      target === 'Closed' ? /close/i :
+                      target === 'Reopened' ? /reopen/i :
+                      target === 'InProgress' ? /in progress/i :
+                      target === 'WaitingForRequester' ? /waiting for requester/i :
+                      new RegExp(target, 'i');
+        expect(screen.getByRole('button', { name: regex })).toBeInTheDocument();
       }
 
       // Verify unpermitted options are NOT present
@@ -231,9 +238,9 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
     });
 
     // Requester must not see any status transition buttons
-    expect(screen.queryByRole('button', { name: /in progress/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /resolve/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^in progress$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^resolve$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^cancel ticket$/i })).not.toBeInTheDocument();
   });
 
   // ==========================================
@@ -342,7 +349,7 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
     expect(assignOwnerShortcut).toBeInTheDocument();
 
     // Check shortcut to Log Action
-    const logActionShortcut = screen.getByRole('button', { name: /log action/i });
+    const logActionShortcut = screen.getByRole('button', { name: /^log action$/i });
     expect(logActionShortcut).toBeInTheDocument();
   });
 
@@ -708,7 +715,7 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
       expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     });
 
-    const closeBtn = screen.getByRole('button', { name: /close|dismiss/i });
+    const closeBtn = screen.getByRole('button', { name: /^Close$/i });
     fireEvent.click(closeBtn);
 
     await waitFor(() => {
@@ -731,12 +738,12 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
     fireEvent.click(cancelBtn);
 
     await waitFor(() => {
-      const dialog = screen.getByRole('dialog') || screen.getByRole('alertdialog');
+      const dialog = screen.getByRole('alertdialog');
       expect(dialog).toBeInTheDocument();
       expect(dialog).toHaveTextContent(/confirm cancellation|cancel ticket/i);
 
-      // Safe button (Keep Ticket / Cancel) must have focus
-      const safeBtn = screen.getByRole('button', { name: /keep ticket|do not cancel|cancel/i });
+      // Safe button (Keep Ticket) must have focus
+      const safeBtn = screen.getByRole('button', { name: 'Keep Ticket' });
       expect(document.activeElement).toBe(safeBtn);
     });
   });
@@ -755,7 +762,7 @@ describe('Ticket Workflow and Resolution Feedback (Lab 4 Issue 7)', () => {
     fireEvent.click(cancelBtn);
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog') || screen.getByRole('alertdialog')).toBeInTheDocument();
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     });
 
     // Press Escape

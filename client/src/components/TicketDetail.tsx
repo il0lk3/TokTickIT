@@ -1,8 +1,22 @@
-import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
-import { TicketDetailResponse, getTicketDetail, uploadAttachment, removeAttachment, downloadAttachmentBlob, postComment, markAppearsResolved, getItStaff, UserResponse, updateTicket, postNote } from "../api.js";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  TicketDetailResponse,
+  getTicketDetail,
+  uploadAttachment,
+  removeAttachment,
+  downloadAttachmentBlob,
+  postComment,
+  markAppearsResolved,
+  getItStaff,
+  UserResponse,
+  updateTicket,
+  postNote,
+  ApiError
+} from "../api.js";
 import { useAuth } from "../contexts/AuthContext";
 import { ActionsTakenSection } from "./ticket/ActionsTakenSection";
+import { TicketWorkflowActions } from "./ticket/TicketWorkflowActions";
+import { AccessibleDialog } from "./common/AccessibleDialog";
 
 interface TicketDetailProps {
   ticketId: number;
@@ -15,6 +29,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   const [itStaffList, setItStaffList] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [workflowError, setWorkflowError] = useState("");
+  const [statusAnnouncement, setStatusAnnouncement] = useState("");
   const [commentError, setCommentError] = useState("");
   const [noteError, setNoteError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -23,8 +39,16 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   const [noteText, setNoteText] = useState("");
   const [updating, setUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState("public");
+
+  // Modals state
   const [confirmModal, setConfirmModal] = useState<{ status: string } | null>(null);
+  const [conflictModal, setConflictModal] = useState<{ currentStatus?: string; currentVersion?: number } | null>(null);
+  const [advisoryModal, setAdvisoryModal] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const ownerSelectRef = useRef<HTMLSelectElement>(null);
+
+  const isStaff = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
 
   useEffect(() => {
     async function load() {
@@ -33,7 +57,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
         const isStaffUser = user.role === "IT_STAFF" || user.role === "ADMINISTRATOR";
         const detail = await getTicketDetail(ticketId, isStaffUser);
         setTicket(detail);
-        if (user.role === "IT_STAFF") {
+        if (isStaffUser) {
           const staff = await getItStaff();
           setItStaffList(staff);
         }
@@ -56,27 +80,6 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
       console.error("Failed to reload ticket:", err);
     }
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && confirmModal) {
-        setConfirmModal(null);
-      }
-    };
-    if (confirmModal) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [confirmModal]);
-
-  useEffect(() => {
-    if (confirmModal) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    return () => document.body.classList.remove('modal-open');
-  }, [confirmModal]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !ticket || !e.target.files?.length) return;
@@ -187,16 +190,22 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
     }
   };
 
-  const handleAppearsResolved = async () => {
+  const handleExecuteAppearsResolved = async () => {
     if (!user || !ticket) return;
-    setCommenting(true);
+    setUpdating(true);
+    setWorkflowError("");
     try {
       const result = await markAppearsResolved(ticketId);
-      setTicket(prev => prev ? { ...prev, appearsResolved: true, publicComments: [...prev.publicComments, result.comment] } : null);
+      setTicket(prev => prev ? {
+        ...prev,
+        appearsResolved: true,
+        version: result.ticket.version ?? (prev.version ?? 1) + 1,
+        publicComments: [...prev.publicComments, result.comment],
+      } : null);
     } catch (err: any) {
-      alert(err.message || "Failed to mark as resolved");
+      setWorkflowError(err.message || "Failed to mark as resolved");
     } finally {
-      setCommenting(false);
+      setUpdating(false);
     }
   };
 
@@ -205,19 +214,60 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
       setConfirmModal({ status: updates.status });
       return;
     }
-    performUpdate(updates);
+    performTicketUpdate(updates);
   };
 
-  const performUpdate = async (updates: { ownerId?: number | null; itPriority?: string; status?: string }) => {
+  const performTicketUpdate = async (updates: { ownerId?: number | null; itPriority?: string; status?: string }) => {
     if (!ticket) return;
     setUpdating(true);
+    setWorkflowError("");
     try {
       const isStaffUser = user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR";
-      await updateTicket(ticketId, { ...updates, expectedVersion: ticket.version ?? 1 }, isStaffUser);
-      const detail = await getTicketDetail(ticketId, isStaffUser);
-      setTicket(detail);
+      const updated = await updateTicket(ticketId, {
+        ...updates,
+        expectedVersion: ticket.version ?? 1,
+      }, isStaffUser);
+
+      setTicket(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...updated,
+          version: updated.version,
+          updatedAt: updated.updatedAt,
+          currentStatus: updated.currentStatus || prev.currentStatus,
+          allowedTransitions: updated.allowedTransitions || prev.allowedTransitions,
+          resolutionGate: updated.resolutionGate || prev.resolutionGate,
+          appearsResolved: updated.appearsResolved !== undefined ? updated.appearsResolved : prev.appearsResolved,
+        };
+      });
+
+      if (updates.status) {
+        setStatusAnnouncement(`Status changed to ${updates.status}`);
+        setTimeout(() => {
+          const summaryEl = document.getElementById("ticket-summary-status");
+          if (summaryEl) {
+            summaryEl.focus();
+          }
+        }, 50);
+      }
     } catch (err: any) {
-      alert(err.message || "Failed to update ticket");
+      if (err instanceof ApiError && (err.status === 409 || err.code === 'STALE_VERSION_CONFLICT')) {
+        setConflictModal({
+          currentStatus: err.currentStatus,
+          currentVersion: err.currentVersion,
+        });
+      } else if (err instanceof ApiError && err.code === 'RESOLUTION_GATE_FAILED') {
+        setWorkflowError("Resolution gate failed: Ticket must have an active IT Staff owner and at least one Action Taken with a result.");
+      } else if (err instanceof ApiError && err.code === 'INVALID_STATUS_TRANSITION') {
+        setWorkflowError(err.message || "Invalid status transition.");
+      } else if (err instanceof ApiError && err.code === 'TERMINAL_TICKET_LOCKED') {
+        setWorkflowError(err.message || "Cannot modify a locked ticket.");
+      } else if (err instanceof ApiError && err.code === 'INACTIVE_ASSIGNEE_REJECTED') {
+        setWorkflowError("Must be an active IT Staff member (inactive user rejected).");
+      } else {
+        setWorkflowError(err.message || "Network or unexpected error occurred. Please try again.");
+      }
     } finally {
       setUpdating(false);
       setConfirmModal(null);
@@ -255,429 +305,580 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "New": return "badge-zen-info";
+      case "Open": return "badge-zen-primary";
       case "InProgress": return "badge-zen-warning";
       case "WaitingForRequester": return "badge-zen-warning";
       case "Resolved": return "badge-zen-success";
       case "Closed": return "badge-zen-secondary";
+      case "Cancelled": return "badge-zen-danger";
+      case "Reopened": return "badge-zen-warning";
       default: return "badge-zen-secondary";
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "New":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>;
+      case "Open":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
+      case "InProgress":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+      case "WaitingForRequester":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+      case "Resolved":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>;
+      case "Closed":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+      case "Cancelled":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>;
+      case "Reopened":
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>;
+      default:
+        return null;
+    }
+  };
+
   const activeAttachments = ticket.attachments.filter(a => !a.isRemoved).length;
-  const isTerminal = ["Resolved", "Closed", "Cancelled"].includes(ticket.currentStatus);
-  const isStaff = user?.role === "IT_STAFF";
+  const isTerminal = ["Closed", "Cancelled"].includes(ticket.currentStatus);
+
+  // Status transitions available
+  const fallbackTransitions = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"].filter(s => s !== ticket.currentStatus);
+  const allowedTransitions = ticket.allowedTransitions !== undefined ? ticket.allowedTransitions : fallbackTransitions;
 
   return (
     <>
       <div className="animate-enter position-relative">
+        {/* Announcer region for a11y */}
+        <div role="status" aria-live="polite" className="visually-hidden">
+          {statusAnnouncement}
+        </div>
+
         {/* Loading Overlay for updates */}
-      {updating && (
-        <div className="position-absolute w-100 h-100 bg-white bg-opacity-50 d-flex justify-content-center align-items-center" style={{ zIndex: 10, backdropFilter: 'blur(1px)' }}>
-          <div className="spinner-border text-zen-primary" role="status"></div>
+        {updating && (
+          <div className="position-absolute w-100 h-100 bg-white bg-opacity-50 d-flex justify-content-center align-items-center" style={{ zIndex: 10, backdropFilter: 'blur(1px)' }}>
+            <div className="spinner-border text-zen-primary" role="status"></div>
+          </div>
+        )}
+
+        {/* Breadcrumb and Back Button */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="text-success fw-medium">
+            <span className="text-success" style={{cursor: 'pointer'}} onClick={onBack}>{isStaff ? "Ticket Queue" : "My Tickets"}</span> &gt; <span className="text-secondary">Ticket Details</span>
+          </div>
+          <button onClick={onBack} className="btn btn-outline-success btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 bg-white">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to {isStaff ? "Queue" : "Tickets"}
+          </button>
         </div>
-      )}
 
-      {/* Breadcrumb and Back Button */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="text-success fw-medium">
-          <span className="text-success" style={{cursor: 'pointer'}} onClick={onBack}>{isStaff ? "Ticket Queue" : "My Tickets"}</span> &gt; <span className="text-secondary">Ticket Details</span>
-        </div>
-        <button onClick={onBack} className="btn btn-outline-success btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 bg-white">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          Back to {isStaff ? "Queue" : "Tickets"}
-        </button>
-      </div>
+        {/* Staff Advisory Notice Banner */}
+        {ticket.appearsResolved && isStaff && (
+          <div
+            id="requester-advisory-banner"
+            data-testid="requester-advisory-banner"
+            className="alert alert-success d-flex align-items-center justify-content-between p-3 mb-4 rounded-3 border-0 bg-success bg-opacity-10 shadow-sm"
+            role="region"
+            aria-label="Requester Advisory Notice"
+          >
+            <div className="d-flex align-items-center gap-2 text-success-emphasis fw-medium">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span>Requester marked issue as resolved — please verify actions taken and resolve ticket.</span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-success px-3 py-1 rounded-pill fw-bold text-nowrap"
+              onClick={() => {
+                const el = document.getElementById("actions-taken-section");
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                  el.focus();
+                }
+              }}
+            >
+              Review Actions Taken
+            </button>
+          </div>
+        )}
 
-      <div className="glass-panel overflow-hidden mb-4">
-        <div className="p-4 p-md-5">
-          <div className="row g-4">
-            {/* Row 1 */}
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Ticket No.</label>
-              <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.ticketNumber} style={{ cursor: 'default' }} />
+        {/* Workflow / Concurrency Error Alert */}
+        {workflowError && (
+          <div className="alert alert-danger d-flex align-items-center justify-content-between p-3 mb-4 rounded-3 shadow-sm border-0" role="alert">
+            <div className="d-flex align-items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <span>{workflowError}</span>
             </div>
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Category</label>
-              <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.category.name} style={{ cursor: 'default' }} />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Related System</label>
-              <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.relatedSystem.name} style={{ cursor: 'default' }} />
-            </div>
+            <button type="button" className="btn-close" aria-label="Close" onClick={() => setWorkflowError("")} />
+          </div>
+        )}
 
-            {/* Row 2 */}
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Requester</label>
-              <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.requester?.name || '-'} style={{ cursor: 'default' }} />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Ticket Owner</label>
-              {isStaff ? (
-                <div className="d-flex align-items-center gap-2">
-                  <select 
-                    className="form-select bg-white border"
-                    style={{ cursor: 'pointer' }}
-                    value={ticket.owner?.id || ticket.ownerId || ""}
-                    onChange={(e) => requestUpdate({ ownerId: e.target.value ? parseInt(e.target.value, 10) : null })}
-                  >
-                    <option value="">-- Unassigned --</option>
-                    {itStaffList.map(staff => (
-                      <option key={staff.id} value={staff.id}>{staff.name}</option>
-                    ))}
-                  </select>
-                  {((ticket.owner?.id || ticket.ownerId) !== user.id) && (
-                    <button className="btn btn-outline-primary text-nowrap px-2 py-1 small" onClick={() => requestUpdate({ ownerId: user.id })}>
-                      Claim Ticket
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="form-control readonly-wrapper d-flex align-items-center" style={{ minHeight: '38px' }}>
-                  <span className="badge rounded-pill px-3 py-1 bg-secondary text-white">
-                    {ticket.owner?.name || ticket.ownerName || '-'}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Current Status</label>
-              {isStaff ? (
-                <div className="d-flex flex-column gap-1">
-                  <select 
-                    className="form-select fw-bold bg-white text-dark border"
-                    style={{ cursor: 'pointer' }}
-                    value={ticket.currentStatus}
-                    onChange={(e) => requestUpdate({ status: e.target.value })}
-                  >
-                    <option value="New">New</option>
-                    <option value="Open">Open</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="WaitingForRequester">Waiting for Requester</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
-                    <option value="Reopened">Reopened</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                  {ticket.appearsResolved && (
-                    <span className="badge badge-zen-success rounded-pill mt-1 d-block text-center py-1">
-                      Requester marked resolved
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="form-control readonly-wrapper d-flex flex-wrap align-items-center gap-2" style={{ minHeight: '38px' }}>
-                  <span className={`badge rounded-pill px-3 py-1 ${getStatusBadgeClass(ticket.currentStatus)}`}>
-                    {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}
-                  </span>
-                  {ticket.appearsResolved && (
-                    <span className="badge rounded-pill px-2 py-1 badge-zen-success" style={{fontSize: '0.7rem'}}>
-                      Appears Resolved
-                    </span>
-                  )}
-                  {user?.role === 'REQUESTER' && !ticket.appearsResolved && !isTerminal && ticket.currentStatus !== 'New' && (
-                    <button 
-                      className="btn btn-outline-success btn-sm px-2 rounded-pill fw-medium"
-                      onClick={handleAppearsResolved}
-                      disabled={updating}
-                      style={{ padding: '2px 8px', fontSize: '0.75rem' }}
+        {/* Ticket Details Panel */}
+        <div className="glass-panel overflow-hidden mb-4">
+          <div className="p-4 p-md-5">
+            <div className="row g-4">
+              {/* Row 1 */}
+              <div className="col-md-4">
+                <label className="form-label text-muted small fw-bold mb-1">Ticket No.</label>
+                <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.ticketNumber} style={{ cursor: 'default' }} />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label text-muted small fw-bold mb-1">Category</label>
+                <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.category.name} style={{ cursor: 'default' }} />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label text-muted small fw-bold mb-1">Related System</label>
+                <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.relatedSystem.name} style={{ cursor: 'default' }} />
+              </div>
+
+              {/* Row 2 */}
+              <div className="col-md-4">
+                <label className="form-label text-muted small fw-bold mb-1">Requester</label>
+                <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.requester?.name || '-'} style={{ cursor: 'default' }} />
+              </div>
+
+              {/* Ticket Owner */}
+              <div className="col-md-4">
+                <label htmlFor="ownerSelect" className="form-label text-muted small fw-bold mb-1">Ticket Owner</label>
+                {isStaff ? (
+                  <div className="d-flex align-items-center gap-2">
+                    <select 
+                      id="ownerSelect"
+                      ref={ownerSelectRef}
+                      aria-label="Ticket Owner"
+                      className="form-select bg-white border"
+                      style={{ cursor: isTerminal ? 'not-allowed' : 'pointer' }}
+                      value={ticket.owner?.id || ticket.ownerId || ""}
+                      disabled={isTerminal || updating}
+                      onChange={(e) => performTicketUpdate({ ownerId: e.target.value ? parseInt(e.target.value, 10) : null })}
                     >
-                      Problem Appears Resolved
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Row 3 */}
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">Requested Priority</label>
-              <div className="form-control readonly-wrapper d-flex align-items-center" style={{ minHeight: '38px' }}>
-                <span className={`badge rounded-pill px-3 py-1 ${getPriorityBadgeClass(ticket.requestedPriority)}`}>
-                  {ticket.requestedPriority.charAt(0) + ticket.requestedPriority.slice(1).toLowerCase()}
-                </span>
+                      <option value="">-- Unassigned --</option>
+                      {itStaffList.map(staff => (
+                        <option key={staff.id} value={staff.id}>{staff.name}</option>
+                      ))}
+                    </select>
+                    {!isTerminal && ((ticket.owner?.id || ticket.ownerId) !== user.id) && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary text-nowrap px-2 py-1 small"
+                        disabled={updating}
+                        onClick={() => performTicketUpdate({ ownerId: user.id })}
+                      >
+                        Claim Ticket
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="form-control readonly-wrapper d-flex align-items-center" style={{ minHeight: '38px' }}>
+                    <span className="badge rounded-pill px-3 py-1 bg-secondary text-white">
+                      {ticket.owner?.name || ticket.ownerName || '-'}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label text-muted small fw-bold mb-1">IT Priority</label>
-              {isStaff ? (
-                <select 
-                  className="form-select bg-white fw-medium border"
-                  style={{ cursor: 'pointer' }}
-                  value={ticket.itPriority}
-                  onChange={(e) => requestUpdate({ itPriority: e.target.value })}
-                >
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                </select>
-              ) : (
+
+              {/* Current Status */}
+              <div className="col-md-4">
+                <label className="form-label text-muted small fw-bold mb-1">Current Status</label>
+                {isStaff ? (
+                  <div className="d-flex flex-column gap-2">
+                    <div id="ticket-summary-status" data-testid="ticket-summary-status" tabIndex={-1} style={{ outline: 'none' }} className="d-flex align-items-center gap-2">
+                      <span data-testid="status-badge" className={`badge rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 ${getStatusBadgeClass(ticket.currentStatus)}`}>
+                        {getStatusIcon(ticket.currentStatus)}
+                        {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus === 'WaitingForRequester' ? 'Waiting for Requester' : ticket.currentStatus}
+                      </span>
+                    </div>
+
+                    {/* Role-aware dropdown for backwards compatibility & quick selection */}
+                    <select
+                      aria-label="Current Status"
+                      className="form-select fw-bold bg-white text-dark border small"
+                      style={{ cursor: isTerminal ? 'not-allowed' : 'pointer' }}
+                      value={ticket.currentStatus}
+                      disabled={isTerminal || updating}
+                      onChange={(e) => requestUpdate({ status: e.target.value })}
+                    >
+                      <option value={ticket.currentStatus}>{ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus}</option>
+                      {allowedTransitions.map(target => (
+                        <option key={target} value={target}>
+                          {target === 'InProgress' ? 'In Progress' : target === 'WaitingForRequester' ? 'Waiting for Requester' : target}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Dedicated Workflow Transition Action Buttons */}
+                    <TicketWorkflowActions
+                      currentStatus={ticket.currentStatus}
+                      allowedTransitions={allowedTransitions}
+                      resolutionGate={ticket.resolutionGate}
+                      isUpdating={updating}
+                      onTransition={(targetStatus) => performTicketUpdate({ status: targetStatus })}
+                      onAssignOwnerShortcut={() => {
+                        if (ownerSelectRef.current) {
+                          ownerSelectRef.current.focus();
+                        }
+                      }}
+                      onLogActionShortcut={() => {
+                        const logBtn = document.querySelector('button[aria-label="+ Log Action Taken"], button:has-text("+ Log Action Taken")') as HTMLElement;
+                        if (logBtn) {
+                          logBtn.scrollIntoView({ behavior: 'smooth' });
+                          logBtn.focus();
+                          logBtn.click();
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div id="ticket-summary-status" data-testid="ticket-summary-status" tabIndex={-1} className="form-control readonly-wrapper d-flex flex-wrap align-items-center gap-2" style={{ minHeight: '38px', outline: 'none' }}>
+                    <span data-testid="status-badge" className={`badge rounded-pill px-3 py-1 ${getStatusBadgeClass(ticket.currentStatus)}`}>
+                      {ticket.currentStatus === 'InProgress' ? 'In Progress' : ticket.currentStatus === 'WaitingForRequester' ? 'Waiting for Requester' : ticket.currentStatus}
+                    </span>
+                    {ticket.appearsResolved && (
+                      <span className="badge rounded-pill px-2 py-1 badge-zen-success" style={{fontSize: '0.7rem'}}>
+                        You reported this problem appears resolved
+                      </span>
+                    )}
+                    {user?.role === 'REQUESTER' && !ticket.appearsResolved && ['Open', 'InProgress', 'WaitingForRequester'].includes(ticket.currentStatus) && (
+                      <button 
+                        type="button"
+                        className="btn btn-outline-success btn-sm px-2 rounded-pill fw-medium"
+                        onClick={() => setAdvisoryModal(true)}
+                        disabled={updating}
+                        style={{ padding: '2px 8px', fontSize: '0.75rem' }}
+                      >
+                        Problem Appears Resolved
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Row 3 */}
+              <div className="col-md-4">
+                <label className="form-label text-muted small fw-bold mb-1">Requested Priority</label>
                 <div className="form-control readonly-wrapper d-flex align-items-center" style={{ minHeight: '38px' }}>
-                  <span className={`badge rounded-pill px-3 py-1 ${getPriorityBadgeClass(ticket.itPriority)}`}>
-                    {ticket.itPriority.charAt(0) + ticket.itPriority.slice(1).toLowerCase()}
+                  <span className={`badge rounded-pill px-3 py-1 ${getPriorityBadgeClass(ticket.requestedPriority)}`}>
+                    {ticket.requestedPriority.charAt(0) + ticket.requestedPriority.slice(1).toLowerCase()}
                   </span>
                 </div>
-              )}
-            </div>
-
-            {/* Row 4 */}
-            <div className="col-12">
-              <label className="form-label text-muted small fw-bold mb-1">Summary</label>
-              <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.summary} style={{ cursor: 'default' }} />
-            </div>
-
-            {/* Row 5 */}
-            <div className="col-12">
-              <label className="form-label text-muted small fw-bold mb-1">Description</label>
-              <textarea className="form-control bg-light text-muted border-light" readOnly rows={3} style={{ resize: 'none', cursor: 'default' }} value={ticket.description} />
-            </div>
-
-            {/* Row 6 */}
-            <div className="col-12">
-              <label className="form-label text-muted small fw-bold mb-1">Resolution Summary</label>
-              <textarea className="form-control bg-light text-muted fst-italic border-light" readOnly rows={2} style={{ resize: 'none', cursor: 'default' }} value={ticket.resolutionSummary || 'No resolution summary available yet.'} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Actions Taken Section */}
-      <ActionsTakenSection
-        ticketId={ticketId}
-        ticketStatus={ticket.currentStatus}
-        onActionChanged={reloadTicket}
-      />
-
-      {/* Communication Tabs Container */}
-      <div className="glass-panel overflow-hidden mb-4">
-        <div className="p-4 p-md-5">
-          <div className="row g-4">
-            {/* Tabs Header */}
-            <div className="col-12">
-              <div className="zen-tabs">
-                <button 
-
-                  className={`zen-tab-btn ${activeTab === 'public' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('public')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> 
-                  Public Comments <span className="badge bg-secondary rounded-pill">{ticket.publicComments?.length || 0}</span>
-                </button>
-                {isStaff && (
-                  <button 
-
-                    className={`zen-tab-btn internal-notes-tab ${activeTab === 'internal' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('internal')}
+              </div>
+              <div className="col-md-4">
+                <label htmlFor="itPrioritySelect" className="form-label text-muted small fw-bold mb-1">IT Priority</label>
+                {isStaff ? (
+                  <select 
+                    id="itPrioritySelect"
+                    aria-label="IT Priority"
+                    className="form-select bg-white fw-medium border"
+                    style={{ cursor: isTerminal ? 'not-allowed' : 'pointer' }}
+                    value={ticket.itPriority}
+                    disabled={isTerminal || updating}
+                    onChange={(e) => performTicketUpdate({ itPriority: e.target.value })}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
-                    Internal Notes <span className="badge bg-warning text-dark rounded-pill">{ticket.internalNotes?.length || 0}</span>
-                  </button>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                ) : (
+                  <div className="form-control readonly-wrapper d-flex align-items-center" style={{ minHeight: '38px' }}>
+                    <span className={`badge rounded-pill px-3 py-1 ${getPriorityBadgeClass(ticket.itPriority)}`}>
+                      {ticket.itPriority.charAt(0) + ticket.itPriority.slice(1).toLowerCase()}
+                    </span>
+                  </div>
                 )}
-                <button 
-
-                  className={`zen-tab-btn ${activeTab === 'attachments' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('attachments')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> 
-                  Attachments <span className="badge bg-secondary rounded-pill">{activeAttachments}</span>
-                </button>
               </div>
 
-              {/* Tab Contents */}
-              <div className="tab-content">
-                
-                {/* PUBLIC COMMENTS TAB */}
-                {activeTab === 'public' && (
-                  <div className="animate-enter">
-                    <div className="mb-4">
-                      {(!ticket.publicComments || ticket.publicComments.length === 0) ? (
-                        <p className="text-muted small fst-italic">No comments yet.</p>
-                      ) : (
-                        <div className="d-flex flex-column gap-3">
-                          {ticket.publicComments.map(c => (
-                            <div key={c.id} className="bg-light p-3 rounded border border-light shadow-sm">
-                              <div className="d-flex justify-content-between mb-2">
-                                <strong className="small text-dark">{c.author.name} <span className="text-muted fw-normal">({c.author.role})</span></strong>
-                                <small className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(c.createdAt).toLocaleString()}</small>
-                              </div>
-                              <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap' }}>{c.content}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+              {/* Row 4 */}
+              <div className="col-12">
+                <label className="form-label text-muted small fw-bold mb-1">Summary</label>
+                <input type="text" className="form-control bg-light text-muted border-light" readOnly value={ticket.summary} style={{ cursor: 'default' }} />
+              </div>
 
-                    {isTerminal ? (
-                      <div className="bg-light p-3 rounded border text-center text-muted fst-italic">
-                        Ticket is {ticket.currentStatus}. Further comments cannot be added.
-                      </div>
-                    ) : (
-                      <div className="bg-white p-3 rounded border shadow-sm">
-                        <textarea 
-                          className="form-control border-0 bg-light mb-2 small shadow-sm" 
-                          rows={3} 
-                          placeholder="Type a comment..." 
-                          style={{ resize: 'none' }}
-                          value={commentText}
-                          onChange={e => setCommentText(e.target.value)}
-                          disabled={commenting}
-                        />
-                        <div className="d-flex justify-content-end align-items-center">
-                          <button 
-                            className="btn btn-primary btn-sm px-4 rounded-pill fw-medium"
-                            onClick={handlePostComment}
-                            disabled={commenting || !commentText.trim()}
-                          >
-                            {commenting ? "Posting..." : "Post Comment"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+              {/* Row 5 */}
+              <div className="col-12">
+                <label className="form-label text-muted small fw-bold mb-1">Description</label>
+                <textarea className="form-control bg-light text-muted border-light" readOnly rows={3} style={{ resize: 'none', cursor: 'default' }} value={ticket.description} />
+              </div>
 
-                {/* INTERNAL NOTES TAB */}
-                {isStaff && activeTab === 'internal' && (
-                  <div className="animate-enter internal-notes-content">
-                    <div className="mb-4">
-                      {(!ticket.internalNotes || ticket.internalNotes.length === 0) ? (
-                        <p className="text-muted small fst-italic">No internal notes yet.</p>
-                      ) : (
-                        <div className="d-flex flex-column gap-3">
-                          {ticket.internalNotes.map(n => (
-                            <div key={n.id} className="p-3 rounded bg-white shadow-sm">
-                              <div className="d-flex justify-content-between mb-2">
-                                <strong className="small text-dark">{n.author.name} <span className="text-muted fw-normal">({n.author.role})</span></strong>
-                                <small className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(n.createdAt).toLocaleString()}</small>
-                              </div>
-                              <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap' }}>{n.content}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {isTerminal ? (
-                      <div className="bg-light p-3 rounded border text-center text-muted fst-italic">
-                        Ticket is {ticket.currentStatus}. Further notes cannot be added.
-                      </div>
-                    ) : (
-                      <div className="p-3 rounded border shadow-sm bg-white">
-                        <textarea 
-                          className="form-control border-0 bg-light mb-2 small shadow-sm" 
-                          rows={3} 
-                          placeholder="Type a private internal note..." 
-                          style={{ resize: 'none' }}
-                          value={noteText}
-                          onChange={e => setNoteText(e.target.value)}
-                          disabled={commenting}
-                        />
-                        <div className="d-flex justify-content-end">
-                          <button 
-                            className="btn btn-warning btn-sm px-4 rounded-pill fw-medium text-dark"
-                            onClick={handlePostNote}
-                            disabled={commenting || !noteText.trim()}
-                          >
-                            {commenting ? "Posting..." : "Post Note"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ATTACHMENTS TAB */}
-                {activeTab === 'attachments' && (
-                  <div className="animate-enter">
-                    {ticket.attachments.length === 0 ? (
-                      <div className="text-center py-4 bg-light rounded border">
-                        <p className="text-muted small mb-0">No attachments uploaded yet.</p>
-                      </div>
-                    ) : (
-                      <ul className="list-group mb-3 shadow-sm border-0">
-                        {ticket.attachments.map(a => (
-                          <li key={a.id} className="list-group-item bg-white border-light px-3 py-2 d-flex justify-content-between align-items-center">
-                            <div className="me-2 text-truncate">
-                              {a.isRemoved ? (
-                                <div className="text-decoration-line-through text-muted small text-truncate fw-medium" title={a.originalName}>{a.originalName}</div>
-                              ) : (
-                                <a 
-                                  href="#" 
-                                  onClick={(e) => { e.preventDefault(); handleDownload(a.id, a.originalName); }}
-                                  className="text-decoration-none fw-bold text-zen-primary small text-truncate d-block"
-                                  title={a.originalName}
-                                >
-                                  {a.originalName}
-                                </a>
-                              )}
-                            </div>
-                            {!a.isRemoved && (!isStaff || user.role === 'REQUESTER') && (
-                              <button 
-                                className="btn btn-sm btn-link text-danger p-1" 
-                                onClick={() => handleRemove(a.id)}
-                                title="Remove attachment"
-                                aria-label={`Remove attachment ${a.originalName}`}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                              </button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {activeAttachments < 5 && (!isStaff || user.role === 'REQUESTER') && (
-                      <div className="mt-2 text-end">
-                        <input 
-                          type="file" 
-                          className="d-none" 
-                          ref={fileInputRef} 
-                          onChange={handleFileUpload}
-                          accept=".jpg,.jpeg,.png,.webp,.pdf"
-                        />
-                        <button 
-                          className="btn btn-sm btn-outline-secondary px-3 py-1 fw-medium rounded d-inline-flex align-items-center gap-2 bg-white"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploading}
-                        >
-                          {uploading ? (
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                          ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                          )}
-                          {uploading ? "Uploading..." : "Upload File"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+              {/* Row 6 */}
+              <div className="col-12">
+                <label className="form-label text-muted small fw-bold mb-1">Resolution Summary</label>
+                <textarea className="form-control bg-light text-muted fst-italic border-light" readOnly rows={2} style={{ resize: 'none', cursor: 'default' }} value={ticket.resolutionSummary || 'No resolution summary available yet.'} />
               </div>
             </div>
-
           </div>
         </div>
-      </div>
+
+        {/* Actions Taken Section */}
+        <ActionsTakenSection
+          ticketId={ticketId}
+          ticketStatus={ticket.currentStatus}
+          onActionChanged={reloadTicket}
+        />
+
+        {/* Communication Tabs Container */}
+        <div className="glass-panel overflow-hidden mb-4">
+          <div className="p-4 p-md-5">
+            <div className="row g-4">
+              {/* Tabs Header */}
+              <div className="col-12">
+                <div className="zen-tabs">
+                  <button 
+                    className={`zen-tab-btn ${activeTab === 'public' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('public')}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> 
+                    Public Comments <span className="badge bg-secondary rounded-pill">{ticket.publicComments?.length || 0}</span>
+                  </button>
+                  {isStaff && (
+                    <button 
+                      className={`zen-tab-btn internal-notes-tab ${activeTab === 'internal' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('internal')}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
+                      Internal Notes <span className="badge bg-warning text-dark rounded-pill">{ticket.internalNotes?.length || 0}</span>
+                    </button>
+                  )}
+                  <button 
+                    className={`zen-tab-btn ${activeTab === 'attachments' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('attachments')}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> 
+                    Attachments <span className="badge bg-secondary rounded-pill">{activeAttachments}</span>
+                  </button>
+                </div>
+
+                {/* Tab Contents */}
+                <div className="tab-content">
+                  
+                  {/* PUBLIC COMMENTS TAB */}
+                  {activeTab === 'public' && (
+                    <div className="animate-enter">
+                      <div className="mb-4">
+                        {(!ticket.publicComments || ticket.publicComments.length === 0) ? (
+                          <p className="text-muted small fst-italic">No comments yet.</p>
+                        ) : (
+                          <div className="d-flex flex-column gap-3">
+                            {ticket.publicComments.map(c => (
+                              <div key={c.id} className="bg-light p-3 rounded border border-light shadow-sm">
+                                <div className="d-flex justify-content-between mb-2">
+                                  <strong className="small text-dark">{c.author.name} <span className="text-muted fw-normal">({c.author.role})</span></strong>
+                                  <small className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(c.createdAt).toLocaleString()}</small>
+                                </div>
+                                <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap' }}>{c.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {isTerminal ? (
+                        <div className="bg-light p-3 rounded border text-center text-muted fst-italic">
+                          Ticket is {ticket.currentStatus}. Further comments cannot be added.
+                        </div>
+                      ) : (
+                        <div className="bg-white p-3 rounded border shadow-sm">
+                          <textarea 
+                            className="form-control border-0 bg-light mb-2 small shadow-sm" 
+                            rows={3} 
+                            placeholder="Type a comment..." 
+                            style={{ resize: 'none' }}
+                            value={commentText}
+                            onChange={e => setCommentText(e.target.value)}
+                            disabled={commenting}
+                          />
+                          <div className="d-flex justify-content-end align-items-center">
+                            <button 
+                              className="btn btn-primary btn-sm px-4 rounded-pill fw-medium"
+                              onClick={handlePostComment}
+                              disabled={commenting || !commentText.trim()}
+                            >
+                              {commenting ? "Posting..." : "Post Comment"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* INTERNAL NOTES TAB */}
+                  {isStaff && activeTab === 'internal' && (
+                    <div className="animate-enter internal-notes-content">
+                      <div className="mb-4">
+                        {(!ticket.internalNotes || ticket.internalNotes.length === 0) ? (
+                          <p className="text-muted small fst-italic">No internal notes yet.</p>
+                        ) : (
+                          <div className="d-flex flex-column gap-3">
+                            {ticket.internalNotes.map(n => (
+                              <div key={n.id} className="p-3 rounded bg-white shadow-sm">
+                                <div className="d-flex justify-content-between mb-2">
+                                  <strong className="small text-dark">{n.author.name} <span className="text-muted fw-normal">({n.author.role})</span></strong>
+                                  <small className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(n.createdAt).toLocaleString()}</small>
+                                </div>
+                                <p className="mb-0 text-dark small" style={{ whiteSpace: 'pre-wrap' }}>{n.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {isTerminal ? (
+                        <div className="bg-light p-3 rounded border text-center text-muted fst-italic">
+                          Ticket is {ticket.currentStatus}. Further notes cannot be added.
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded border shadow-sm bg-white">
+                          <textarea 
+                            className="form-control border-0 bg-light mb-2 small shadow-sm" 
+                            rows={3} 
+                            placeholder="Type a private internal note..." 
+                            style={{ resize: 'none' }}
+                            value={noteText}
+                            onChange={e => setNoteText(e.target.value)}
+                            disabled={commenting}
+                          />
+                          <div className="d-flex justify-content-end">
+                            <button 
+                              className="btn btn-warning btn-sm px-4 rounded-pill fw-medium text-dark"
+                              onClick={handlePostNote}
+                              disabled={commenting || !noteText.trim()}
+                            >
+                              {commenting ? "Posting..." : "Post Note"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ATTACHMENTS TAB */}
+                  {activeTab === 'attachments' && (
+                    <div className="animate-enter">
+                      {ticket.attachments.length === 0 ? (
+                        <div className="text-center py-4 bg-light rounded border">
+                          <p className="text-muted small mb-0">No attachments uploaded yet.</p>
+                        </div>
+                      ) : (
+                        <ul className="list-group mb-3 shadow-sm border-0">
+                          {ticket.attachments.map(a => (
+                            <li key={a.id} className="list-group-item bg-white border-light px-3 py-2 d-flex justify-content-between align-items-center">
+                              <div className="me-2 text-truncate">
+                                {a.isRemoved ? (
+                                  <div className="text-decoration-line-through text-muted small text-truncate fw-medium" title={a.originalName}>{a.originalName}</div>
+                                ) : (
+                                  <a 
+                                    href="#" 
+                                    onClick={(e) => { e.preventDefault(); handleDownload(a.id, a.originalName); }}
+                                    className="text-decoration-none fw-bold text-zen-primary small text-truncate d-block"
+                                    title={a.originalName}
+                                  >
+                                    {a.originalName}
+                                  </a>
+                                )}
+                              </div>
+                              {!a.isRemoved && (!isStaff || user.role === 'REQUESTER') && (
+                                <button 
+                                  className="btn btn-sm btn-link text-danger p-1" 
+                                  onClick={() => handleRemove(a.id)}
+                                  title="Remove attachment"
+                                  aria-label={`Remove attachment ${a.originalName}`}
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {activeAttachments < 5 && (!isStaff || user.role === 'REQUESTER') && (
+                        <div className="mt-2 text-end">
+                          <input 
+                            type="file" 
+                            className="d-none" 
+                            ref={fileInputRef} 
+                            onChange={handleFileUpload}
+                            accept=".jpg,.jpeg,.png,.webp,.pdf"
+                          />
+                          <button 
+                            className="btn btn-sm btn-outline-secondary px-3 py-1 fw-medium rounded d-inline-flex align-items-center gap-2 bg-white"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                          >
+                            {uploading ? (
+                              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            )}
+                            {uploading ? "Uploading..." : "Upload File"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </div>
       
-      {/* Confirmation Modal */}
-      {confirmModal && createPortal(
-        <div className="modal d-block glass-overlay" style={{ zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 glass-modal">
-              <div className="modal-header bg-warning bg-opacity-10 text-warning-emphasis border-0 glass-modal-header">
-                <h5 className="modal-title fw-bold text-dark">Confirm Status Change</h5>
-                <button type="button" className="btn-close" onClick={() => setConfirmModal(null)}></button>
-              </div>
-              <div className="modal-body glass-modal-body">
-                <p className="mb-0">Are you sure you want to change the status to <strong>{confirmModal.status}</strong>? This is a terminal or critical status.</p>
-              </div>
-              <div className="modal-footer border-0 glass-modal-footer">
-                <button type="button" className="btn btn-light px-4 fw-medium shadow-sm" autoFocus onClick={() => setConfirmModal(null)}>Cancel</button>
-                <button type="button" className="btn btn-warning px-4 fw-bold shadow-sm text-dark" onClick={() => performUpdate({ status: confirmModal.status })}>Confirm</button>
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {/* Status Change Confirmation Modal */}
+      {confirmModal && (
+        <AccessibleDialog
+          isOpen={true}
+          role="alertdialog"
+          title="Confirm Status Change"
+          description={`Are you sure you want to change the status to ${confirmModal.status}? This is a terminal or critical status.`}
+          confirmText={`Confirm ${confirmModal.status === 'Cancelled' ? 'Cancel' : confirmModal.status}`}
+          cancelText="Cancel"
+          confirmVariant={confirmModal.status === 'Cancelled' ? 'danger' : 'warning'}
+          isSubmitting={updating}
+          initialFocusSafe={true}
+          onClose={() => setConfirmModal(null)}
+          onConfirm={() => performTicketUpdate({ status: confirmModal.status })}
+        />
+      )}
+
+      {/* Optimistic Concurrency 409 Conflict Dialog */}
+      {conflictModal && (
+        <AccessibleDialog
+          isOpen={true}
+          role="alertdialog"
+          title="Conflict Detected"
+          description={`This ticket has been modified by another user. Current status is ${conflictModal.currentStatus || 'updated'} (v${conflictModal.currentVersion || ''}). Please reload latest changes to prevent accidental overwrites.`}
+          confirmText="Reload Ticket"
+          cancelText="Close"
+          confirmVariant="primary"
+          initialFocusSafe={false}
+          onClose={async () => {
+            setConflictModal(null);
+            await reloadTicket();
+          }}
+          onConfirm={async () => {
+            setConflictModal(null);
+            await reloadTicket();
+          }}
+        />
+      )}
+
+      {/* Requester Advisory Signal Confirmation Modal */}
+      {advisoryModal && (
+        <AccessibleDialog
+          isOpen={true}
+          role="dialog"
+          title="Confirm Resolution Signal"
+          description="This will notify IT Staff that your issue appears resolved and post an advisory audit comment. IT Staff will verify and complete the resolution."
+          confirmText="Confirm"
+          cancelText="Cancel"
+          confirmVariant="success"
+          isSubmitting={updating}
+          initialFocusSafe={true}
+          onClose={() => setAdvisoryModal(false)}
+          onConfirm={async () => {
+            setAdvisoryModal(false);
+            await handleExecuteAppearsResolved();
+          }}
+        />
       )}
     </>
   );

@@ -130,6 +130,7 @@ export interface TicketResponse {
   itPriority: string;
   version?: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export async function createTicket(payload: CreateTicketPayload): Promise<TicketResponse> {
