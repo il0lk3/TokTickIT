@@ -83,88 +83,101 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ---
 
-## 3. IT Staff Dashboard Screen (`/dashboard`)
+## 3. IT Staff & Administrator Dashboard Screen (`/dashboard`)
 
-*Based on Lab 4 Mockup Handout page 5.*
-
-### 3.1 Layout Structure
-- **Header**:
-  - Greeting: `"Welcome back, {User Name}!"` with subtitle `"Here's what's happening with your queue today."`
-  - Action: **Refresh** button with sync icon (spins while fetching data).
-- **Metric Cards Grid (Top)**:
-  - 5 cards displayed side-by-side on desktop (reflows to 2 columns on tablet, 1 column on mobile):
-    1. **New**: Total unhandled new tickets.
-    2. **Open**: Accepted tickets awaiting work.
-    3. **In Progress**: Currently active investigation tickets.
-    4. **Waiting for Requester**: Tickets blocked awaiting user reply.
-    5. **My Assigned**: Tickets assigned to the logged-in staff member.
-  - Card Design: Large bold count numeral (36px), clear semantic label, subtle "+X from yesterday" indicator, and clickable drill-down linking directly to `/queue?status={Status}`.
-- **Main Section (Split 2:1 on Desktop)**:
-  - **Left (67% width) — "My Recent Tickets"**:
-    - Table/list of the 5 most recently active tickets.
-    - Columns: Ticket Number (monospace link), Summary, Status Badge, Formatted Timestamp (e.g. "May 12, 09:14 AM").
-    - Header includes a `"View all"` link navigating to `/queue`.
-  - **Right (33% width) — "Quick Actions"**:
-    - Card container containing 3 prominent shortcut buttons:
-      - `+ Create Ticket`: Opens ticket creation modal/page.
-      - `🔍 Search Tickets`: Opens ticket queue with focus on search input.
-      - `📋 My Queue`: Navigates to `/queue?ownerId=me`.
+### 3.1 Layout Structure & Visual Hierarchy
+- **Header Section**:
+  - `<h1>`: "IT Support Dashboard" (for IT Staff) or "IT Administration Dashboard" (for Administrator).
+  - `<h2>`: Subtitle `Welcome back, {User Name} — operational workload and support queue health.` with styling `text-muted mb-0 small fs-6 fw-normal`.
+  - **Quick Actions**: Quick navigation buttons linking to **+ Create Ticket** (`/tickets/new`), **Search Tickets** (`/queue`), and **My Queue** (`/queue?ownerId=me&active=true`).
+  - **Refresh Action**: Accessible button with sync SVG icon. Disabled with `aria-busy="true"` and spinning animation while in-flight. Rapid repeated clicks are ignored while in-flight.
+- **Accessible Live Region**:
+  - Hidden element with `role="status"` and `aria-live="polite"` announcing `"Dashboard loaded"` or `"Dashboard updated"`.
+- **4 Operational Metric Cards (Top Row)**:
+  - Responsive layout: 4 columns on desktop (1280px), 2 columns on tablet (768px), 1 column on mobile (375px).
+  - 1-to-1 drill-down destinations:
+    1. **Unassigned**: Active tickets needing triage -> `/queue?ownerId=unassigned&active=true` (Warning variant).
+    2. **Assigned to Me**: Active tickets assigned to current user -> `/queue?ownerId=me&active=true` (Primary variant).
+    3. **Appears Resolved**: Active tickets with requester advisory signals -> `/queue?appearsResolved=true&active=true` (Success variant).
+    4. **Updated in 24h**: Operational activity in last 24 hours -> `/queue?active=true&updatedSince={ISO}` (Info variant).
+  - Card components include SVG decorative icons with `aria-hidden="true"`, large bold count numeral (`.display-6`), subtitle, and full accessible names (e.g., `aria-label="Unassigned, 8 tickets, view in Ticket Queue"`).
+- **Admin User Management Summary (Administrator only)**:
+  - Banner container visible strictly to `ADMINISTRATOR` users, displaying total users count, active breakdown, and drill-down link to `/admin/users`.
+  - Safe-failure tolerance: If `adminUserCounts` is null, cleanly falls back without crashing.
+- **Queue Breakdown Sections**:
+  - **Status Chip Group**: Renders all 8 status chips (`New`, `Open`, `InProgress`, `WaitingForRequester`, `Resolved`, `Closed`, `Reopened`, `Cancelled`). Terminal states (`Closed`, `Cancelled`) link to `/queue?status={status}` without `active=true`, while non-terminal states link to `/queue?status={status}&active=true`.
+  - **Priority Chip Group**: Renders `LOW`, `MEDIUM`, and `HIGH` chips with non-negative counts and drill-down to `/queue?itPriority={priority}&active=true`.
+- **Activity Sections**:
+  - **Urgent Active Tickets**: Top 5 active tickets with `itPriority === 'HIGH'`, sorted by `updatedAt DESC, id DESC`, with direct detail links to `/tickets/:id`.
+  - **My Recent Tickets**: Top 5 active tickets owned by logged-in staff, sorted by `updatedAt DESC, id DESC`, with direct detail links to `/tickets/:id`.
+- **Responsive Overflow Defense**:
+  - Ticket summaries enforce `.text-break` to prevent unbroken long strings from causing horizontal overflow at 375px mobile viewport.
 
 ### 3.2 UI States
-- **Loading State**: Metric cards render pulsing skeleton blocks; recent tickets table shows 5 skeleton rows.
-- **Empty State**: Metric values display `0`; recent tickets displays an illustrative Zen Green placeholder: *"No active tickets found in your queue. Great job!"*
-- **Safe Failure State**: Non-blocking alert banner with message *"Unable to refresh dashboard metrics"* and a `"Retry"` button.
-- **Forbidden State**: Non-staff users navigating here are redirected or shown a clear 403 Forbidden screen.
+- **Loading State (`DashboardSkeleton`)**: Clean shimmer skeleton placeholder for cards and tables.
+- **Empty State**: When queue has zero active tickets, displays Zen Green banner: *"Queue is all clear. No active tickets require immediate triage."* with a "View All Queue" button.
+- **Error State**: Friendly alert card with retry button when initial fetch fails. Non-destructive inline alert when manual refresh fails without destroying rendered data.
+- **Forbidden State (`DashboardForbidden`)**: In-place 403 screen with SVG shield, informative text, and link back to list.
 
 ---
 
 ## 4. Requester Dashboard Screen (`/dashboard`)
 
-*Based on Lab 4 Mockup Handout page 6.*
-
-### 4.1 Layout Structure
-- **Header**:
-  - Greeting: `"Welcome, {User Name}!"` with subtitle `"Here's the latest on your requests."`
-- **Metric Cards Grid (Top)**:
-  - 4 cards displayed horizontally:
-    1. **My Open Tickets**: Total unresolved tickets submitted by user (`New`, `Open`, `Reopened`).
-    2. **In Progress**: Work actively being conducted by IT Staff.
-    3. **Resolved**: Issues solved awaiting closure or confirmation.
-    4. **Closed**: Historical completed tickets.
-  - Card Design: Clean card with count numeral, label, and `"View all"` drill-down button linking to `/tickets?status={Status}`.
-- **Main Section (Split 2:1 on Desktop)**:
-  - **Left (67% width) — "My Recent Tickets"**:
-    - List of recently updated tickets owned by this Requester.
-    - Displays Ticket Number, Summary, Status Badge, and Updated Time.
-    - Link to view full ticket details.
-  - **Right (33% width) — "Quick Actions"**:
-    - `+ Create Ticket`: Primary button (`#2d6a4f`) to submit a new IT service request.
-    - `📋 View My Tickets`: Secondary button to navigate to the full tickets table (`/tickets`).
+### 4.1 Layout Structure & Visual Hierarchy
+- **Header Section**:
+  - `<h1>`: "Requester Dashboard".
+  - `<h2>`: Subtitle `Welcome back, {User Name} — track and manage your support requests.`
+  - **Quick Actions**: Navigation buttons linking to **+ Create Ticket** (`/tickets/new`) and **View My Tickets** (`/tickets`).
+  - **Refresh Action**: Sync button with live status region announcement.
+- **5 Top Metric Cards**:
+  - Reflows across breakpoints (5 columns on desktop, 2-3 on tablet, 1 on mobile).
+  - 1-to-1 drill-down destinations:
+    1. **Open Requests**: Count of `New`, `Open`, and `Reopened` -> `/tickets?status=New,Open,Reopened`.
+    2. **In Progress**: Count of `InProgress` -> `/tickets?status=InProgress`.
+    3. **Waiting on You**: Count of `WaitingForRequester` -> `/tickets?status=WaitingForRequester`.
+    4. **Recently Resolved**: Count of `Resolved` within past 7 days -> `/tickets?status=Resolved&updatedSince={ISO}`.
+    5. **Closed**: Count of `Closed` -> `/tickets?status=Closed`.
+- **Activity Sections**:
+  - **Attention Needed**: Tickets with status `WaitingForRequester` requiring requester response.
+  - **My Recent Requests**: Up to 5 most recently updated tickets owned by user, with links to `/tickets/:id`.
 
 ### 4.2 UI States
-- **Loading State**: Shimmer skeleton blocks for cards and ticket rows.
-- **Empty State**: For a requester with 0 tickets: Displays welcoming banner *"You have no active requests. If you need assistance, submit a ticket below."*
-- **Safe Failure State**: Informative error message with retry trigger.
+- **Loading State**: Shimmer skeleton blocks matching card layout.
+- **Empty State**: When requester has zero tickets, displays welcoming banner: *"You have no tickets yet. All caught up! You have not submitted any support tickets."* with a "Create Ticket" button.
+- **Safe Failure & Forbidden States**: Consistent with Zen Green standard alerts.
 
 ---
 
-## 5. Actions Taken on Ticket Detail
+## 5. Active Filter Chips & List Parity (DoD-6)
+
+### 5.1 Active Filter Chips Bar
+- **Location**: Positioned directly beneath filter controls on `/tickets` and `/queue`.
+- **Accessibility**: Enclosed in `<div data-testid="active-filter-chips" role="region" aria-label="Active filters">`.
+- **Behavior**:
+  - Displays interactive pill badges for each active filter (e.g., `Status: In Progress`, `Owner: Unassigned`, `Active Only`, `Priority: HIGH`).
+  - Each chip features an accessible remove button (`aria-label="Remove filter: ..."`) that clears that single filter parameter and resets pagination to page 1.
+  - "Clear all" button clears all filter parameters back to the default list view.
+  - Exposes `data-testid="list-total-count"` which renders `meta.total`, ensuring strict dynamic equality with dashboard metric card numbers.
+
+---
+
+## 6. Actions Taken on Ticket Detail
 
 *Positioned on Ticket Detail (`/tickets/:ticketId`).*
 
-### 5.1 Placement & Visual Hierarchy
+### 6.1 Placement & Visual Hierarchy
 - Placed immediately below the Ticket Details card and above the Public Comments / Internal Notes tabbed container.
-- Container title: `🛠️ Actions Taken ({count})` with a badge showing total actions logged.
+- Container title: `Actions Taken ({count})` with a badge showing total actions logged.
 
-### 5.2 Actions Taken Table / List
-- **Desktop (≥ 768px)**: Clean responsive data table.
+### 6.2 Actions Taken Table / List
+- **Desktop (>= 768px)**: Clean responsive data table.
   - **Columns**:
     1. `Date / Time`: Formatted as `YYYY-MM-DD HH:mm`.
     2. `Description`: Primary technical activity performed.
     3. `Result`: Concrete diagnostic or resolution outcome.
     4. `Performed By`: Badge with staff member's name.
     5. `Follow-Up`: Distinct badge:
-       - If `true`: Amber badge with ⚠️ icon and `"Yes"` label.
+       - If `true`: Amber badge with `[Follow-up]` indicator and `"Yes"` label.
        - If `false`: Muted gray badge `"No"`.
     6. `Follow-up Note`: Text note explaining required next steps.
     7. `Attachment Notes`: Text noting filenames to reference.

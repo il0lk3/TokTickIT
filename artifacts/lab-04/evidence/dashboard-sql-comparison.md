@@ -179,7 +179,7 @@ Automated verification is enforced via:
 - **Equivalence Status:** Verified identical count in API-DSH-21.
 
 ### 2.4 Breakdown By Priority (`byPriority`)
-- **Formula:** Active tickets grouped by `itPriority`, with `UNSET` mapped for tickets without explicit IT priority assignment.
+- **Formula:** Active tickets grouped by `itPriority` (`LOW`, `MEDIUM`, `HIGH`).
 - **Prisma Application Query:**
   ```typescript
   prisma.ticket.groupBy({
@@ -211,3 +211,18 @@ Vitest execution summary from `server/tests/lab-04/requester-dashboard.api.test.
 - 1-to-1 Card-to-List Count Consistency:
   - `API-DSH-09`: `GET /api/tickets` with drill-down query matches card count for every metric.
   - `API-DSH-20`: `GET /api/staff/tickets` with drill-down query matches card count for every metric.
+
+---
+
+## 4. UI & E2E Drill-Down Count Parity (DoD-6)
+
+Client and End-to-End automated validation confirms that clicking any dashboard metric card or chip preserves strict count equality between the card number and the filtered list total (`meta.total === card.count`):
+- **Client Unit/Integration Tests (`client/tests/lab-04/`):**
+  - `ListFilterChips.test.tsx` (`UI-FLT-05`, `UI-FLT-06`): Verified `data-testid="list-total-count"` matches `meta.total`.
+  - `RequesterDashboard.test.tsx` (`UI-DSH-01` to `UI-DSH-10`): Verified drill-down URL construction and counts.
+  - `StaffDashboard.test.tsx` (`UI-DSH-11` to `UI-DSH-26`): Verified operational cards, status chips, priority chips, and admin user counts.
+- **Playwright End-to-End Tests (`e2e/lab-04/dashboards.spec.ts`):**
+  - `E2E-DSH-01`: Requester dashboard click on `Open Requests` navigates to `/tickets?status=New,Open,Reopened` and verifies `list-total-count` matches card count.
+  - `E2E-DSH-02`: Staff dashboard click on `Unassigned` and `Assigned to Me` navigates to `/queue?...` and verifies `list-total-count` matches card count.
+  - `E2E-DSH-03`: Status and Priority chips drill-down in queue with active filter chip removal and parity verification.
+

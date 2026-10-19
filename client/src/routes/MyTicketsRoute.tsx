@@ -34,6 +34,9 @@ export function MyTicketsRoute({ categories }: MyTicketsRouteProps) {
       requestedPriority = rawRequestedPriority;
     }
 
+    const rawActive = searchParams.get("active");
+    const active = rawActive === "true" ? "true" : "";
+    const updatedSince = searchParams.get("updatedSince") || "";
     const search = searchParams.get("search") || "";
     const categoryId = searchParams.get("categoryId") || "";
     const page = parseInt(searchParams.get("page") || "1", 10) || 1;
@@ -43,7 +46,9 @@ export function MyTicketsRoute({ categories }: MyTicketsRouteProps) {
       requestedPriority,
       search,
       categoryId,
-      page
+      page,
+      active,
+      updatedSince
     };
   }, [searchParams]);
 
@@ -74,9 +79,12 @@ export function MyTicketsRoute({ categories }: MyTicketsRouteProps) {
       search={filters.search}
       categoryId={filters.categoryId}
       page={filters.page}
+      active={filters.active}
+      updatedSince={filters.updatedSince}
       onFilterChange={handleFilterChange}
     />
   );
 }
 
 export default MyTicketsRoute;
+

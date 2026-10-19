@@ -207,8 +207,8 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
       expect(metrics.byStatus[st]).toBeGreaterThanOrEqual(0);
     }
 
-    // Verify byPriority map completeness (LOW, MEDIUM, HIGH, UNSET present)
-    const allPriorities = ["LOW", "MEDIUM", "HIGH", "UNSET"];
+    // Verify byPriority map completeness (LOW, MEDIUM, HIGH present)
+    const allPriorities = ["LOW", "MEDIUM", "HIGH"];
     for (const pr of allPriorities) {
       expect(metrics.byPriority).toHaveProperty(pr);
       expect(typeof metrics.byPriority[pr]).toBe("number");
@@ -243,9 +243,9 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
   });
 
   // ==========================================
-  // API-DSH-13: byPriority Completeness & UNSET Group
+  // API-DSH-13: byPriority Completeness
   // ==========================================
-  it("API-DSH-13: byPriority contains LOW, MEDIUM, HIGH, and UNSET keys (all >= 0) even when counts are 0", async () => {
+  it("API-DSH-13: byPriority contains LOW, MEDIUM, and HIGH keys (all >= 0) even when counts are 0", async () => {
     const res = await request(app)
       .get("/api/dashboard/staff")
       .set("Cookie", staff1Cookie);
@@ -256,7 +256,6 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
     expect(typeof byPriority.LOW).toBe("number");
     expect(typeof byPriority.MEDIUM).toBe("number");
     expect(typeof byPriority.HIGH).toBe("number");
-    expect(typeof byPriority.UNSET).toBe("number");
 
     // Total active tickets must equal the sum of byPriority
     const activeTotal = await prisma.ticket.count({
@@ -265,7 +264,7 @@ describe("Lab 4 Issue 8: Staff & Administrator Dashboard API (API-DSH-11 to API-
       },
     });
 
-    const sumPriorities = byPriority.LOW + byPriority.MEDIUM + byPriority.HIGH + byPriority.UNSET;
+    const sumPriorities = byPriority.LOW + byPriority.MEDIUM + byPriority.HIGH;
     expect(sumPriorities).toBe(activeTotal);
   });
 

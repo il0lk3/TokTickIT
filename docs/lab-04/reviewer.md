@@ -33,7 +33,10 @@ A living document tracking the code review process. Reviews run in both directio
 | [#71](https://github.com/il0lk3/TokTickIT/pull/71) | Issue 3 — Actions Taken API and Authorization (TDD) | `feature/lab4-actions-taken-api` | Approved & Merged |
 | [#72](https://github.com/il0lk3/TokTickIT/pull/72) | Issue 4 — Ticket Workflow Rules and Conflict Handling (API) | `feature/lab4-ticket-workflow-api` | Approved & Merged |
 | [#73](https://github.com/il0lk3/TokTickIT/pull/73) | Issue 5 — Client Routing and Role-aware Application Shell | `feature/lab4-client-routing-shell` | Approved & Merged |
-| [#74](https://github.com/il0lk3/TokTickIT/pull/74) | Issue 6 — Actions Taken UI on Ticket Detail | `feature/lab4-actions-taken-ui` | Pending Review |
+| [#74](https://github.com/il0lk3/TokTickIT/pull/74) | Issue 6 — Actions Taken UI on Ticket Detail | `feature/lab4-actions-taken-ui` | Approved & Merged |
+| [#75](https://github.com/il0lk3/TokTickIT/pull/75) | Issue 7 — Ticket Workflow UI and Resolution Feedback | `feature/lab4-ticket-workflow-ui` | Approved & Merged |
+| [#76](https://github.com/il0lk3/TokTickIT/pull/76) | Issue 8 — Dashboard APIs (Requester and IT Staff) | `feature/lab4-dashboard-api` | Approved & Merged |
+| [#77](https://github.com/il0lk3/TokTickIT/pull/77) | Issue 9 — Dashboard UIs, Navigation, and Drill-down | `feature/lab4-dashboard-ui` | Pending Review |
 
 > *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
 
@@ -139,7 +142,61 @@ A living document tracking the code review process. Reviews run in both directio
 | **Review Verdict** | Changes Requested ([Review #5571550643](https://github.com/il0lk3/TokTickIT/pull/76#pullrequestreview-5571550643)), addressed |
 | **Review Feedback** | 1. **`urgentTickets` ordering contradicts contract**: `dashboard.ts` sorted by `ownerId ASC` first instead of `updatedAt DESC, id DESC`. Dropped `ownerId` and added ordering assertions in `API-DSH-16`.<br>2. **`active=true` overwrote `status` filter**: `where.currentStatus` was reassigned when `active=true`, discarding the `status` filter. Composed with `AND` array in `staff.ts` and `tickets.ts`.<br>3. **Internal spec consistency**: `specification.md` FR-07/FR-08 still used `openTickets`, staff `waitingForRequester`, and `Asia/Bangkok`. Aligned with `api-spec.md` (`openRequests`, `appearsResolved`, rolling UTC intervals).<br>4. **Response shape drift**: Staff lists lacked `category` and `requester.id`; requester lists lacked `category.id`. Selected complete objects matching spec.<br>5. **Evidence snippets alignment**: Updated `dashboard-sql-comparison.md` to reflect actual `prisma.ticket.count` queries instead of `groupBy`. |
 | **My Response / Actions Taken** | 1. **Urgent Tickets Recency Sorting**: Updated `dashboard.ts:254` to sort strictly by `[{ updatedAt: "desc" }, { id: "desc" }]`. Added ordering assertions in `API-DSH-16` verifying chronological descent with secondary tiebreaker.<br>2. **Filter Composition with `where.AND`**: Refactored `staff.ts` and `tickets.ts` using `statusConditions` array so filtering with both `status` and `active=true` composes cleanly with `where.AND`. Added tests `API-DSH-16b` and `API-DSH-09b` verifying `?status=Open&active=true` and `?status=Closed&active=true`.<br>3. **Full Spec Synchronization**: Updated `docs/lab-04/specification.md` FR-07, FR-08, Section 6.1, and Section 11 to match `api-spec.md` (`openRequests`, `appearsResolved`, `myRecentTickets`, `urgentTickets`, and deterministic UTC millisecond rolling boundaries).<br>4. **Response Shape Precision**: Added `category: { select: { id: true, name: true } }` and `requester: { select: { id: true, name: true } }` to `myRecentTickets` and `urgentTickets`; added `category.id` to Requester `attentionTickets` and `recentTickets`.<br>5. **Evidence Documentation Polish**: Updated `artifacts/lab-04/evidence/dashboard-sql-comparison.md` application query snippets to reflect `prisma.ticket.count`.<br>6. **Suite Verification**: 191/191 server tests passed (26/26 dashboard tests), 102/102 client tests passed, and 0 TypeScript errors on client and server. |
-| **Outcome** | Pushed fixes to `feature/lab4-dashboard-api`; posted review reply comment on PR #76 requesting re-review. |
+| **Outcome** | Approved and merged into `lab4-staging` by @Achikan (commit `6cf6524`) |
+
+---
+
+### PR #77 — Issue 9: Dashboard UIs, Navigation, and Drill-down
+
+| Field | Detail |
+|---|---|
+| **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/77](https://github.com/il0lk3/TokTickIT/pull/77) |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Verdict** | Changes Requested ([Review #5574123342](https://github.com/il0lk3/TokTickIT/pull/77#pullrequestreview-5574123342)), addressed |
+| **Review Scope** | Requester & Staff/Admin Dashboard UIs, 1-to-1 Metric Drill-Down Parity (DoD-6), Active Filter Chips, Accessibility, Visual Evidence |
+| **Review Feedback** | 1. **False empty states (both dashboards)**: `RequesterDashboard.tsx` computed "no tickets" by summing subset metrics excluding Cancelled and older Resolved tickets; `StaffDashboard.tsx` used overlapping subset metrics which hid the queue breakdown when active tickets existed.<br>2. **`UNSET` priority is a dead control**: `itPriority` is non-nullable (`TicketPriority @default(LOW)`). `byPriority.UNSET` was always 0 and filter was vacuous.<br>3. **Quick Actions missing**: Populated dashboards lacked Quick Action navigation buttons required by handout mockups and `specification.md`.<br>4. **`ui-spec.md` Attention Needed mismatch**: Stated `appearsResolved` but API returns only `WaitingForRequester`.<br>5. **Staff `recentlyUpdated` fallback drill-down**: Omitted `updatedSince`. |
+| **My Response / Actions Taken** | 1. **Correct Empty State Criteria**: In `RequesterDashboard.tsx`, empty state is gated on `totalCount === 0 && recentTickets.length === 0`, ensuring requesters with cancelled or older resolved tickets retain full access to their ticket history and recent list. Added test `UI-DSH-05b`. In `StaffDashboard.tsx`, empty queue state is computed from active non-terminal statuses (`New`, `Open`, `InProgress`, `WaitingForRequester`, `Resolved`, `Reopened`) in `byStatus`, guaranteeing active tickets are never hidden.<br>2. **Dropped Dead `UNSET` Priority Control**: Removed `UNSET` priority across UI, API, test suites, and documentation per handout §7. Simplified `validItPriorities` to `["LOW", "MEDIUM", "HIGH"]` in `staff.ts`, normalized `byPriority` to `LOW`, `MEDIUM`, `HIGH` in `dashboard.ts`, removed obsolete `staff-queue-unset.api.test.ts`, and updated chip configurations.<br>3. **Added Quick Actions**: Integrated Quick Action navigation buttons in headers: Requester Dashboard (`+ Create Ticket` -> `/tickets/new`, `View My Tickets` -> `/tickets`); Staff Dashboard (`+ Create Ticket` -> `/tickets/new`, `Search Tickets` -> `/queue`, `My Queue` -> `/queue?ownerId=me&active=true`).<br>4. **Aligned `ui-spec.md`**: Corrected Attention Needed definition to `WaitingForRequester` requiring requester response.<br>5. **Added `updatedSince` Fallback**: Updated `recentlyUpdated` fallback query in `StaffDashboard.tsx` to include `updatedSince: ISO`.<br>6. **Full Suite Verification**: 191/191 server tests passed (18 files), 139/139 client tests passed (15 files), 7/7 Playwright dashboard E2E tests passed, 6/6 navigation E2E tests passed, and 0 TypeScript compilation errors on client and server. |
+| **Outcome** | Changes addressed and pushed to `feature/lab4-dashboard-ui`. Reply posted on PR #77 requesting re-review. |
+
+#### Reviewer Verification Commands
+
+```bash
+# 1. Verify Unit & Integration Tests (100% Pass)
+cd /Users/karn/Downloads/toktickit/server && npm test
+# Expected: 18 test files, 191 passed (100%)
+
+cd /Users/karn/Downloads/toktickit/client && npm test
+# Expected: 15 test files, 139 passed (100%)
+
+# 2. Verify Playwright End-to-End Tests
+cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/dashboards.spec.ts
+# Expected: 7 passed (100%) - covers E2E-DSH-01 to E2E-DSH-07
+
+cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/navigation.spec.ts
+# Expected: 6 passed (100%) - covers routing and RBAC
+
+# 3. Verify Zero Residual References to DashboardPlaceholder / DashboardShell
+git grep "DashboardPlaceholder" client/src/
+git grep "DashboardShell" client/src/
+# Expected: 0 matches
+
+# 4. Verify Zero Emojis in Workspace Code & Docs
+git grep -P "[\x{1F300}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]" client/src/ docs/lab-04/
+# Expected: 0 matches
+```
+
+#### Screenshot Evidence Cross-Reference
+
+| Viewport | State | Requester Dashboard | Staff / Admin Dashboard |
+|---|---|---|---|
+| Desktop (1280px) | Populated | `artifacts/lab-04/screenshots/requester-dashboard/desktop-populated.png` | `artifacts/lab-04/screenshots/staff-dashboard/desktop-populated.png` |
+| Tablet (768px) | Populated | `artifacts/lab-04/screenshots/requester-dashboard/tablet-populated.png` | `artifacts/lab-04/screenshots/staff-dashboard/tablet-populated.png` |
+| Mobile (375px) | Populated | `artifacts/lab-04/screenshots/requester-dashboard/mobile-populated.png` | `artifacts/lab-04/screenshots/staff-dashboard/mobile-populated.png` |
+| Desktop (1280px) | Empty | `artifacts/lab-04/screenshots/requester-dashboard/desktop-empty.png` | N/A (Admin seed has tickets) |
+| Mobile (375px) | Empty | `artifacts/lab-04/screenshots/requester-dashboard/mobile-empty.png` | N/A |
+| Desktop (1280px) | Error | `artifacts/lab-04/screenshots/requester-dashboard/desktop-error.png` | `artifacts/lab-04/screenshots/staff-dashboard/desktop-error.png` |
+| Desktop (1280px) | Forbidden | N/A | `artifacts/lab-04/screenshots/staff-dashboard/desktop-forbidden.png` |
+
 
 
 

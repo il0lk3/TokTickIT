@@ -88,11 +88,12 @@ router.get("/tickets", async (req: Request, res: Response) => {
       where.AND = statusConditions;
     }
 
-    const validPriorities = ["LOW", "MEDIUM", "HIGH"];
-    if (requestedPriority && !validPriorities.includes(requestedPriority as string)) {
+    const validRequestedPriorities = ["LOW", "MEDIUM", "HIGH"];
+    if (requestedPriority && !validRequestedPriorities.includes(requestedPriority as string)) {
       return res.status(400).json({ error: "Invalid requestedPriority parameter", code: "INVALID_PRIORITY" });
     }
-    if (itPriority && !validPriorities.includes(itPriority as string)) {
+    const validItPriorities = ["LOW", "MEDIUM", "HIGH"];
+    if (itPriority && !validItPriorities.includes(itPriority as string)) {
       return res.status(400).json({ error: "Invalid itPriority parameter", code: "INVALID_PRIORITY" });
     }
 
@@ -105,7 +106,9 @@ router.get("/tickets", async (req: Request, res: Response) => {
     }
 
     if (requestedPriority) where.requestedPriority = requestedPriority as TicketPriority;
-    if (itPriority) where.itPriority = itPriority as TicketPriority;
+    if (itPriority) {
+      where.itPriority = itPriority as TicketPriority;
+    }
     
     if (categoryId) {
       const catId = parseInt(categoryId as string, 10);

@@ -12,6 +12,9 @@ interface TicketQueueProps {
   requestedPriority?: string;
   categoryId?: string;
   search?: string;
+  active?: string;
+  appearsResolved?: string;
+  updatedSince?: string;
   page?: number;
   onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
@@ -31,6 +34,9 @@ export function TicketQueue({
   requestedPriority: propRequestedPriority,
   categoryId: propCategoryId,
   search: propSearch,
+  active: propActive,
+  appearsResolved: propAppearsResolved,
+  updatedSince: propUpdatedSince,
   page: propPage,
   onFilterChange
 }: TicketQueueProps) {
@@ -60,6 +66,9 @@ export function TicketQueue({
   const itPriority = propItPriority !== undefined ? propItPriority : localItPriority;
   const requestedPriority = propRequestedPriority !== undefined ? propRequestedPriority : localRequestedPriority;
   const categoryId = propCategoryId !== undefined ? propCategoryId : localCategoryId;
+  const active = propActive !== undefined ? propActive : "";
+  const appearsResolved = propAppearsResolved !== undefined ? propAppearsResolved : "";
+  const updatedSince = propUpdatedSince !== undefined ? propUpdatedSince : "";
   const page = propPage !== undefined ? propPage : localPage;
   const search = localSearch;
 
@@ -112,6 +121,9 @@ export function TicketQueue({
         itPriority,
         status,
         ownerId,
+        active: active === "true" ? "true" : undefined,
+        appearsResolved: appearsResolved === "true" ? "true" : undefined,
+        updatedSince: updatedSince || undefined,
         page,
         limit: 10,
         sortBy,
@@ -129,7 +141,7 @@ export function TicketQueue({
     } finally {
       setLoading(false);
     }
-  }, [user, debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, page, sortBy, sortOrder]);
+  }, [user, debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, active, appearsResolved, updatedSince, page, sortBy, sortOrder]);
 
   const isMobile = useMediaQuery('(max-width: 991.98px)');
 
@@ -212,11 +224,31 @@ export function TicketQueue({
     if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setLocalSearch(""); setDebouncedSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
     if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setLocalCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
     if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
-    if (itPriority) filters.push({ label: `IT Priority: ${itPriority}`, clear: () => { setLocalItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); } });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
-    if (ownerId) filters.push({ label: `Owner: ${ownerId === 'unassigned' ? 'Unassigned' : ownerMap[Number(ownerId)] || ownerId}`, clear: () => { setLocalOwnerId(""); onFilterChange?.({ ownerId: "", page: 1 }); } });
+    if (itPriority) {
+      filters.push({
+        label: `Priority: ${itPriority}`,
+        clear: () => { setLocalItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); }
+      });
+    }
+    if (status) {
+      const statusDisplay = status === 'InProgress' ? 'In Progress' : status;
+      filters.push({ label: `Status: ${statusDisplay}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
+    }
+    if (ownerId) {
+      const ownerLabel = ownerId === 'unassigned' ? 'Unassigned' : (ownerId === 'me' ? 'Assigned to Me' : (ownerMap[Number(ownerId)] || ownerId));
+      filters.push({ label: `Owner: ${ownerLabel}`, clear: () => { setLocalOwnerId(""); onFilterChange?.({ ownerId: "", page: 1 }); } });
+    }
+    if (active === "true") {
+      filters.push({ label: "Active Only", clear: () => onFilterChange?.({ active: "", page: 1 }) });
+    }
+    if (appearsResolved === "true") {
+      filters.push({ label: "Appears Resolved", clear: () => onFilterChange?.({ appearsResolved: "", page: 1 }) });
+    }
+    if (updatedSince) {
+      filters.push({ label: "Recently Updated", clear: () => onFilterChange?.({ updatedSince: "", page: 1 }) });
+    }
     return filters;
-  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, categoryMap, ownerMap, onFilterChange]);
+  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, active, appearsResolved, updatedSince, categoryMap, ownerMap, onFilterChange]);
 
   if (isForbidden) {
     return (
@@ -241,7 +273,7 @@ export function TicketQueue({
           <p className="text-muted mb-0 small">Manage and triage all support requests</p>
         </div>
         <div className="d-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm border border-light">
-          <span className="fw-bold text-zen-primary">{totalTickets}</span>
+          <span data-testid="list-total-count" className="fw-bold text-zen-primary">{totalTickets}</span>
           <span className="text-muted small fw-medium">Total Tickets</span>
         </div>
       </div>
@@ -297,6 +329,7 @@ export function TicketQueue({
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
+              <option value="UNSET">Unset</option>
             </select>
           </div>
           <div className="col-6 col-md-3">
@@ -309,12 +342,12 @@ export function TicketQueue({
         </div>
 
         {activeFilters.length > 0 && (
-          <div className="d-flex align-items-center gap-2 mt-3 flex-wrap">
+          <div data-testid="active-filter-chips" role="region" aria-label="Active filters" className="d-flex align-items-center gap-2 mt-3 flex-wrap">
             <span className="small text-muted me-1 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Filters:</span>
             {activeFilters.map((f, i) => (
               <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
                 {f.label}
-                <button type="button" aria-label="Clear filter" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+                <button type="button" aria-label={`Remove filter: ${f.label}`} className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
               </span>
             ))}
             <button 
@@ -328,7 +361,7 @@ export function TicketQueue({
                 setLocalStatus("");
                 setLocalOwnerId("");
                 setPage(1);
-                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", itPriority: "", status: "", ownerId: "", page: 1 });
+                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", itPriority: "", status: "", ownerId: "", active: "", appearsResolved: "", updatedSince: "", page: 1 });
               }}
             >
               Clear All

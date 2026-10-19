@@ -49,7 +49,7 @@ async function main() {
     { email: "grace.su@example.com", name: "Grace Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
     { email: "phrao.su@example.com", name: "Phrao Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
     // Dedicated Requester with ZERO tickets to test empty dashboard state
-    { email: "pueng.su@example.com", name: "Pueng Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: true },
+    { email: "pueng.su@example.com", name: "Pueng Su", role: Role.REQUESTER, isActive: true, requiresPasswordChange: false },
     { email: "inactive.user@example.com", name: "Inactive TestUser", role: Role.REQUESTER, isActive: false, requiresPasswordChange: true },
     // E2E Fixture Users
     { email: "e2e.requester@example.com", name: "E2E Requester", role: Role.REQUESTER, isActive: true, requiresPasswordChange: false },

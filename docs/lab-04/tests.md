@@ -76,7 +76,7 @@ cd e2e && npx playwright test lab-04
 | **API-DSH-10** | API | **Rubric-5** | Direct SQL comparison: metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-11** | API | **AC-09** | Staff retrieves operational dashboard metrics with complete byStatus and byPriority maps | HTTP 200 OK; normalized maps returned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-12** | API | **BR-14** | Closed and Cancelled tickets without owner are NOT counted in unassigned active metric | HTTP 200 OK; terminal tickets excluded from active unassigned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
-| **API-DSH-13** | API | **AC-09** | byPriority contains LOW, MEDIUM, HIGH, and UNSET keys (all >= 0) even when counts are 0 | Normalized map has all keys defined | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-13** | API | **AC-09** | byPriority contains LOW, MEDIUM, and HIGH keys (all >= 0) even when counts are 0 | Normalized map has all keys defined | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-14** | API | **BR-14** | Rolling 24-hour boundary precision for recentlyUpdated (23h included, 25h excluded) | Boundary tickets verified against rolling time window | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-15** | API | **AC-09** | Staff sees appearsResolved metric counting active tickets flagged by requester | HTTP 200 OK; counts active flagged tickets | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-16** | API | **AC-09** | Recent lists include myRecentTickets (owned by staff) and urgentTickets (HIGH priority active) | Lists contain appropriate ticket subsets | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
@@ -130,10 +130,34 @@ cd e2e && npx playwright test lab-04
 | **UI-WKF-20** | UI | **BR-08** | Staff transition clears advisory signal | When Staff transitions ticket status, `appearsResolved` is reset and advisory banner disappears | `client/tests/lab-04/TicketWorkflow.test.tsx` | Passed |
 | **UI-WKF-21** | UI | **AC-10** | Double click prevention & loading indicator | Buttons disable and show loading indicators while mutation is in-flight | `client/tests/lab-04/TicketWorkflow.test.tsx` | Passed |
 | **UI-WKF-22** | UI | **BR-13** | Administrator operational capability parity | Administrator user has full capability to perform workflow transitions | `client/tests/lab-04/TicketWorkflow.test.tsx` | Passed |
-| **UI-DSH-01** | UI | **AC-09** | Staff Dashboard renders 5 metric cards and recent tickets | Displays correct counts and renders ticket rows | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
-| **UI-DSH-02** | UI | **FR-08** | Clicking metric card navigates to filtered Queue (Drill-down) | URL navigates to `/queue?status=...` | `client/tests/lab-04/StaffDashboard.test.tsx` | Planned |
-| **UI-DSH-03** | UI | **AC-02** | Requester Dashboard renders personal metrics | Cards render counts; Recent tickets list displays | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
-| **UI-DSH-04** | UI | **AC-08** | Requester with zero tickets renders welcoming empty state | Displays empty state with "+ Create Ticket" button | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
+| **UI-DSH-01** | UI | **AC-02, DoD-6** | Requester Dashboard renders 5 metric cards with correct counts | Verified 5 cards with non-negative counts | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
+| **UI-DSH-02** | UI | **AC-02, DoD-6** | Requester metric cards link to exact `/tickets` query destinations | Verified URLSearchParams construction | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
+| **UI-DSH-03** | UI | **AC-02** | Requester Dashboard renders Attention Needed list | Verified `WaitingForRequester` | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
+| **UI-DSH-04** | UI | **AC-08** | Requester with zero tickets renders welcoming empty state | Displays empty state with "Create Ticket" button | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
+| **UI-DSH-05** | UI | **AC-02** | Refresh button in-flight state and throttling | Refresh button disables and announces update | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
+| **UI-DSH-11** | UI | **AC-09, DoD-6** | Staff Dashboard renders 4 operational cards with correct counts | Verified Unassigned, Assigned, Appears Resolved, Updated 24h | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-12** | UI | **AC-09, DoD-6** | Operational cards link to exact `/queue` query destinations | Verified exact URLSearchParams drill-down links | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-13** | UI | **AC-09** | Status chips render all 8 statuses with non-negative counts | Verified 8 status chips with drill-down links | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-14** | UI | **AC-09** | Priority chips render LOW, MEDIUM, HIGH with links | Verified 3 priority chips and query composition | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-15** | UI | **AC-09** | Terminal status chips link to `/queue?status=...` without active=true | Non-terminal include active=true, terminal do not | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-16** | UI | **AC-09** | Urgent Active Tickets (HIGH priority) render with detail links | Verified top 5 urgent tickets and links | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-17** | UI | **AC-09** | My Recent Tickets render with detail links | Verified top 5 recent owned tickets and links | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-18** | UI | **AC-09** | Admin user counts render for Administrator | Verified total user breakdown and link to `/admin/users` | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-19** | UI | **AC-09** | IT Staff does not see Admin user counts | User administration block hidden for IT_STAFF | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-20** | UI | **AC-09** | Null adminUserCounts does not crash page | Safe fallback handles missing admin metrics cleanly | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-21** | UI | **AC-08** | Empty queue state displays when queue has 0 active tickets | Verified "Queue is all clear" banner | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-22** | UI | **AC-10** | Rapid double-click on refresh ignores redundant click | Second click throttled while in-flight | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-DSH-26** | UI | **AC-12** | Responsive text-break prevents horizontal overflow | Long unbroken summaries wrap without overflow | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
+| **UI-FLT-01** | UI | **AC-15, DoD-6** | MyTickets displays active filter chip for multi-status | Verified status filter chip rendered | `client/tests/lab-04/ListFilterChips.test.tsx` | Passed |
+| **UI-FLT-02** | UI | **AC-15, DoD-6** | TicketQueue displays active filter chips for owner, active, priority | Verified multiple chips rendered | `client/tests/lab-04/ListFilterChips.test.tsx` | Passed |
+| **UI-FLT-03** | UI | **AC-15** | Removing single filter chip updates URL searchParams | Clicking chip remove button updates query cleanly | `client/tests/lab-04/ListFilterChips.test.tsx` | Passed |
+| **UI-FLT-04** | UI | **AC-15** | Clicking Clear all removes all filters | Clears all parameters back to default list | `client/tests/lab-04/ListFilterChips.test.tsx` | Passed |
+| **UI-FLT-05** | UI | **DoD-6** | MyTickets list total count element matches meta.total | Verified `data-testid="list-total-count"` matches | `client/tests/lab-04/ListFilterChips.test.tsx` | Passed |
+| **UI-FLT-06** | UI | **DoD-6** | TicketQueue list total count element matches meta.total | Verified `data-testid="list-total-count"` matches | `client/tests/lab-04/ListFilterChips.test.tsx` | Passed |
+| **UI-A11Y-01** | UI | **DoD-5** | Heading hierarchy strictly follows h1 -> h2 | Verified single h1 followed by h2 headings | `client/tests/lab-04/DashboardA11y.test.tsx` | Passed |
+| **UI-A11Y-02** | UI | **DoD-5** | Metric cards have accessible names including title and count | Verified aria-label accessibility composition | `client/tests/lab-04/DashboardA11y.test.tsx` | Passed |
+| **UI-A11Y-03** | UI | **DoD-5** | All decorative icons have aria-hidden=true | All dashboard SVGs have aria-hidden="true" | `client/tests/lab-04/DashboardA11y.test.tsx` | Passed |
+| **UI-A11Y-04** | UI | **DoD-5** | Keyboard navigation: Tab to cards and activate with Enter | Keyboard focus traversal verified | `client/tests/lab-04/DashboardA11y.test.tsx` | Passed |
 | **UI-NAV-01** | UI | **AC-14, DoD-5** | Unauthenticated access redirects to `/login` with `from` state | Browser redirects to `/login`, preserves return URL in state | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
 | **UI-NAV-02** | UI | **AC-14, DoD-5** | Active nav items expose `aria-current="page"` | Link matching current URL has `aria-current="page"` and active styling | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
 | **UI-NAV-03** | UI | **AC-14** | Session loading shows accessible loading spinner | Renders centered spinner while `isLoading = true` | `client/tests/lab-04/AppRouting.test.tsx` | Passed |
@@ -161,8 +185,13 @@ cd e2e && npx playwright test lab-04
 | **E2E-RES-02** | E2E | **BR-08** | Requester advisory signal & staff feedback workflow | Requester signals resolved; Staff views alert banner and uses shortcut to review Actions Taken | `e2e/lab-04/ticket-resolution.spec.ts` | Passed |
 | **E2E-RES-03** | E2E | **AC-07, BR-11** | Optimistic concurrency 409 conflict dialog & reload | Concurrent update triggers 409 dialog; Reload updates client state to latest server version | `e2e/lab-04/ticket-resolution.spec.ts` | Passed |
 | **E2E-RES-04** | E2E | **BR-07, BR-10** | Terminal ticket locking & Reopen transition | Terminal Closed ticket locks staff controls; Reopen transition re-enables controls | `e2e/lab-04/ticket-resolution.spec.ts` | Passed |
-| **E2E-03** | E2E | **AC-02, AC-09** | Dashboard metrics and drill-down navigation | Metrics verify against UI; clicking cards navigates to filtered lists | `e2e/lab-04/dashboards.spec.ts` | Planned |
-| **E2E-04** | E2E | **AC-12** | Responsive verification across 375px, 768px, 1280px | No horizontal scroll, no clipping, accessible tap targets | `e2e/lab-04/dashboards.spec.ts` | Planned |
+| **E2E-DSH-01** | E2E | **AC-02, DoD-6** | Requester Dashboard Drill-down & Count Parity | Clicking card navigates to `/tickets?...` and matches list total | `e2e/lab-04/dashboards.spec.ts` | Passed |
+| **E2E-DSH-02** | E2E | **AC-09, DoD-6** | Staff Dashboard Operational Cards Drill-down & Count Parity | Clicking cards navigates to `/queue?...` and matches list total | `e2e/lab-04/dashboards.spec.ts` | Passed |
+| **E2E-DSH-03** | E2E | **AC-09, DoD-6** | Priority & Status Chips Drill-down with Filter Removal | Clicking chip filters queue; removing chip updates queue | `e2e/lab-04/dashboards.spec.ts` | Passed |
+| **E2E-DSH-04** | E2E | **AC-10** | Dashboard Refresh Button Throttling & Live Feedback | Refresh button throttles redundant clicks and announces live status | `e2e/lab-04/dashboards.spec.ts` | Passed |
+| **E2E-DSH-05** | E2E | **AC-12** | Staff Dashboard Visual Capture across viewports | Desktop (1280px), Tablet (768px), Mobile (375px) screenshots | `e2e/lab-04/dashboards.spec.ts` | Passed |
+| **E2E-DSH-06** | E2E | **AC-12** | Requester Dashboard Visual Capture across viewports | Desktop (1280px), Tablet (768px), Mobile (375px) screenshots | `e2e/lab-04/dashboards.spec.ts` | Passed |
+| **E2E-DSH-07** | E2E | **AC-08, DoD-5** | Empty, Error, and Forbidden States Screenshots | Empty state, 500 error state, and 403 forbidden state captured | `e2e/lab-04/dashboards.spec.ts` | Passed |
 | **E2E-NAV-01** | E2E | **AC-14** | Admin Operational Parity | Admin logs in, views `/queue`, opens `/tickets/1`, verifies queue/detail | `e2e/lab-04/navigation.spec.ts` | Passed |
 | **E2E-NAV-02** | E2E | **AC-14** | Role Boundary Enforcement | Requester navigating to `/queue` or `/admin/users` gets in-place 403 | `e2e/lab-04/navigation.spec.ts` | Passed |
 | **E2E-NAV-03** | E2E | **AC-14** | Deep-link Login Return | Unauthenticated `/tickets/1` redirects to `/login` and returns on auth | `e2e/lab-04/navigation.spec.ts` | Passed |

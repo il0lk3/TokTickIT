@@ -56,8 +56,8 @@ vi.mock("../../src/components/UserManagement", () => ({
   UserManagement: () => <div data-testid="user-management-screen">User Management Screen</div>
 }));
 
-vi.mock("../../src/components/dashboard/DashboardShell", () => ({
-  DashboardShell: () => <div data-testid="dashboard-shell-screen">Dashboard Shell Screen</div>
+vi.mock("../../src/components/dashboard/DashboardRoute", () => ({
+  DashboardRoute: () => <div data-testid="dashboard-shell-screen">Dashboard Shell Screen</div>
 }));
 
 describe("Lab 4 Issue 5: Client Routing and Role-aware Application Shell (UI-NAV)", () => {
