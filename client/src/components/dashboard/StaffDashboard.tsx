@@ -175,9 +175,9 @@ export function StaffDashboard() {
           <h1 className="h3 fw-bold mb-1 text-dark">
             {user?.role === "ADMINISTRATOR" ? "IT Administration Dashboard" : "IT Support Dashboard"}
           </h1>
-          <p className="text-muted mb-0 small">
+          <h2 className="text-muted mb-0 small fs-6 fw-normal">
             Welcome back, {user?.name || "Staff"} — operational workload and support queue health.
-          </p>
+          </h2>
         </div>
 
         <div className="d-flex align-items-center gap-2">

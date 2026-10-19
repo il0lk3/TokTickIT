@@ -226,7 +226,7 @@ export function TicketQueue({
     if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
     if (itPriority) {
       filters.push({
-        label: itPriority === 'UNSET' ? 'Priority: Unset' : `IT Priority: ${itPriority}`,
+        label: itPriority === 'UNSET' ? 'Priority: Unset' : `Priority: ${itPriority}`,
         clear: () => { setLocalItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); }
       });
     }
@@ -342,7 +342,7 @@ export function TicketQueue({
         </div>
 
         {activeFilters.length > 0 && (
-          <div data-testid="active-filter-chips" className="d-flex align-items-center gap-2 mt-3 flex-wrap">
+          <div data-testid="active-filter-chips" role="region" aria-label="Active filters" className="d-flex align-items-center gap-2 mt-3 flex-wrap">
             <span className="small text-muted me-1 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Filters:</span>
             {activeFilters.map((f, i) => (
               <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">

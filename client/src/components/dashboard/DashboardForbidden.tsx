@@ -23,7 +23,7 @@ export function DashboardForbidden({
           </svg>
         </div>
 
-        <h1 className="h4 fw-bold mb-2 text-dark">Access Forbidden</h1>
+        <h1 className="h4 fw-bold mb-2 text-dark">403 - Access Forbidden</h1>
         <p className="text-muted mb-4">{message}</p>
 
         <div className="d-flex justify-content-center gap-3">
