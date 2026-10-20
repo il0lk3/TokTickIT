@@ -42,7 +42,7 @@ cd e2e && npx playwright test lab-04
 
 | Test ID | Layer | Req / AC | What It Tests | Expected Result | Automated Test File | Status |
 |---|:---:|:---:|---|---|---|:---:|
-| **API-ACT-01** | API | **AC-01, BR-03** | IT Staff creates valid Action Taken | HTTP 201; saved under correct Ticket with `performedById = session.user.id` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-01** | API | **AC-01, BR-01, BR-03** | IT Staff creates valid Action Taken | HTTP 201; saved under correct Ticket with `performedById = session.user.id` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-02** | API | **AC-03, BR-05** | Requester attempts POST on Actions Taken | HTTP 403 Forbidden; no database record created | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-03** | API | **AC-03, BR-05** | Requester attempts PATCH on Action Taken | HTTP 403 Forbidden; record remains unmodified | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-04** | API | **BR-05** | Requester GET actions on another user's ticket | HTTP 403 Forbidden or 404 Not Found (tenant isolated) | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
@@ -50,7 +50,7 @@ cd e2e && npx playwright test lab-04
 | **API-ACT-06** | API | **BR-04** | Create action with `followUpRequired=false` and note provided | HTTP 201; note is saved as null or empty | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-07** | API | **BR-03** | Client payload attempts to forge `performedById` | Forged ID ignored; server enforces authenticated user ID | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-08** | API | **AC-08, BR-16** | Ticket with zero actions returns empty list | HTTP 200 OK with `[]` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
-| **API-ACT-09** | API | **BR-02, BR-16** | Ticket with multiple actions from different staff members | HTTP 200 OK; correct stable chronological order | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
+| **API-ACT-09** | API | **BR-02, BR-06, BR-16** | Ticket with multiple actions from different staff members | HTTP 200 OK; correct stable chronological order | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-10** | API | **BR-07** | Attempt to add Action Taken to Closed/Cancelled ticket | HTTP 400 Bad Request; `TERMINAL_TICKET_LOCKED` | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-ACT-11** | API | **AC-10** | Duplicate action submission within short window | Deduplicated or handled safely without duplicate records | `server/tests/lab-04/actions-taken.api.test.ts` | Passed |
 | **API-WKF-01** | API | **AC-05, BR-10** | Permitted transitions in matrix (Open -> InProgress -> Waiting) | HTTP 200 OK; status updated successfully | `server/tests/lab-04/ticket-workflow.api.test.ts` | Passed |
@@ -197,7 +197,12 @@ cd e2e && npx playwright test lab-04
 | **E2E-NAV-03** | E2E | **AC-14** | Deep-link Login Return | Unauthenticated `/tickets/1` redirects to `/login` and returns on auth | `e2e/lab-04/navigation.spec.ts` | Passed |
 | **E2E-NAV-04** | E2E | **AC-14** | Deep-link Direct History Fallback | Opening `/tickets/1` directly falls back to `/queue` on Back click | `e2e/lab-04/navigation.spec.ts` | Passed |
 | **E2E-NAV-05** | E2E | **AC-15** | Filter Persistence & History | Back button preserves URL searchParams across filter transitions | `e2e/lab-04/navigation.spec.ts` | Passed |
-| **E2E-NAV-06** | E2E | **AC-14** | Zen Green 404 Route Handling | Navigating to `/unknown-route` renders 404 with Back to Dashboard button | `e2e/lab-04/navigation.spec.ts` | Passed |
+| **API-SEC-01** | API | **Sec-1, AC-10** | Security & Error Handling Hardening | Rejects malformed JSON with 400, structured 404 for unknown /api/*, x-powered-by disabled, write endpoint protection | `server/tests/lab-04/security-error-hardening.api.test.ts` | Passed |
+| **API-PRF-01** | API | **Perf-1, AC-02, AC-09** | Performance Smoke Benchmarks with Warm-Up | Dashboard & list endpoints respond within 500ms with single-aggregate efficiency | `server/tests/lab-04/performance-smoke.api.test.ts` | Passed |
+| **E2E-ACT-06** | E2E | **AC-01, AC-03** | Complete Actions Taken Lifecycle Flow | Staff logs in -> opens ticket -> creates and edits action -> Requester sees it read-only | `e2e/lab-04/actions-taken-flow.spec.ts` | Passed |
+| **E2E-RES-03b** | E2E | **AC-07, DoD-7** | Two Concurrent Browser Sessions Conflict | Simultaneous mutation across two browser contexts triggers 409 conflict dialog and reload | `e2e/lab-04/ticket-resolution.spec.ts` | Passed |
+| **E2E-REG-01** | E2E | **AC-13, Rubric-8** | Labs 1-3 Representative Regression Suite | Attachments upload/delete, public comment vs internal note isolation, cross-tenant isolation, admin user management | `e2e/lab-04/regression-lab1-3.spec.ts` | Passed |
+| **E2E-SMK-01** | E2E | **AC-10, DoD-5** | Quality & Smoke Sweep | Crawls all registered routes across 3 roles: asserts 0 console errors, 0 broken links, 0 unrendered placeholders | `e2e/lab-04/quality-smoke.spec.ts` | Passed |
 | **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/`, `client/tests/`, `e2e/` | Passed |
 
 ---

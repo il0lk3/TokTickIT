@@ -19,7 +19,7 @@ test.describe('3. Staff Queue Screenshots', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200);
-    await page.waitForSelector('h2:has-text("My Tickets")');
+    await page.waitForURL(url => !url.pathname.includes('/login'));
     await page.goto('/queue');
     await page.waitForSelector('text=Forbidden', { timeout: 5000 }).catch(() => {});
 

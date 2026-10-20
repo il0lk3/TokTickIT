@@ -10,7 +10,7 @@ interface TicketQueueRouteProps {
 const VALID_STATUSES = new Set([
   "New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"
 ]);
-const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH", "UNSET"]);
+const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH"]);
 
 export function TicketQueueRoute({ categories }: TicketQueueRouteProps) {
   const [searchParams, setSearchParams] = useSearchParams();

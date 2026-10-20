@@ -642,7 +642,6 @@ export interface StaffDashboardResponse {
       LOW: number;
       MEDIUM: number;
       HIGH: number;
-      UNSET: number;
     };
     adminUserCounts?: AdminUserCounts | null;
   };

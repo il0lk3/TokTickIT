@@ -1,9 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Lab 4 Issue 5: Client Routing and Role-aware Application Shell (E2E-NAV)', () => {
-  // Run on desktop chromium for deterministic routing checks
-  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Routing tests run once on Chromium desktop');
-
   const ADMIN_EMAIL = 'e2e.admin@example.com';
   const STAFF_EMAIL = 'e2e.staff@example.com';
   const REQUESTER_EMAIL = 'e2e.requester@example.com';

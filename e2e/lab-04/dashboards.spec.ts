@@ -2,9 +2,6 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH)', () => {
-  // Run on desktop chromium for deterministic checks; responsive viewports tested explicitly inside
-  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Dashboard E2E suite runs on Chromium desktop');
-
   const ADMIN_EMAIL = 'e2e.admin@example.com';
   const STAFF_EMAIL = 'e2e.staff@example.com';
   const REQUESTER_EMAIL = 'e2e.requester@example.com';

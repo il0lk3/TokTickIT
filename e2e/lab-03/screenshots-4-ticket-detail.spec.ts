@@ -21,6 +21,7 @@ test.describe('4. Staff Ticket Detail Screenshots', () => {
       page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200),
       page.click('button[type="submit"]')
     ]);
+    await page.goto('/queue');
     await page.waitForSelector('.glass-panel'); await page.waitForTimeout(1000);
 
     // Find an unassigned ticket
