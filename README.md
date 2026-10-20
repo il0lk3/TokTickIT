@@ -43,9 +43,9 @@ cd ../client && npm install
 # 2. Create the environment files from templates (server)
 cd ../server
 cp .env.example .env
-# IMPORTANT: open .env and set JWT_SECRET to a random string.
-# As of Lab 3, the server requires JWT_SECRET and will refuse to start without it — there is no
-# hardcoded fallback, by design (see docs/lab-03/specification.md, Section 11).
+# Open .env and set JWT_SECRET (e.g. JWT_SECRET="your_secure_random_string_here").
+# The server, seed runner, and test runner automatically load .env via dotenv.
+# (A safe development fallback is provided if JWT_SECRET is omitted in dev mode).
 
 # 3. Start PostgreSQL via Docker
 docker compose up -d
@@ -141,11 +141,11 @@ cd client
 npm run test
 
 # Run all end-to-end (E2E) tests
-# 38 tests, 100% pass across Chromium, Tablet WebKit, and Mobile Chromium
+# 51 tests total, 100% pass across Chromium, Tablet WebKit, and Mobile Chromium
 cd e2e
 npm run test
 
-# Or target Lab 4 E2E tests specifically
+# Or target Lab 4 E2E tests specifically (38 tests)
 npm test -- lab-04
 
 # Verify requirements traceability against codebase
@@ -171,8 +171,8 @@ Follow these steps to demonstrate the end-to-end multi-role capabilities of TokT
 ### 1. Role: Requester (`e2e.requester@example.com` / `Password123!`)
 1. **Sign In**: Navigate to `http://localhost:5173/login`. Enter email and password. Click **Sign In**.
 2. **Requester Dashboard**: The landing view displays live personal metrics:
-   - Metric cards: Open, In Progress, Waiting on You, and Resolved.
-   - Attention Needed card for tickets requiring user response.
+   - Metric cards: **Open Requests**, **In Progress**, **Waiting for Requester**, **Recently Resolved**, and **Closed** (all 5 cards feature 1-click drill-downs to `/tickets?status=...`).
+   - Attention Needed panel for tickets requiring user response.
    - Recent Tickets table sorted chronologically.
 3. **Create Ticket**:
    - Click **+ New Ticket** (or Quick Action on dashboard) -> navigates to `/tickets/new`.
@@ -192,12 +192,12 @@ Follow these steps to demonstrate the end-to-end multi-role capabilities of TokT
 ### 2. Role: IT Staff (`e2e.staff@example.com` / `Password123!`)
 1. **Sign In**: Navigate to `http://localhost:5173/login`. Enter email and password. Click **Sign In**.
 2. **Staff Operational Dashboard**:
-   - View operational cards: Total Open, In Progress, Waiting for Requester, and Resolved Today.
-   - View Priority Distribution chips (*High*, *Medium*, *Low*) and Urgent Tickets table.
+   - View operational metric cards: **Unassigned** (unclaimed tickets), **Assigned to Me** (tickets owned by current staff), **Appears Resolved** (tickets with requester resolution advisory signal), and **Updated in 24h** (activity in last 24 rolling hours).
+   - View Priority Distribution chips (*High*, *Medium*, *Low*), Status breakdown chips, and Urgent Tickets table.
 3. **Drill-down to Queue**:
-   - Click the **In Progress** card or **High** priority chip.
-   - Navigates to `/queue?status=IN_PROGRESS` or `/queue?itPriority=HIGH` with 1-to-1 matching ticket counts.
-   - Notice the active filter chips above the queue. Click the '×' button on a chip to remove that filter in-place.
+   - Click any metric card (e.g. **Unassigned**) or status chip (e.g. **In Progress**) or **High** priority chip.
+   - Navigates to `/queue?ownerId=unassigned` or `/queue?status=InProgress` or `/queue?itPriority=HIGH` with 1-to-1 matching ticket counts.
+   - Notice the active filter chips above the queue. Click the '×' button on a chip to remove that filter in-place, or click 'Clear all filters'.
 4. **Open Ticket & Advisory Banner**:
    - Select an assigned or active ticket to open `/tickets/:id`.
    - If the Requester signaled resolution, notice the amber Requester Advisory Banner at the top with a **Review Actions Taken** shortcut button.

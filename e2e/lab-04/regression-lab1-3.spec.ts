@@ -33,7 +33,40 @@ test.describe('Rubric Part 8 & Issue 10: Labs 1-3 Representative Regression E2E 
     const attachmentTab = page.locator('button.zen-tab-btn:has-text("Attachments")');
     await expect(attachmentTab).toBeVisible();
     await attachmentTab.click();
-    await expect(page.locator('input[type="file"]')).toBeAttached();
+
+    const fileInput = page.locator('input[type="file"]');
+    await expect(fileInput).toBeAttached();
+
+    // Upload attachment round-trip
+    const testFileName = `reg-upload-${Date.now()}.png`;
+    const dummyPng = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64'
+    );
+
+    await fileInput.setInputFiles({
+      name: testFileName,
+      mimeType: 'image/png',
+      buffer: dummyPng,
+    });
+
+    // Verify uploaded attachment appears in the list
+    const uploadedLink = page.locator(`a:has-text("${testFileName}")`);
+    await expect(uploadedLink).toBeVisible();
+
+    // Remove the attachment via prompt dialog
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('prompt');
+      await dialog.accept('Regression test removal reason');
+    });
+
+    const removeBtn = page.locator(`li:has(a:has-text("${testFileName}")) button[title="Remove attachment"]`);
+    await expect(removeBtn).toBeVisible();
+    await removeBtn.click();
+
+    // Verify it is displayed with line-through marking removal
+    const removedItem = page.locator(`li:has-text("${testFileName}") .text-decoration-line-through`);
+    await expect(removedItem).toBeVisible();
 
     await logoutUser(page);
   });
@@ -47,13 +80,17 @@ test.describe('Rubric Part 8 & Issue 10: Labs 1-3 Representative Regression E2E 
     await page.goto('/tickets/2');
     await expect(page.locator('text=Ticket Details').first()).toBeVisible();
 
+    // Open Internal Notes tab
+    const internalNotesTab = page.locator('button.zen-tab-btn:has-text("Internal Notes")');
+    await expect(internalNotesTab).toBeVisible();
+    await internalNotesTab.click();
+
     const secretNoteText = `CONFIDENTIAL_INTERNAL_NOTE_${Date.now()}`;
-    const noteInput = page.locator('#internalNoteInput, textarea[placeholder*="internal note" i]');
-    if (await noteInput.isVisible()) {
-      await noteInput.fill(secretNoteText);
-      await page.click('button:has-text("Add Note"), button:has-text("Post Note")');
-      await expect(page.getByText(secretNoteText)).toBeVisible();
-    }
+    const noteInput = page.locator('textarea[placeholder*="internal note" i]');
+    await expect(noteInput).toBeVisible();
+    await noteInput.fill(secretNoteText);
+    await page.click('button:has-text("Post Note")');
+    await expect(page.getByText(secretNoteText)).toBeVisible();
 
     await logoutUser(page);
 
@@ -62,6 +99,9 @@ test.describe('Rubric Part 8 & Issue 10: Labs 1-3 Representative Regression E2E 
     await page.goto('/tickets/2');
     await expect(page.locator('text=Ticket Details').first()).toBeVisible();
 
+    // Verify Internal Notes tab is NOT visible for Requester
+    await expect(page.locator('button.zen-tab-btn:has-text("Internal Notes")')).toHaveCount(0);
+
     // Verify secret internal note text is strictly NOT present anywhere in DOM
     const noteInDom = page.locator(`text="${secretNoteText}"`);
     await expect(noteInDom).toHaveCount(0);
@@ -69,11 +109,10 @@ test.describe('Rubric Part 8 & Issue 10: Labs 1-3 Representative Regression E2E 
     // Requester posts a public comment
     const publicCommentText = `Public requester reply ${Date.now()}`;
     const commentInput = page.locator('textarea[placeholder*="comment" i]').first();
-    if (await commentInput.isVisible()) {
-      await commentInput.fill(publicCommentText);
-      await page.click('button:has-text("Post Comment"), button:has-text("Add Comment")');
-      await expect(page.getByText(publicCommentText)).toBeVisible();
-    }
+    await expect(commentInput).toBeVisible();
+    await commentInput.fill(publicCommentText);
+    await page.click('button:has-text("Post Comment")');
+    await expect(page.getByText(publicCommentText)).toBeVisible();
 
     await logoutUser(page);
   });

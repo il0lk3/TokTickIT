@@ -1,6 +1,6 @@
 # Sprint 4 Test Plan, Traceability Matrix, and Results
 
-This document serves as the comprehensive testing matrix for Lab 4 of TokTickIT. It defines the testing strategy, test commands, and complete traceability mapping between Requirements / Acceptance Criteria (AC-01 to AC-13), Business Rules, and automated test suites across Server API, React Component, and Playwright E2E layers.
+This document serves as the comprehensive testing matrix for Lab 4 of TokTickIT. It defines the testing strategy, test commands, and complete traceability mapping between Requirements / Acceptance Criteria (AC-01 to AC-17), Business Rules, and automated test suites across Server API, React Component, and Playwright E2E layers.
 
 ---
 
@@ -73,7 +73,7 @@ cd e2e && npx playwright test lab-04
 | **API-DSH-07** | API | **BR-15** | Unauthenticated or expired token request receives 401 Unauthorized | HTTP 401 Unauthorized | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-08** | API | **AC-02** | Isolation check: query parameter ?userId=<other> is strictly ignored | HTTP 200 OK; tickets belong strictly to authenticated requester | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-09** | API | **DoD-6** | Calling GET /api/tickets with drillDown.query params matches card count for every metric | HTTP 200 OK; list total strictly equals card count | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
-| **API-DSH-10** | API | **Rubric-5** | Direct SQL comparison: metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-10** | API | **AC-02, BR-14** | Direct SQL comparison: metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-11** | API | **AC-09** | Staff retrieves operational dashboard metrics with complete byStatus and byPriority maps | HTTP 200 OK; normalized maps returned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-12** | API | **BR-14** | Closed and Cancelled tickets without owner are NOT counted in unassigned active metric | HTTP 200 OK; terminal tickets excluded from active unassigned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-13** | API | **AC-09** | byPriority contains LOW, MEDIUM, and HIGH keys (all >= 0) even when counts are 0 | Normalized map has all keys defined | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
@@ -84,10 +84,10 @@ cd e2e && npx playwright test lab-04
 | **API-DSH-18** | API | **BR-15** | Requester calling /api/dashboard/staff receives 403 Forbidden | HTTP 403 Forbidden | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-19** | API | **BR-15** | Unauthenticated or expired token request receives 401 Unauthorized | HTTP 401 Unauthorized | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-20** | API | **DoD-6** | Calling GET /api/staff/tickets with drillDown.query params matches card count for every metric | HTTP 200 OK; queue total strictly equals card count | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
-| **API-DSH-21** | API | **Rubric-5** | Direct SQL comparison: staff metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-21** | API | **AC-09, BR-14** | Direct SQL comparison: staff metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-22** | API | **BR-14** | When updatedAt is identical, recent ticket items sort consistently by id DESC | Secondary tiebreaker deterministic sorting | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-23** | API | **BR-14** | Endpoint returns Cache-Control: no-store header | Cache-Control header present and strictly no-store | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
-| **API-DSH-24** | API | **Sec-1** | Response objects expose only public user fields (id, name), omitting emails, roles, and passwordHash | No sensitive credentials leaked in dashboard response | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-24** | API | **AC-16** | Response objects expose only public user fields (id, name), omitting emails, roles, and passwordHash | No sensitive credentials leaked in dashboard response | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-MIG-01** | DB | **AC-11** | Database migration preserves Labs 1-3 records | Pre- and post-migration record counts for Users, Tickets, etc. are identical | `server/tests/lab-04/database-regression.test.ts` | Passed |
 | **API-MIG-02** | DB | **AC-11** | Seed script is idempotent when executed repeatedly | Database record counts remain unchanged after 2nd seed run | `server/tests/lab-04/database-regression.test.ts` | Passed |
 | **UI-ACT-01** | UI | **AC-01, AC-08, BR-16** | Actions Taken section renders list and empty state | Renders loading spinner, chronological table (`actionAt` ASC, `id` ASC), and empty alert when 0 actions | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
@@ -197,12 +197,12 @@ cd e2e && npx playwright test lab-04
 | **E2E-NAV-03** | E2E | **AC-14** | Deep-link Login Return | Unauthenticated `/tickets/1` redirects to `/login` and returns on auth | `e2e/lab-04/navigation.spec.ts` | Passed |
 | **E2E-NAV-04** | E2E | **AC-14** | Deep-link Direct History Fallback | Opening `/tickets/1` directly falls back to `/queue` on Back click | `e2e/lab-04/navigation.spec.ts` | Passed |
 | **E2E-NAV-05** | E2E | **AC-15** | Filter Persistence & History | Back button preserves URL searchParams across filter transitions | `e2e/lab-04/navigation.spec.ts` | Passed |
-| **API-SEC-01** | API | **Sec-1, AC-10** | Security & Error Handling Hardening | Rejects malformed JSON with 400, structured 404 for unknown /api/*, x-powered-by disabled, write endpoint protection | `server/tests/lab-04/security-error-hardening.api.test.ts` | Passed |
-| **API-PRF-01** | API | **Perf-1, AC-02, AC-09** | Performance Smoke Benchmarks with Warm-Up | Dashboard & list endpoints respond within 500ms with single-aggregate efficiency | `server/tests/lab-04/performance-smoke.api.test.ts` | Passed |
+| **API-SEC-01** | API | **AC-16** | Security & Error Handling Hardening | Rejects malformed JSON with 400, structured 404 for unknown /api/*, x-powered-by disabled, write endpoint protection | `server/tests/lab-04/security-error-hardening.api.test.ts` | Passed |
+| **API-PRF-01** | API | **AC-17, AC-02, AC-09** | Performance Smoke Benchmarks with Warm-Up | Dashboard & list endpoints respond within 500ms with single-aggregate efficiency | `server/tests/lab-04/performance-smoke.api.test.ts` | Passed |
 | **E2E-ACT-06** | E2E | **AC-01, AC-03** | Complete Actions Taken Lifecycle Flow | Staff logs in -> opens ticket -> creates and edits action -> Requester sees it read-only | `e2e/lab-04/actions-taken-flow.spec.ts` | Passed |
 | **E2E-RES-03b** | E2E | **AC-07, DoD-7** | Two Concurrent Browser Sessions Conflict | Simultaneous mutation across two browser contexts triggers 409 conflict dialog and reload | `e2e/lab-04/ticket-resolution.spec.ts` | Passed |
-| **E2E-REG-01** | E2E | **AC-13, Rubric-8** | Labs 1-3 Representative Regression Suite | Attachments upload/delete, public comment vs internal note isolation, cross-tenant isolation, admin user management | `e2e/lab-04/regression-lab1-3.spec.ts` | Passed |
-| **E2E-SMK-01** | E2E | **AC-10, DoD-5** | Quality & Smoke Sweep | Crawls all registered routes across 3 roles: asserts 0 console errors, 0 broken links, 0 unrendered placeholders | `e2e/lab-04/quality-smoke.spec.ts` | Passed |
+| **E2E-REG-01** | E2E | **AC-13, DoD-3** | Labs 1-3 Representative Regression Suite | Attachments upload/delete, public comment vs internal note isolation, cross-tenant isolation, admin user management | `e2e/lab-04/regression-lab1-3.spec.ts` | Passed |
+| **E2E-SMK-01** | E2E | **DoD-4, DoD-5** | Quality & Smoke Sweep | Crawls all registered routes across 3 roles: asserts 0 console errors, 0 broken links, 0 unrendered placeholders | `e2e/lab-04/quality-smoke.spec.ts` | Passed |
 | **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/`, `client/tests/`, `e2e/` | Passed |
 
 ---
@@ -221,7 +221,10 @@ cd e2e && npx playwright test lab-04
 - **AC-10**: Verified by `API-ACT-11`, `UI-ACT-04`
 - **AC-11**: Verified by `API-MIG-01`, `API-MIG-02`
 - **AC-12**: Verified by `E2E-04`
-- **AC-13**: Verified by `REG-01` (189/189 server tests, 102/102 client tests, 100% pass)
+- **AC-13**: Verified by `REG-01` (199/199 server tests, 140/140 client tests, 51/51 E2E tests, 100% pass)
 - **AC-14**: Verified by `UI-NAV-01` through `UI-NAV-11`, `UI-NAV-17`, `UI-NAV-18`, `E2E-NAV-01` through `E2E-NAV-04`, `E2E-NAV-06`
 - **AC-15**: Verified by `UI-NAV-12` through `UI-NAV-16`, `E2E-NAV-05`
+- **AC-16**: Verified by `API-SEC-01`, `API-DSH-24`
+- **AC-17**: Verified by `API-PRF-01`
+
 

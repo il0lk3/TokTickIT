@@ -26,8 +26,8 @@ describe("Security & Error Handling Hardening (Labsheet Section 8.5)", () => {
     expect(res.headers["x-powered-by"]).toBeUndefined();
   });
 
-  it("audit: all registered write endpoints on /api are protected or explicit auth endpoints", () => {
-    // Inspect Express router layer stack to verify no unprotected write endpoints exist
+  it("enforces authentication on write endpoints: unauthenticated requests are rejected with 401", async () => {
+    // 1. Audit route prefixes: verify all registered write endpoints start with /api
     const registeredWriteRoutes: { method: string; path: string }[] = [];
 
     const inspectRouter = (router: any, basePath = "") => {
@@ -43,7 +43,6 @@ describe("Security & Error Handling Hardening (Labsheet Section 8.5)", () => {
         } else if (layer.name === "router" && layer.handle) {
           let segment = "";
           if (layer.regexp && layer.regexp.source) {
-            // Strip regex boundary markers
             const raw = layer.regexp.source
               .replace(/^\\\^/, "")
               .replace(/\\\/\?\(\?=\\\/\|\$\)\/i?$/, "")
@@ -61,10 +60,22 @@ describe("Security & Error Handling Hardening (Labsheet Section 8.5)", () => {
     };
 
     inspectRouter((app as any)._router);
-
-    // Verify all write endpoints start with /api
     expect(registeredWriteRoutes.length).toBeGreaterThan(0);
     const nonApi = registeredWriteRoutes.filter((r) => !r.path.startsWith("/api"));
     expect(nonApi).toEqual([]);
+
+    // 2. Enforce auth guard: unauthenticated write requests must be rejected with 401
+    const testEndpoints = [
+      { method: "post", url: "/api/tickets", data: { title: "Hack", categoryId: 1, description: "Hack" } },
+      { method: "patch", url: "/api/staff/tickets/1", data: { itPriority: "HIGH", expectedVersion: 1 } },
+      { method: "post", url: "/api/tickets/1/actions-taken", data: { description: "Hack", result: "Hack" } },
+      { method: "post", url: "/api/admin/users", data: { name: "Hacker", email: "hacker@example.com", role: "REQUESTER" } },
+    ];
+
+    for (const ep of testEndpoints) {
+      const res = await (request(app) as any)[ep.method](ep.url).send(ep.data);
+      expect(res.status).toBe(401);
+      expect(res.body).toHaveProperty("error");
+    }
   });
 });

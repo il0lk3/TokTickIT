@@ -51,7 +51,7 @@ A living document tracking the code review process. Reviews run in both directio
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Verdict** | Approved ([Review #5556815718](https://github.com/il0lk3/TokTickIT/pull/69#pullrequestreview-5556815718)) |
 | **Review Comments** | 1. **Missing Advisory Resolution API & Schema:** Requester advisory-signal (`appearsResolved = true`) was missing in `api-spec.md` and `Ticket` schema in `specification.md`.<br>2. **Client Route Inconsistency:** Inconsistent path references between documents (`/staff/queue` vs `/queue`, `/staff/dashboard` vs `/dashboard`).<br>3. **Authorization Matrix Contradiction:** Section 5.1 marked "Create Ticket" as `No` for IT Staff and Admin, contradicting Section 11 and UI spec. |
-| **My Response / Actions Taken** | 1. Added `PATCH /api/tickets/:id/appears-resolved` specification in [api-spec.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/api-spec.md#L233) with full validation, RBAC, and response schema. Added `appearsResolved Boolean @default(false)` to `Ticket` schema in [specification.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/specification.md#L207).<br>2. Standardized all frontend routes across [specification.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/specification.md), [ui-spec.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/ui-spec.md), and [api-spec.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/api-spec.md) to use canonical paths (`/dashboard`, `/tickets`, `/tickets/new`, `/tickets/:ticketId`, `/queue`, `/admin/users`).<br>3. Updated Section 5.1 Authorization Matrix in [specification.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/specification.md#L78) for `Create Ticket` to `Yes (on behalf of user)` for both IT Staff and Administrator. |
+| **My Response / Actions Taken** | 1. Added `PATCH /api/tickets/:id/appears-resolved` specification in [api-spec.md](./api-spec.md) with full validation, RBAC, and response schema. Added `appearsResolved Boolean @default(false)` to `Ticket` schema in [specification.md](./specification.md).<br>2. Standardized all frontend routes across [specification.md](./specification.md), [ui-spec.md](./ui-spec.md), and [api-spec.md](./api-spec.md) to use canonical paths (`/dashboard`, `/tickets`, `/tickets/new`, `/tickets/:ticketId`, `/queue`, `/admin/users`).<br>3. Updated Section 5.1 Authorization Matrix in [specification.md](./specification.md) for `Create Ticket` to `Yes (on behalf of user)` for both IT Staff and Administrator. |
 | **Outcome** | Approved & Merged into `lab4-staging` by @Achikan |
 
 ---
@@ -64,7 +64,7 @@ A living document tracking the code review process. Reviews run in both directio
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Verdict** | Changes Requested ([Review #5557454686](https://github.com/il0lk3/TokTickIT/pull/70#pullrequestreview-5557454686)), addressed and approved |
 | **Review Comments** | 1. **Missing Attachment Seeding in Clean Setup:** `server/prisma/seed.ts` lacked an `Attachment` seed, causing `API-MIG-01` to fail on fresh environments where `attachmentCount` starts at 0.<br>2. **Avoid Hardcoded IDs for Comments/Notes:** In `seed.ts`, comments and notes used fixed `id: 1` which can cause PK conflicts if database sequences diverge. |
-| **My Response / Actions Taken** | 1. Added `upsertAttachment` helper to [seed.ts](file:///Users/karn/Downloads/toktickit/server/prisma/seed.ts) and seeded a sample attachment (`duplexer-gear.png`) for Ticket 1.<br>2. Replaced hardcoded IDs with dynamic `upsertPublicComment` and `upsertInternalNote` lookup helpers, and added PostgreSQL sequence realignment (`setval`) across all tables at the end of seed execution. |
+| **My Response / Actions Taken** | 1. Added `upsertAttachment` helper to [seed.ts](../../server/prisma/seed.ts) and seeded a sample attachment (`duplexer-gear.png`) for Ticket 1.<br>2. Replaced hardcoded IDs with dynamic `upsertPublicComment` and `upsertInternalNote` lookup helpers, and added PostgreSQL sequence realignment (`setval`) across all tables at the end of seed execution. |
 | **Outcome** | Approved & Merged into `lab4-staging` by @Achikan |
 
 ---
@@ -115,8 +115,8 @@ A living document tracking the code review process. Reviews run in both directio
 | **PR Link** | [https://github.com/il0lk3/TokTickIT/pull/74](https://github.com/il0lk3/TokTickIT/pull/74) |
 | **Reviewer** | [@Achikan](https://github.com/Achikan) |
 | **Review Verdict** | Changes Requested ([Review #5564014620](https://github.com/il0lk3/TokTickIT/pull/74#pullrequestreview-5564014620)), addressed |
-| **Review Comments** | 1. **Hardcoded Screenshot Output Paths in `actions-taken.spec.ts`**: Screenshots wrote to absolute paths (`/Users/karn/Downloads/toktickit/artifacts/...`), which fails on CI or other developer environments.<br>2. **Responsive Breakpoint Contradiction (`991.98px` vs `767.98px`)**: CSS media query used `max-width: 991.98px` collapsing the table at tablet view (768px), contradicting UI Spec §5.2 and §7 stating tablets (>=768px) display the table view and only mobile (<768px) collapses to card layout.<br>3. **Missing Viewport Overflow Assertions on Tablet and Desktop in `E2E-ACT-06`**: E2E only asserted `scrollWidth <= clientWidth` on mobile (375px), missing verification for tablet (768px) and desktop (1280px), as well as table header visibility on tablet.<br>4. **`UI-ACT-04` Test & Doc Alignment**: `docs/lab-04/tests.md` stated handling of HTTP 200 duplicate responses gracefully, but the test suite lacked explicit unit assertion for idempotent 200 duplicate handling. |
-| **My Response / Actions Taken** | 1. **Repo-Relative Paths in E2E**: Replaced all hardcoded absolute screenshot paths in [actions-taken.spec.ts](file:///Users/karn/Downloads/toktickit/e2e/lab-04/actions-taken.spec.ts) with `path.resolve(__dirname, '../../artifacts/lab-04/screenshots/actions-taken')` with automatic directory creation via `fs.mkdirSync(..., { recursive: true })`.<br>2. **Tablet Responsive Breakpoint Fixed**: Changed `@media (max-width: 991.98px)` to `@media (max-width: 767.98px)` in [index.css](file:///Users/karn/Downloads/toktickit/client/src/index.css#L160) so tablets (>=768px) render the clean tabular view while mobile (<768px) collapses to cards.<br>3. **Comprehensive Viewport Overflow Assertions**: Added `expect(scrollWidth <= clientWidth)` assertions for Desktop (1280px), Tablet (768px), and Mobile (375px) in `E2E-ACT-06`, along with asserting `thead` visibility on tablet.<br>4. **UI-ACT-04B Test & Doc Alignment**: Added unit test `UI-ACT-04B` in [ActionsTaken.test.tsx](file:///Users/karn/Downloads/toktickit/client/tests/lab-04/ActionsTaken.test.tsx) explicitly asserting graceful handling of HTTP 200 duplicate responses without UI errors; aligned description in [tests.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/tests.md).<br>5. **UI Polish & Spacing**: Cleaned table headers in `ActionsTakenSection.tsx` by removing inline emoji icons and adding distinct cell division (`border-end border-light-subtle px-3`), and added `mb-4` margin below the top ticket details card in `TicketDetail.tsx` for visual separation.<br>6. **Full Suite Verification**: Verified 100% test pass rate: 10 client test suites (79/79 passed), 16 server test suites (165/165 passed), 6/6 Playwright E2E tests passed, and 0 TypeScript errors on client and server. |
+| **Review Comments** | 1. **Hardcoded Screenshot Output Paths in `actions-taken.spec.ts`**: Screenshots wrote to absolute paths (`/Users/karn/...`), which fails on CI or other developer environments.<br>2. **Responsive Breakpoint Contradiction (`991.98px` vs `767.98px`)**: CSS media query used `max-width: 991.98px` collapsing the table at tablet view (768px), contradicting UI Spec §5.2 and §7 stating tablets (>=768px) display the table view and only mobile (<768px) collapses to card layout.<br>3. **Missing Viewport Overflow Assertions on Tablet and Desktop in `E2E-ACT-06`**: E2E only asserted `scrollWidth <= clientWidth` on mobile (375px), missing verification for tablet (768px) and desktop (1280px), as well as table header visibility on tablet.<br>4. **`UI-ACT-04` Test & Doc Alignment**: `docs/lab-04/tests.md` stated handling of HTTP 200 duplicate responses gracefully, but the test suite lacked explicit unit assertion for idempotent 200 duplicate handling. |
+| **My Response / Actions Taken** | 1. **Repo-Relative Paths in E2E**: Replaced all hardcoded absolute screenshot paths in [actions-taken.spec.ts](../../e2e/lab-04/actions-taken.spec.ts) with `path.resolve(__dirname, '../../artifacts/lab-04/screenshots/actions-taken')` with automatic directory creation via `fs.mkdirSync(..., { recursive: true })`.<br>2. **Tablet Responsive Breakpoint Fixed**: Changed `@media (max-width: 991.98px)` to `@media (max-width: 767.98px)` in [index.css](../../client/src/index.css) so tablets (>=768px) render the clean tabular view while mobile (<768px) collapses to cards.<br>3. **Comprehensive Viewport Overflow Assertions**: Added `expect(scrollWidth <= clientWidth)` assertions for Desktop (1280px), Tablet (768px), and Mobile (375px) in `E2E-ACT-06`, along with asserting `thead` visibility on tablet.<br>4. **UI-ACT-04B Test & Doc Alignment**: Added unit test `UI-ACT-04B` in [ActionsTaken.test.tsx](../../client/tests/lab-04/ActionsTaken.test.tsx) explicitly asserting graceful handling of HTTP 200 duplicate responses without UI errors; aligned description in [tests.md](./tests.md).<br>5. **UI Polish & Spacing**: Cleaned table headers in `ActionsTakenSection.tsx` by removing inline emoji icons and adding distinct cell division (`border-end border-light-subtle px-3`), and added `mb-4` margin below the top ticket details card in `TicketDetail.tsx` for visual separation.<br>6. **Full Suite Verification**: Verified 100% test pass rate: 10 client test suites (79/79 passed), 16 server test suites (165/165 passed), 6/6 Playwright E2E tests passed, and 0 TypeScript errors on client and server. |
 | **Outcome** | Changes addressed and pushed to `feature/lab4-actions-taken-ui`. Reply comment posted on PR #74 requesting re-review. |
 
 ---
@@ -163,17 +163,17 @@ A living document tracking the code review process. Reviews run in both directio
 
 ```bash
 # 1. Verify Unit & Integration Tests (100% Pass)
-cd /Users/karn/Downloads/toktickit/server && npm test
+npm test --prefix server
 # Expected: 18 test files, 191 passed (100%)
 
-cd /Users/karn/Downloads/toktickit/client && npm test
+npm test --prefix client
 # Expected: 15 test files, 139 passed (100%)
 
 # 2. Verify Playwright End-to-End Tests
-cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/dashboards.spec.ts
+npm test --prefix e2e -- lab-04/dashboards.spec.ts
 # Expected: 7 passed (100%) - covers E2E-DSH-01 to E2E-DSH-07
 
-cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04/navigation.spec.ts
+npm test --prefix e2e -- lab-04/navigation.spec.ts
 # Expected: 6 passed (100%) - covers routing and RBAC
 
 # 3. Verify Zero Residual References to DashboardPlaceholder / DashboardShell
@@ -216,26 +216,43 @@ git grep -P "[\x{1F300}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]" client/src
 
 ```bash
 # 1. Run Complete Backend Test Suite (Lab 1–4)
-cd /Users/karn/Downloads/toktickit/server && npm test
+npm test --prefix server
 # Expected: 20 test files, 199 passed (100%), 0 failed
 
 # 2. Run Complete Frontend Test Suite (Lab 2–4)
-cd /Users/karn/Downloads/toktickit/client && npm test
+npm test --prefix client
 # Expected: 15 test files, 140 passed (100%), 0 failed
 
-# 3. Run Playwright E2E Suite (All Lab 4 Tests with ZERO Skips)
-cd /Users/karn/Downloads/toktickit/e2e && npm test -- lab-04
-# Expected: 38 passed (100%), 0 skipped, 0 failed across Chromium, Tablet WebKit, Mobile Chromium
+# 3. Run Playwright E2E Suite (All Tests across Lab 3 and Lab 4)
+npm test --prefix e2e
+# Expected: 51 passed (100%), 0 skipped, 0 failed across Chromium, Tablet WebKit, Mobile Chromium
 
-# 4. Verify 100% Specification & Test Traceability
-node /Users/karn/Downloads/toktickit/scripts/verify-traceability.js
-# Expected: 100% of ACs, BRs, and test file paths verified successfully
+# Or target Lab 4 E2E tests specifically
+npm test --prefix e2e -- lab-04
+# Expected: 38 passed (100%)
+
+# 4. Verify 100% Specification & Test Traceability (Bidirectional)
+node scripts/verify-traceability.js
+# Expected: 100% bidirectional traceability verified successfully
 
 # 5. Verify Zero Skipped Tests Across E2E Workspace
-git grep "test.skip" /Users/karn/Downloads/toktickit/e2e/
+git grep "test.skip" e2e/
 # Expected: 0 matches
 
 # 6. Verify Zero UNSET Dead Control References in Client Code
-git grep "UNSET" /Users/karn/Downloads/toktickit/client/src/
+git grep "UNSET" client/src/
 # Expected: 0 matches
 ```
+
+---
+
+#### Review 2 (Round 2 Feedback from @Achikan)
+
+| Field | Detail |
+|---|---|
+| **Review Date** | 2026-10-20 |
+| **Reviewer** | [@Achikan](https://github.com/Achikan) |
+| **Review Verdict** | `CHANGES_REQUESTED` -> Addressed |
+| **Review Comments** | 1. **Setup does not run without exported env vars**: Running `npm run dev` or `npm test` after copying `.env.example` to `.env` failed with missing `JWT_SECRET` because server had no `dotenv` loader.<br>2. **Traceability Table References Undefined Requirement IDs**: `tests.md` mapped rows to `Sec-1`, `Perf-1`, and `Rubric-8`, which were absent from `specification.md`, and mapped `API-SEC-01` to `AC-10`. Verifier only checked forward direction.<br>3. **Regression Suite Conditional Guard Issue**: `regression-lab1-3.spec.ts` wrapped note and comment creation in `if (await ...isVisible())`, silently skipping execution. `REG-01` only checked attachment file input existence without an upload/delete round-trip.<br>4. **README Demo Script Drift**: Staff dashboard documented legacy card names ("Total Open / In Progress...") instead of shipped cards (**Unassigned / Assigned to Me / Appears Resolved / Updated in 24h**), used `/queue?status=IN_PROGRESS` instead of `InProgress`, and missed 5 requester cards.<br>5. **Minor**: `specification.md` DoD and `tests.md` intro said "AC-01 through AC-13"; `tests.md:224` cited old test counts; `security-error-hardening.api.test.ts` case 4 only checked `/api` prefix rather than auth guard; verification commands used author-local paths; and `ai-use.md` attributed UNSET removal to Issue 9 instead of Issue 10. |
+| **My Response / Actions Taken** | 1. **Automatic .env Loading**: Installed `dotenv` in `server`, created `server/src/env.ts` loading candidates from cwd, `./server/.env`, and `../.env` with development fallback. Configured `server/src/index.ts`, `server/src/app.ts`, `server/prisma/seed.ts`, and `server/vitest.config.ts` to load environment automatically without manual `export`.<br>2. **Spec Alignment & Bidirectional Verifier**: Added `AC-16` (Security Hardening) and `AC-17` (Performance Benchmarks) to `specification.md`. Mapped `API-SEC-01` and `API-DSH-24` to `AC-16`, `API-PRF-01` to `AC-17`, `E2E-REG-01` to `AC-13, DoD-3`, and `E2E-SMK-01` to `DoD-4, DoD-5`. Updated `scripts/verify-traceability.js` to strictly fail if any requirement ID in `tests.md` is undefined in `specification.md`.<br>3. **Real Regression Test Execution**: Refactored `regression-lab1-3.spec.ts`: `REG-01` performs a real PNG attachment upload and prompt-dialog deletion round-trip; `REG-02` unconditionally switches to the Internal Notes tab, posts a confidential note, and verifies strictly 0 instances on Requester view, followed by posting a public comment.<br>4. **README Demo Walkthrough Alignment**: Aligned Staff dashboard cards to shipped names (**Unassigned**, **Assigned to Me**, **Appears Resolved**, **Updated in 24h**), fixed drill-down query to `/queue?status=InProgress`, and updated Requester metrics to list all 5 cards with drill-down.<br>5. **Documentation & Tests Polish**: Updated `specification.md` DoD and `tests.md` intro to cite AC-01 through AC-17 and accurate test totals (199 server, 140 client, 51 E2E); updated `security-error-hardening.api.test.ts` case 4 to actively test 401 rejection on unauthenticated write routes; converted all verification commands to repo-relative paths; and updated `ai-use.md` to credit UNSET cleanup to Issue 10. |
+| **Outcome** | All review items resolved cleanly. Verified 199/199 server, 140/140 client, and 51/51 E2E tests pass 100%. |

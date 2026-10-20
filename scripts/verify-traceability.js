@@ -2,8 +2,10 @@
 
 /**
  * verify-traceability.js
- * Automatically verifies that all Acceptance Criteria and Business Rules in specification.md
- * are mapped to test suites in tests.md, and that every test file path exists on disk.
+ * Automatically verifies bidirectional traceability:
+ * 1. Every Acceptance Criteria (AC-XX) and Business Rule (BR-XX) in specification.md is mapped in tests.md.
+ * 2. Every requirement ID referenced in tests.md exists in specification.md.
+ * 3. Every referenced test file path exists on disk.
  */
 
 import fs from 'fs';
@@ -30,7 +32,11 @@ const acRegex = /AC-\d+/g;
 const brRegex = /BR-\d+/g;
 
 const specACs = new Set(specContent.match(acRegex) || []);
-const specBRs = new Set(specContent.match(brRegex) || []);
+const specBRs = new Set(specBRsRegexMatch(specContent) || []);
+
+function specBRsRegexMatch(text) {
+  return text.match(brRegex) || [];
+}
 
 console.log(`Found ${specACs.size} unique ACs and ${specBRs.size} unique BRs in specification.md`);
 
@@ -57,7 +63,42 @@ if (missingBRs.length > 0) {
   console.error(`Traceability Failure: Missing BR references in tests.md: ${missingBRs.join(', ')}`);
 }
 
-// 3. Extract and verify test file paths referenced in tests.md table
+// 3. Reverse Verification: Ensure every requirement ID in tests.md exists in specification.md
+const tableLines = testMatrixContent.split('\n').filter(line => line.startsWith('| **') && line.includes('|'));
+const testMatrixReqTokens = new Set();
+for (const line of tableLines) {
+  const cols = line.split('|').map(c => c.trim());
+  if (cols.length >= 4) {
+    const reqCol = cols[3]; // e.g. "**AC-01, BR-04**"
+    const matches = reqCol.match(/[A-Za-z0-9]+-\d+[a-z]?/g) || [];
+    for (const m of matches) {
+      testMatrixReqTokens.add(m);
+    }
+  }
+}
+
+console.log(`Checking ${testMatrixReqTokens.size} unique requirement IDs referenced in tests.md...`);
+const unknownReqsInTests = [];
+for (const req of testMatrixReqTokens) {
+  // Normalize DoD-X to check either "DoD-X" or "X. " in Section 10
+  if (req.startsWith('DoD-')) {
+    const num = req.replace('DoD-', '');
+    if (!specContent.includes(`DoD-${num}`) && !specContent.includes(`${num}. **`)) {
+      unknownReqsInTests.push(req);
+    }
+    continue;
+  }
+  const reqPattern = new RegExp(`\\b${req}\\b`);
+  if (!reqPattern.test(specContent)) {
+    unknownReqsInTests.push(req);
+  }
+}
+
+if (unknownReqsInTests.length > 0) {
+  console.error(`Traceability Failure: Requirement IDs in tests.md are NOT defined in specification.md:\n  ${unknownReqsInTests.join(', ')}`);
+}
+
+// 4. Extract and verify test file paths referenced in tests.md table
 const fileRegex = /`((?:server|client|e2e)\/[^`]+)`/g;
 let match;
 const testFiles = new Set();
@@ -81,8 +122,15 @@ if (missingFiles.length > 0) {
   console.error(`Traceability Failure: Test files referenced in tests.md do not exist on disk:\n  ${missingFiles.join('\n  ')}`);
 }
 
-if (missingACs.length === 0 && missingBRs.length === 0 && missingFiles.length === 0) {
-  console.log('Traceability Verification Passed: 100% of ACs, BRs, and test file paths verified successfully.');
+const allPassed = (
+  missingACs.length === 0 &&
+  missingBRs.length === 0 &&
+  unknownReqsInTests.length === 0 &&
+  missingFiles.length === 0
+);
+
+if (allPassed) {
+  console.log('Traceability Verification Passed: 100% bidirectional traceability verified successfully.');
   process.exit(0);
 } else {
   process.exit(1);
