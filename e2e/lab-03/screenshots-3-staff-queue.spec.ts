@@ -33,6 +33,7 @@ test.describe('3. Staff Queue Screenshots', () => {
     await page.fill('input[type="password"]', 'Password123!');
     await page.click('button[type="submit"]');
     await page.waitForResponse(r => r.url().includes('/api/auth/login') && r.status() === 200);
+    await page.goto('/queue');
     await page.waitForResponse(r => r.url().includes('/api/staff/tickets') && r.status() === 200);
 
     // 1. queue-default-view.png
