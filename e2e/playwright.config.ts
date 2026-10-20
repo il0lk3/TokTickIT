@@ -21,10 +21,12 @@ export default defineConfig({
     {
       name: 'tablet',
       use: { ...devices['iPad (gen 7)'] },
+      testMatch: /.*(quality-smoke).*\.spec\.ts/,
     },
     {
       name: 'mobile',
       use: { ...devices['Pixel 5'] },
+      testMatch: /.*(quality-smoke).*\.spec\.ts/,
     }
   ],
   webServer: [

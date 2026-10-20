@@ -1,3 +1,4 @@
+import "../src/env.js";
 import { getPrisma } from "../src/prisma.js";
 import bcrypt from "bcryptjs";
 import { Role, TicketPriority, TicketStatus } from "@prisma/client";

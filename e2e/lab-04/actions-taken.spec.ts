@@ -8,8 +8,6 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
 }
 
 test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () => {
-  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Actions Taken E2E runs once on Chromium desktop');
-
   const STAFF_EMAIL = 'e2e.staff@example.com';
   const ADMIN_EMAIL = 'e2e.admin@example.com';
   const REQUESTER_EMAIL = 'e2e.requester@example.com';

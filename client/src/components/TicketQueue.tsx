@@ -298,7 +298,7 @@ export function TicketQueue({
             </div>
           </div>
           <div className="col-4 col-md-2">
-            <select className="form-select" value={status} onChange={handleFilterChange("status", setLocalStatus)}>
+            <select className="form-select" aria-label="Status" value={status} onChange={handleFilterChange("status", setLocalStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
               <option value="Open">Open</option>
@@ -310,13 +310,13 @@ export function TicketQueue({
             </select>
           </div>
           <div className="col-4 col-md-2">
-            <select className="form-select" value={categoryId} onChange={handleFilterChange("categoryId", setLocalCategoryId)}>
+            <select className="form-select" aria-label="Category" value={categoryId} onChange={handleFilterChange("categoryId", setLocalCategoryId)}>
               <option value="">Category</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setLocalRequestedPriority)}>
+            <select className="form-select" aria-label="Requested Priority" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setLocalRequestedPriority)}>
               <option value="">Req Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -324,16 +324,15 @@ export function TicketQueue({
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={itPriority} onChange={handleFilterChange("itPriority", setLocalItPriority)}>
+            <select className="form-select" aria-label="IT Priority" value={itPriority} onChange={handleFilterChange("itPriority", setLocalItPriority)}>
               <option value="">IT Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
-              <option value="UNSET">Unset</option>
             </select>
           </div>
           <div className="col-6 col-md-3">
-            <select className="form-select" value={ownerId} onChange={handleFilterChange("ownerId", setLocalOwnerId)}>
+            <select className="form-select" aria-label="Owner" value={ownerId} onChange={handleFilterChange("ownerId", setLocalOwnerId)}>
               <option value="">Owner</option>
               <option value="unassigned">Unassigned</option>
               {staffUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}

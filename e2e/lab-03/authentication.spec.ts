@@ -1,9 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('E2E-03: Authentication and Identity Flow', () => {
-  // Mutating tests should only run on a single viewport to avoid data corruption
-  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Mutating auth flow only needs to be verified once');
-
   test('should login and navigate to app shell after mandatory password change', async ({ page }) => {
     await page.goto('/');
 
