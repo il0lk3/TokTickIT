@@ -1,39 +1,51 @@
-# dependencies
+# Dependencies
 node_modules/
-# env & secrets
+
+# Environment & Secrets
 .env
+.env.*
 *.env
 !.env.example
-# build output
-dist/
-build/
-# prisma
-server/prisma/*.db
-# logs & OS
-*.log
-.DS_Store
+*.pem
+*.key
 
-# uploads
+# Application Uploads
 server/uploads/*
 !server/uploads/.gitkeep
 
-# ignore diffs and patches from extensions
-*.patch
-*_diff.txt
+# Database Backups
+server/backups/*
+!server/backups/.gitkeep
 
-# pro-level additions
+# Production & Build Artifacts
+dist/
+build/
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+
+# Test & E2E Reports
 coverage/
+playwright-report/
+blob-report/
+playwright/.cache/
+test-results/
+**/.auth/
+storageState*.json
+
+# Logs & Operating System
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor & Tooling Caches
 .vscode/
 .idea/
-.vite/
-*.tsbuildinfo
-Thumbs.db
-*-journal
-*.db-journal
+.eslintcache
+.gemini/
+.cursor/
+.claude/settings.local.json
 
-# e2e artifacts
-e2e/playwright-report/
-e2e/test-results/
-dummy.txt
-test-results/
-
+# Patch and Diff Artifacts
+*.patch
+*_diff.txt
