@@ -88,8 +88,11 @@ test.describe('E2E-05: Requester Flow (Lab 3)', () => {
     const appearsResolvedBtn = page.getByRole('button', { name: 'Problem Appears Resolved' });
     await expect(appearsResolvedBtn).toBeVisible();
 
-    // Click it
+    // Click it and confirm via modal (introduced in Lab 4 Issue 7)
     await appearsResolvedBtn.click();
+    const confirmModal = page.getByRole('dialog', { name: /Confirm Resolution Signal/i });
+    await expect(confirmModal).toBeVisible();
+    await confirmModal.getByRole('button', { name: 'Confirm' }).click();
 
     // Verify comment is posted automatically
     await expect(page.getByText('The problem appears to be resolved.')).toBeVisible();

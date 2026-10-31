@@ -1,3 +1,4 @@
+import "./env.js";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -10,8 +11,18 @@ void getPrisma;
 // Supertest can import `app` without opening a port. Do not merge these files.
 export const app = express();
 
+app.disable("x-powered-by");
 app.use(cors({ origin: true, credentials: true })); // allow cookies
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+
+// Handle malformed JSON body
+app.use((err: any, _req: Request, res: Response, next: express.NextFunction) => {
+  if (err instanceof SyntaxError && "body" in err && (err as any).status === 400) {
+    return res.status(400).json({ error: "Invalid JSON payload" });
+  }
+  next(err);
+});
+
 app.use(cookieParser());
 
 import { authRouter } from "./routes/auth.js";
@@ -101,6 +112,23 @@ app.get("/api/systems", async (_req: Request, res: Response) => {
     console.error("Failed to fetch systems:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+// Unknown API routes return structured JSON 404
+app.all("/api/*", (_req: Request, res: Response) => {
+  res.status(404).json({ error: "Not Found" });
+});
+
+// Global error handler
+app.use((err: any, _req: Request, res: Response, _next: express.NextFunction) => {
+  if (process.env.NODE_ENV !== "test") {
+    console.error("Unhandled API error:", err);
+  }
+  const status = typeof err.status === "number" ? err.status : (typeof err.statusCode === "number" ? err.statusCode : 500);
+  const message = process.env.NODE_ENV === "production"
+    ? (status === 500 ? "Internal server error" : (err.message || "An error occurred"))
+    : (err.message || "Internal server error");
+  res.status(status).json({ error: message });
 });
 
 export default app;

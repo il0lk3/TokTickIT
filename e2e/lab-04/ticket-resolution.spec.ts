@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Lab 4 Issue 7: Ticket Workflow & Resolution Feedback (E2E-RES)', () => {
-  test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || !!isMobile, 'Resolution Flow E2E runs once on Chromium desktop');
-
   const STAFF_EMAIL = 'e2e.staff@example.com';
   const ADMIN_EMAIL = 'e2e.admin@example.com';
   const REQUESTER_EMAIL = 'e2e.requester@example.com';
@@ -242,6 +240,49 @@ test.describe('Lab 4 Issue 7: Ticket Workflow & Resolution Feedback (E2E-RES)', 
     await expect(conflictDialog).toBeHidden();
 
     await logoutUser(page);
+  });
+
+  // =========================================================================
+  // E2E-RES-03b: Two Active Browser Sessions Concurrency Conflict (DoD-7)
+  // =========================================================================
+  test('E2E-RES-03b: Two concurrent browser sessions editing the same ticket triggers 409 conflict dialog', async ({ browser }) => {
+    // Session 1: Staff 1
+    const context1 = await browser.newContext();
+    const page1 = await context1.newPage();
+    await loginUser(page1, STAFF_EMAIL);
+    await page1.goto('/tickets/2');
+    await expect(page1.locator('text=Ticket Details').first()).toBeVisible();
+
+    // Session 2: Admin
+    const context2 = await browser.newContext();
+    const page2 = await context2.newPage();
+    await loginUser(page2, ADMIN_EMAIL);
+    await page2.goto('/tickets/2');
+    await expect(page2.locator('text=Ticket Details').first()).toBeVisible();
+
+    // Session 1 mutates the ticket (sets priority to HIGH or MEDIUM)
+    const currentVal = await page1.$eval('#itPrioritySelect', (el: any) => el.value);
+    const newVal1 = currentVal === 'HIGH' ? 'MEDIUM' : 'HIGH';
+    await page1.selectOption('#itPrioritySelect', { value: newVal1 });
+    await page1.waitForTimeout(500);
+
+    // Session 2 (which still holds old version) attempts to mutate priority
+    const newVal2 = currentVal === 'LOW' ? 'HIGH' : 'LOW';
+    await page2.selectOption('#itPrioritySelect', { value: newVal2 });
+
+    // Session 2 receives 409 Conflict Dialog
+    const conflictDialog2 = page2.getByRole('alertdialog', { name: /Conflict Detected/i });
+    await expect(conflictDialog2).toBeVisible();
+    await expect(conflictDialog2).toContainText('This ticket has been modified by another user');
+
+    // Click Reload Ticket in session 2 to synchronize
+    const reloadBtn2 = conflictDialog2.getByRole('button', { name: 'Reload Ticket' });
+    await reloadBtn2.click();
+    await expect(conflictDialog2).toBeHidden();
+
+    // Clean up contexts
+    await context1.close();
+    await context2.close();
   });
 
   // =========================================================================

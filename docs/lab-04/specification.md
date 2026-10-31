@@ -284,6 +284,8 @@ All error responses adhere to standard format: `{ "error": "Clear, safe message"
 - **AC-13 (Zero-Regression Suite)**: Given the full suite of automated tests from Labs 1–3, when executed against the Lab 4 codebase, then all tests pass with zero regressions.
 - **AC-14 (Role-Based Client Routing & Screen Boundaries)**: Given unauthenticated access to protected routes, the application redirects to `/login` preserving target location in state for seamless post-login return. Given an authenticated user accessing an unauthorized route (e.g. Requester navigating to `/queue` or `/admin/users`), the system renders an in-place Zen Green 403 Forbidden screen with navbar preserved. Invalid paths (or non-numeric ticket IDs) render a Zen Green 404 Not Found screen.
 - **AC-15 (URL Single Source of Truth for Screen Filters)**: Given filter or pagination changes on `/queue` or `/tickets`, the URL search parameters update synchronously without page reload. Direct deep links with search parameters (e.g. `/queue?status=Open&itPriority=HIGH`) sanitize values against whitelists and initialize filter inputs accordingly, enabling drill-down navigation from dashboard metric cards. Browser Back/Forward restores previous filter criteria reliably.
+- **AC-16 (Security & Error Handling Hardening)**: Given malformed JSON bodies, unknown `/api/*` routes, unauthenticated write requests, or public responses, the server returns structured error envelopes (400/404/401), disables `X-Powered-By`, enforces authentication on all state mutations, and omits sensitive credentials from user representations.
+- **AC-17 (Performance Smoke & Query Efficiency)**: Given dashboard and queue API endpoints under load, all endpoints respond within 500ms using aggregate PostgreSQL queries (`COUNT`, `GROUP BY`) without full-table in-memory operations.
 
 ---
 
@@ -292,7 +294,7 @@ All error responses adhere to standard format: `{ "error": "Clear, safe message"
 A feature or pull request in Sprint 4 is considered **Done** only when meeting all of the following criteria:
 
 1. **Specification Precedence**: Feature implementation strictly adheres to the approved specifications in `docs/lab-04/`.
-2. **Test-Driven Traceability**: Every Acceptance Criterion (AC-01 through AC-13) has corresponding automated test coverage in `tests.md` with a passing result.
+2. **Test-Driven Traceability**: Every Acceptance Criterion (AC-01 through AC-17) has corresponding automated test coverage in `tests.md` with a passing result.
 3. **Automated Test Execution**: All unit, integration, component, and E2E test suites pass cleanly with zero failures (`npm test` in `server`, `client`, and `e2e`).
 4. **Zero Console Errors**: Zero JavaScript errors, unhandled promise rejections, or React key warnings in the browser developer console.
 5. **Accessibility Compliance**: Meets WCAG 2.1 AA standards for keyboard navigation, visible focus indicators, semantic labels, and non-color dependent status cues.

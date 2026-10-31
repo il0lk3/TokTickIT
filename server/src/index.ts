@@ -1,3 +1,4 @@
+import "./env.js";
 import { app } from "./app.js";
 
 if (!process.env.JWT_SECRET) {

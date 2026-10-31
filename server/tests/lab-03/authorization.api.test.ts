@@ -175,10 +175,15 @@ describe("Comprehensive Authorization Sweep", () => {
   const getRoutes = () => [
     { path: "/api/tickets", method: "get", allowed: ["REQUESTER"] },
     { path: "/api/tickets", method: "post", allowed: ["REQUESTER"] },
-    { path: `/api/tickets/${ticketId}`, method: "get", allowed: ["REQUESTER", "IT_STAFF"] },
+    { path: `/api/tickets/${ticketId}`, method: "get", allowed: ["REQUESTER", "IT_STAFF", "ADMINISTRATOR"] },
     { path: `/api/staff/tickets`, method: "get", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
     { path: `/api/staff/tickets/${ticketId}`, method: "get", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
     { path: `/api/staff/tickets/${ticketId}`, method: "patch", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
+    { path: `/api/staff/tickets/${ticketId}/notes`, method: "post", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
+    { path: `/api/staff/tickets/${ticketId}/actions`, method: "get", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
+    { path: `/api/staff/tickets/${ticketId}/actions`, method: "post", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
+    { path: `/api/dashboard/requester`, method: "get", allowed: ["REQUESTER"] },
+    { path: `/api/dashboard/staff`, method: "get", allowed: ["IT_STAFF", "ADMINISTRATOR"] },
     { path: `/api/admin/users`, method: "get", allowed: ["ADMINISTRATOR"] },
     { path: `/api/admin/users`, method: "post", allowed: ["ADMINISTRATOR"] },
     { path: `/api/admin/users/${aId}`, method: "patch", allowed: ["ADMINISTRATOR"] }
