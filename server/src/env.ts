@@ -20,7 +20,8 @@ for (const candidate of candidates) {
 // Fallback to default dotenv lookup
 dotenv.config();
 
-// Safe fallback for JWT_SECRET in development/test when omitted
-if (!process.env.JWT_SECRET && process.env.NODE_ENV !== "production") {
+// Safe fallback for JWT_SECRET strictly during automated testing (vitest sets NODE_ENV=test)
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "test") {
   process.env.JWT_SECRET = "supersecretdevkey";
 }
+

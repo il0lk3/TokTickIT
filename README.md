@@ -36,21 +36,26 @@ business rules for each sprint.
 Run the following commands from the root of the repository to get the system running locally.
 
 ```bash
-# 1. Install dependencies for both workspaces
+# 1. Install dependencies for all workspaces and install Playwright browsers
 cd server && npm install
 cd ../client && npm install
+cd ../e2e && npm install
+npx playwright install
+cd ..
 
 # 2. Create the environment files from templates (server)
-cd ../server
+cd server
 cp .env.example .env
 # Open .env and set JWT_SECRET (e.g. JWT_SECRET="your_secure_random_string_here").
 # The server, seed runner, and test runner automatically load .env via dotenv.
-# (A safe development fallback is provided if JWT_SECRET is omitted in dev mode).
+# (Note: JWT_SECRET is mandatory for running the server and has no fallback, by design).
 
 # 3. Start PostgreSQL via Docker
+cd ..
 docker compose up -d
 
 # 4. Create database tables and apply migrations
+cd server
 npx prisma migrate dev
 
 # 5. Insert idempotent seed data (Categories, Systems, Users, Tickets across all 8 statuses, and Actions Taken)
@@ -137,18 +142,19 @@ npx vitest run tests/lab-04/
 
 # Run all frontend tests (Lab 2 + Lab 3 + Lab 4)
 # 15 test files, 140 passed (100%)
-cd client
+cd ../client
 npm run test
 
 # Run all end-to-end (E2E) tests
 # 51 tests total, 100% pass across Chromium, Tablet WebKit, and Mobile Chromium
-cd e2e
+cd ../e2e
 npm run test
 
 # Or target Lab 4 E2E tests specifically (38 tests)
 npm test -- lab-04
 
 # Verify requirements traceability against codebase
+cd ..
 node scripts/verify-traceability.js
 ```
 
@@ -328,7 +334,7 @@ Development continues following the strict feature-branch workflow. Work is neve
   `cd server && npx prisma db push && npx prisma db seed` to initialize the testing data.
 - **Prisma migration errors:** If the database state gets corrupted during testing, run
   `npx prisma migrate reset` inside the `server/` folder to drop and recreate all tables from scratch.
-- **Server fails to start with `JWT_SECRET environment variable is required`:** Open `server/.env` and set
+- **Server fails to start with `FATAL ERROR: JWT_SECRET environment variable is missing.`:** Open `server/.env` and set
   `JWT_SECRET` to any random string. This is required as of Lab 3 and has no fallback, by design.
 - **Login fails with "Invalid email or password" for a seeded account:** Confirm the seed ran after the
   latest migration (`npx prisma db seed`), and that you're using the universal password `Password123!`.

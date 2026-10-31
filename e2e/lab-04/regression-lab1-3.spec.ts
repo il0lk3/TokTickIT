@@ -148,15 +148,22 @@ test.describe('Rubric Part 8 & Issue 10: Labs 1-3 Representative Regression E2E 
     // Search user
     const searchInput = page.locator('input[placeholder*="search" i]').first();
     await searchInput.fill('e2e.admin@example.com');
-    await page.waitForTimeout(500);
+    await page.getByRole('button', { name: 'Search' }).click();
 
-    // Self-deactivation prevention: Deactivate button for own account must be disabled or hidden
-    const selfRow = page.locator('tr:has-text("e2e.admin@example.com")');
+    // Open Edit Modal for self
+    const selfRow = page.locator('tr:has-text("e2e.admin@example.com")').first();
     await expect(selfRow).toBeVisible();
-    const selfDeactivateBtn = selfRow.locator('button:has-text("Deactivate"), input[type="checkbox"]');
-    if (await selfDeactivateBtn.isVisible()) {
-      await expect(selfDeactivateBtn).toBeDisabled();
-    }
+    await selfRow.getByRole('button', { name: 'Edit' }).click();
+    await expect(page.getByText('Edit User: E2E Admin')).toBeVisible();
+
+    // Self-deactivation prevention: Deactivate button for own account must be visible and disabled
+    const deactivateBtn = page.getByRole('button', { name: 'Deactivate User' });
+    await expect(deactivateBtn).toBeVisible();
+    await expect(deactivateBtn).toBeDisabled();
+    await expect(page.getByText('You cannot deactivate your own account.')).toBeVisible();
+
+    // Close modal
+    await page.getByRole('button', { name: 'Cancel' }).click();
 
     await logoutUser(page);
   });
