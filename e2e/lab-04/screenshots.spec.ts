@@ -1517,4 +1517,12 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
 
     await context.close();
   });
+
+  test.afterAll(() => {
+    const { execSync } = require('child_process');
+    execSync('npm run prisma:seed', {
+      cwd: path.resolve(__dirname, '../../server'),
+      stdio: 'pipe',
+    });
+  });
 });

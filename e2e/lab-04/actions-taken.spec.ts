@@ -206,7 +206,7 @@ test.describe('Lab 4 Issue 6: Actions Taken UI on Ticket Detail (E2E-ACT)', () =
     // Trigger validation error
     await page.click('button:has-text("Log Action")');
     await page.waitForTimeout(300);
-    await expect(page.getByText(/Description is required/i)).toBeVisible();
+    await expect(page.getByText(/Description must not be empty/i)).toBeVisible();
 
     // 5. Terminal Locked on Ticket 3
     await page.goto('/tickets/3');

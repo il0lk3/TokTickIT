@@ -204,6 +204,9 @@ async function main() {
       currentStatus: TicketStatus.InProgress,
       ownerId: staff1.id,
       itPriority: TicketPriority.MEDIUM,
+      requesterId: reqCream.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000001",
@@ -268,6 +271,9 @@ async function main() {
       currentStatus: TicketStatus.New,
       ownerId: null,
       itPriority: TicketPriority.LOW,
+      requesterId: reqE2E.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000002",
@@ -289,6 +295,9 @@ async function main() {
       currentStatus: TicketStatus.Closed,
       ownerId: staff1.id,
       itPriority: TicketPriority.LOW,
+      requesterId: reqCream.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000003",
@@ -322,6 +331,9 @@ async function main() {
       currentStatus: TicketStatus.Open,
       ownerId: staff2.id,
       itPriority: TicketPriority.MEDIUM,
+      requesterId: reqBew.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000004",
@@ -355,6 +367,9 @@ async function main() {
       currentStatus: TicketStatus.WaitingForRequester,
       ownerId: staff3.id,
       itPriority: TicketPriority.HIGH,
+      requesterId: reqKanta.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000005",
@@ -388,7 +403,9 @@ async function main() {
       currentStatus: TicketStatus.Resolved,
       ownerId: staff1.id,
       itPriority: TicketPriority.LOW,
+      requesterId: reqCream.id,
       appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000006",
@@ -423,6 +440,9 @@ async function main() {
       currentStatus: TicketStatus.Reopened,
       ownerId: staff2.id,
       itPriority: TicketPriority.HIGH,
+      requesterId: reqGrace.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000007",
@@ -467,6 +487,9 @@ async function main() {
       currentStatus: TicketStatus.Cancelled,
       ownerId: null,
       itPriority: TicketPriority.LOW,
+      requesterId: reqPhrao.id,
+      appearsResolved: false,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000008",
@@ -488,7 +511,9 @@ async function main() {
       currentStatus: TicketStatus.InProgress,
       ownerId: staff3.id,
       itPriority: TicketPriority.HIGH,
+      requesterId: reqCream.id,
       appearsResolved: true,
+      version: 1,
     },
     create: {
       ticketNumber: "TKT-2026-000009",
