@@ -123,8 +123,8 @@ export function AccessibleDialog({
 
   return createPortal(
     <div
-      className="modal fade show d-block"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1055 }}
+      className="modal fade show d-block glass-overlay"
+      style={{ backgroundColor: 'rgba(15, 30, 20, 0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', zIndex: 1055 }}
       tabIndex={-1}
       role={role}
       aria-modal="true"

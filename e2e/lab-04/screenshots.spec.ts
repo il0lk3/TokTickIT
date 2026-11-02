@@ -65,12 +65,38 @@ async function hideUrlBanner(page: Page) {
   });
 }
 
+async function disableStickyAndFloating(page: Page) {
+  await page.addStyleTag({
+    content: `
+      .sticky-top, [class*="sticky-top"], [style*="position: sticky"] {
+        position: static !important;
+      }
+    `,
+  });
+}
+
+async function restoreStickyAndFloating(page: Page) {
+  await page.evaluate(() => {
+    const tags = document.querySelectorAll('style');
+    tags.forEach((t) => {
+      if (t.textContent?.includes('position: static !important')) {
+        t.remove();
+      }
+    });
+  });
+}
+
 async function captureFullPage(page: Page, filePath: string) {
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(300);
+  await disableStickyAndFloating(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(200);
   await page.screenshot({ path: filePath, fullPage: true });
+  await restoreStickyAndFloating(page);
 }
 
 async function captureMobileSplit(page: Page, topPath: string, bottomPath: string) {
+  await disableStickyAndFloating(page);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(300);
   await page.screenshot({ path: topPath });
@@ -78,12 +104,35 @@ async function captureMobileSplit(page: Page, topPath: string, bottomPath: strin
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page.waitForTimeout(300);
   await page.screenshot({ path: bottomPath });
+  await restoreStickyAndFloating(page);
 }
 
 async function captureElement(locator: Locator, filePath: string) {
+  const page = locator.page();
+  await disableStickyAndFloating(page);
   await locator.scrollIntoViewIfNeeded();
-  await locator.page().waitForTimeout(300);
+  await page.waitForTimeout(300);
   await locator.screenshot({ path: filePath });
+  await restoreStickyAndFloating(page);
+}
+
+async function captureModal(page: Page, filePath: string) {
+  await page.waitForTimeout(400);
+  await disableStickyAndFloating(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.addStyleTag({
+    content: `
+      .modal, .glass-overlay {
+        background-color: rgba(15, 30, 20, 0.5) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+      }
+    `,
+  });
+  // Modal is an overlay on top of the viewport. Standard non-fullPage capture
+  // guarantees the backdrop covers 100% of the image without bottom whitespace or skyscraper artifacts.
+  await page.screenshot({ path: filePath, fullPage: false });
+  await restoreStickyAndFloating(page);
 }
 
 async function delayRoute(page: Page, urlPattern: string) {
@@ -831,7 +880,12 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await page.setViewportSize(VIEWPORTS.desktop);
     await page.goto('/tickets/1');
     const actionsSection = page.getByTestId('actions-taken-section');
-    await captureElement(actionsSection, path.join(DIRS.actions, '02-list-columns-detail-desktop.png'));
+    const actionsTable = actionsSection.locator('.table-responsive, table').first();
+    if (await actionsTable.isVisible()) {
+      await captureElement(actionsTable, path.join(DIRS.actions, '02-list-columns-detail-desktop.png'));
+    } else {
+      await captureElement(actionsSection, path.join(DIRS.actions, '02-list-columns-detail-desktop.png'));
+    }
 
     // 03-empty-staff-desktop.png (Ticket 2 should have 0 actions from seed)
     await page.goto('/tickets/2');
@@ -1060,31 +1114,36 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     const firstEditBtn = page.locator('button:has-text("Edit")').first();
     await firstEditBtn.click();
     await page.waitForTimeout(300);
-    await captureElement(page.getByTestId('actions-taken-section'), path.join(DIRS.actions, '30-edit-mode-desktop.png'));
+    const inlineEditForm = page.locator('[data-testid="inline-edit-form"]').first();
+    await captureElement(inlineEditForm, path.join(DIRS.actions, '30-edit-mode-desktop.png'));
 
     await page.setViewportSize(VIEWPORTS.mobile);
-    await captureElement(page.getByTestId('actions-taken-section'), path.join(DIRS.actions, '30-edit-mode-mobile.png'));
+    await page.waitForTimeout(300);
+    await captureElement(inlineEditForm, path.join(DIRS.actions, '30-edit-mode-mobile.png'));
 
     // 31-edit-validation-desktop.png
     await page.setViewportSize(VIEWPORTS.desktop);
-    const inlineEditDesc = page.locator('[data-testid="inline-edit-form"] textarea').first();
+    await page.waitForTimeout(300);
+    const inlineEditDesc = inlineEditForm.locator('textarea').first();
     await inlineEditDesc.fill('');
     await page.click('button:has-text("Save Changes")');
     await expect(page.getByText(/Description must not be empty|Description is required/i)).toBeVisible();
-    await captureElement(page.getByTestId('actions-taken-section'), path.join(DIRS.actions, '31-edit-validation-desktop.png'));
+    await captureElement(inlineEditForm, path.join(DIRS.actions, '31-edit-validation-desktop.png'));
 
     // 32-edit-saved-desktop.png
     await inlineEditDesc.fill('Updated duplexer inspection and lubricated gears.');
     await page.click('button:has-text("Save Changes")');
     await expect(page.getByText(/Action (saved|updated) successfully/i)).toBeVisible({ timeout: 10000 });
-    await captureElement(page.getByTestId('actions-taken-section'), path.join(DIRS.actions, '32-edit-saved-desktop.png'));
+    const savedRow = page.locator('tr:has-text("Updated duplexer inspection")').first();
+    await captureElement(savedRow, path.join(DIRS.actions, '32-edit-saved-desktop.png'));
 
     // 33-edit-cancel-reverted-desktop.png
     const secondEditBtn = page.locator('button:has-text("Edit")').first();
     await secondEditBtn.click();
+    await page.waitForTimeout(300);
     await page.locator('[data-testid="inline-edit-form"] textarea').first().fill('Temporary modified text to test revert');
     await page.click('[data-testid="inline-edit-form"] button:has-text("Cancel")');
-    await captureElement(page.getByTestId('actions-taken-section'), path.join(DIRS.actions, '33-edit-cancel-reverted-desktop.png'));
+    await captureElement(savedRow, path.join(DIRS.actions, '33-edit-cancel-reverted-desktop.png'));
 
     // 34-edit-conflict-desktop.png (409 conflict during edit)
     await secondEditBtn.click();
@@ -1097,7 +1156,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     });
     await page.click('button:has-text("Save Changes")');
     await page.waitForTimeout(400);
-    await captureFullPage(page, path.join(DIRS.actions, '34-edit-conflict-desktop.png'));
+    await captureModal(page, path.join(DIRS.actions, '34-edit-conflict-desktop.png'));
     await page.unroute('**/api/tickets/1/actions-taken/*');
     const closeConflictBtn = page.locator('[role="alertdialog"] button:has-text("Close"), [role="alertdialog"] button:has-text("Reload")').first();
     if (await closeConflictBtn.isVisible()) {
@@ -1264,7 +1323,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await page.waitForSelector('button:has-text("Close Ticket")', { timeout: 15000 });
     await page.click('button:has-text("Close Ticket")');
     await page.waitForTimeout(400);
-    await captureFullPage(page, path.join(DIRS.workflow, '08-close-confirm-dialog.png'));
+    await captureModal(page, path.join(DIRS.workflow, '08-close-confirm-dialog.png'));
     await page.click('button:has-text("Keep Ticket")');
 
     // 09-cancel-confirm-dialog.png
@@ -1272,7 +1331,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await page.waitForSelector('button:has-text("Cancel Ticket")', { timeout: 15000 });
     await page.click('button:has-text("Cancel Ticket")');
     await page.waitForTimeout(400);
-    await captureFullPage(page, path.join(DIRS.workflow, '09-cancel-confirm-dialog.png'));
+    await captureModal(page, path.join(DIRS.workflow, '09-cancel-confirm-dialog.png'));
     await page.click('button:has-text("Keep Ticket")');
 
     // 10-cancelled-locked.png (Ticket 8 is Cancelled)
@@ -1294,7 +1353,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     });
     await page.locator('#itPrioritySelect').selectOption('HIGH');
     await page.waitForTimeout(400);
-    await captureFullPage(page, path.join(DIRS.workflow, '11-conflict-dialog.png'));
+    await captureModal(page, path.join(DIRS.workflow, '11-conflict-dialog.png'));
     await page.unroute('**/api/staff/tickets/1');
 
     // 12-forbidden-transition.png
@@ -1325,7 +1384,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await captureElement(advisoryBtn, path.join(DIRS.workflow, '13-requester-advisory-button.png'));
     await advisoryBtn.click();
     await page.waitForTimeout(400);
-    await captureFullPage(page, path.join(DIRS.workflow, '14-advisory-confirm.png'));
+    await captureModal(page, path.join(DIRS.workflow, '14-advisory-confirm.png'));
     const dismissBtn = page.locator('button:has-text("Cancel"), button:has-text("Close")').first();
     if (await dismissBtn.isVisible()) {
       await dismissBtn.click();
@@ -1420,7 +1479,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     const selfRow = page.locator('tr:has-text("e2e.admin@example.com")');
     await selfRow.locator('button:has-text("Edit")').click();
     await page.waitForTimeout(400);
-    await captureFullPage(page, path.join(DIRS.regression, '08-admin-self-deactivation-disabled.png'));
+    await captureModal(page, path.join(DIRS.regression, '08-admin-self-deactivation-disabled.png'));
 
     await context.close();
   });
