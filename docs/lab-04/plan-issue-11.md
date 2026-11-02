@@ -13,7 +13,7 @@
 ### ปัญหาที่ 1: Modal Backdrop ไม่เบลอทั้งหมด (`08-close-confirm-dialog.png` และ Dialog อื่นๆ)
 - **สาเหตุ**: การถ่ายภาพ Dialog เดิมใช้ `captureFullPage` (`fullPage: true`) ทำให้ Playwright จับภาพยาวทั้งหน้าเว็บ (สูง 9,836px) แต่ตัว `.modal` ใน CSS กำหนด `position: fixed; inset: 0` ซึ่งครอบคลุมเฉพาะขนาด Viewport (800px) เท่านั้น ทำให้มีเพียงส่วนบนที่มืด ส่วนด้านล่างที่เหลือกลายเป็นสีขาวหลุดกรอบ
 - **การแก้ไข**:
-  1. เพิ่มคลาส `glass-overlay` และ `backdropFilter: 'blur(8px)'` ใน [AccessibleDialog.tsx](file:///Users/karn/Downloads/toktickit/client/src/components/common/AccessibleDialog.tsx) ให้เป็นเอฟเฟกต์กระจกฝ้า Zen Green
+  1. เพิ่มคลาส `glass-overlay` และ `backdropFilter: 'blur(8px)'` ใน [AccessibleDialog.tsx](../../client/src/components/common/AccessibleDialog.tsx) ให้เป็นเอฟเฟกต์กระจกฝ้า Zen Green
   2. สร้างฟังก์ชัน `captureModal(page, filePath)` ถ่ายภาพในระดับ Viewport (`fullPage: false`) ที่ขนาด 1280×800 (@2x = 2560×1600) ทำให้พื้นหลังเบลอและมืดคลุม 100% เต็มจอ และกล่อง Dialog อยู่กึ่งกลางอย่างพอดี
 
 ### ปัญหาที่ 2: Tab / Navbar ด้านบนเลื่อนตกลงมาประทับตรงกลางภาพ (`31-edit-validation-desktop.png`, `04-ticket-detail-attachments.png`)
@@ -57,13 +57,13 @@ flowchart TD
   - Visible Focus Ring (`2px solid #2d6a4f`)
   - คีย์บอร์ดควบคุมได้ 100% (Tab, Shift+Tab, Esc ปิด Modal)
   - Accessible Dialog มี Focus Trap และคืนค่า Focus สู่ปุ่มเดิมเมื่อปิด
-  - บันทึก Checklist ครบ 7 หัวข้อใน [ui-spec.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/ui-spec.md)
+  - บันทึก Checklist ครบ 7 หัวข้อใน [ui-spec.md](./ui-spec.md)
 
 ---
 
 ### Phase 3: Documentation & Traceability Alignment
-- [x] อัปเดต [reviewer.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/reviewer.md): บันทึก PR #78 เป็น Approved & Merged และเพิ่มตาราง PR #79 สำหรับ Issue 11
-- [x] อัปเดต [ai-use.md](file:///Users/karn/Downloads/toktickit/docs/lab-04/ai-use.md): บันทึกการใช้งาน AI ในการออกแบบสคริปต์สแนปช็อตอัตโนมัติ (จำนวน 10 รายการตรงตาม Rubric)
+- [x] อัปเดต [reviewer.md](./reviewer.md): บันทึก PR #78 เป็น Approved & Merged และเพิ่มตาราง PR #79 สำหรับ Issue 11
+- [x] อัปเดต [ai-use.md](./ai-use.md): บันทึกการใช้งาน AI ในการออกแบบสคริปต์สแนปช็อตอัตโนมัติ (จำนวน 10 รายการตรงตาม Rubric)
 - [x] ตรวจสอบ `node scripts/verify-traceability.js`: ผ่าน 100% (0 undefined AC, 0 missing tests)
 - [x] ตรวจสอบโครงสร้างโฟลเดอร์ให้ตรงกับ Labsheet ข้อ 12 (`docs/lab-04`, `server/tests/lab-04`, `e2e/lab-04`, `artifacts/lab-04`)
 
