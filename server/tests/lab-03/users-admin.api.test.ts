@@ -13,6 +13,17 @@ describe("Admin User Management API", () => {
   let adminUserId: number;
 
   beforeAll(async () => {
+    // Pre-cleanup in case of dirty state from previous aborted run
+    await prisma.user.deleteMany({
+      where: {
+        OR: [
+          { email: { contains: "test-admin-api" } },
+          { email: { contains: "test-staff-api" } },
+          { email: { contains: "test-req-api" } },
+        ]
+      }
+    });
+
     const passwordHash = await bcrypt.hash("Password123!", 10);
     
     // Create dedicated test users

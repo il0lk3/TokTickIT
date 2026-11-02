@@ -2,6 +2,16 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 
+// Prevent local test requests / superagent from routing through explicit proxy
+delete process.env.HTTP_PROXY;
+delete process.env.http_proxy;
+delete process.env.HTTPS_PROXY;
+delete process.env.https_proxy;
+delete process.env.ALL_PROXY;
+delete process.env.all_proxy;
+process.env.NO_PROXY = "*";
+process.env.no_proxy = "*";
+
 // Locate .env candidate paths (cwd, server/.env, parent .env)
 const candidates = [
   path.resolve(process.cwd(), ".env"),
