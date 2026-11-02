@@ -7,20 +7,29 @@ This document serves as the comprehensive testing matrix for Lab 4 of TokTickIT.
 ## 1. Test Execution Commands
 
 ```bash
-# 1. Run Server Integration & API Tests (Jest / Supertest)
+# 1. Run Complete Server Integration & API Tests (Vitest / Supertest — 20 files, 199 tests)
 cd server && npm test
 
 # 2. Run Specific Lab 4 Server API Tests
-cd server && npx jest tests/lab-04
+cd server && npx vitest run tests/lab-04
 
-# 3. Run Client Component Tests (Vitest / React Testing Library)
+# 3. Run Client Component Tests (Vitest / React Testing Library — 15 files, 140 tests)
 cd client && npm test
 
-# 4. Run Playwright End-to-End (E2E) Tests
+# 4. Run Full Playwright End-to-End (E2E) Suite (51 tests across Chromium, Tablet WebKit, Mobile Chromium)
+cd e2e && npm test
+
+# 5. Run Specific Lab 4 Playwright E2E Tests
 cd e2e && npx playwright test lab-04
+
+# 6. Regenerate Release Evidence Screenshots (@screenshots — 5 suites, 161 @2x PNGs)
+cd e2e && npm run test:screenshots
+
+# 7. Verify 100% Bidirectional Specification & Test Traceability
+node scripts/verify-traceability.js
 ```
 
-*(Note: Playwright is configured via `playwright.config.ts` to automatically boot both the Express API and Vite frontend servers via `webServer` blocks).*
+*(Note: Playwright is configured via `playwright.config.ts` to automatically boot both the Express API and Vite frontend servers via `webServer` blocks. The `@screenshots` suite in `e2e/lab-04/screenshots.spec.ts` is isolated via `RUN_SCREENSHOTS=true` so standard E2E runs stay fast and side-effect free).*
 
 ---
 
@@ -73,13 +82,15 @@ cd e2e && npx playwright test lab-04
 | **API-DSH-07** | API | **BR-15** | Unauthenticated or expired token request receives 401 Unauthorized | HTTP 401 Unauthorized | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-08** | API | **AC-02** | Isolation check: query parameter ?userId=<other> is strictly ignored | HTTP 200 OK; tickets belong strictly to authenticated requester | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-09** | API | **DoD-6** | Calling GET /api/tickets with drillDown.query params matches card count for every metric | HTTP 200 OK; list total strictly equals card count | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
+| **API-DSH-09b** | API | **AC-02, DoD-6** | Composing `status` and `active=true` on GET /api/tickets (`?status=Closed&active=true`) composes via `AND` | HTTP 200 OK; returns 0 without overwriting status filter | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-10** | API | **AC-02, BR-14** | Direct SQL comparison: metric values match raw SQL prisma.$queryRaw results | Raw SQL counts equal application metrics | `server/tests/lab-04/requester-dashboard.api.test.ts` | Passed |
 | **API-DSH-11** | API | **AC-09** | Staff retrieves operational dashboard metrics with complete byStatus and byPriority maps | HTTP 200 OK; normalized maps returned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-12** | API | **BR-14** | Closed and Cancelled tickets without owner are NOT counted in unassigned active metric | HTTP 200 OK; terminal tickets excluded from active unassigned | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-13** | API | **AC-09** | byPriority contains LOW, MEDIUM, and HIGH keys (all >= 0) even when counts are 0 | Normalized map has all keys defined | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-14** | API | **BR-14** | Rolling 24-hour boundary precision for recentlyUpdated (23h included, 25h excluded) | Boundary tickets verified against rolling time window | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-15** | API | **AC-09** | Staff sees appearsResolved metric counting active tickets flagged by requester | HTTP 200 OK; counts active flagged tickets | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
-| **API-DSH-16** | API | **AC-09** | Recent lists include myRecentTickets (owned by staff) and urgentTickets (HIGH priority active) | Lists contain appropriate ticket subsets | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-16** | API | **AC-09** | Recent lists include myRecentTickets (owned by staff) and urgentTickets (HIGH priority active) ordered by `updatedAt DESC, id DESC` | Lists contain appropriate ticket subsets in strict recency order | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
+| **API-DSH-16b** | API | **AC-09, DoD-6** | Composing `status` and `active=true` on GET /api/staff/tickets (`?status=Open&active=true`, `?status=Closed&active=true`) composes via `AND` | HTTP 200 OK; filters compose cleanly without overwriting | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-17** | API | **BR-13** | Administrator receives adminUserCounts breakdown, while IT_STAFF receives null | Admin gets user breakdown; Staff gets null | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-18** | API | **BR-15** | Requester calling /api/dashboard/staff receives 403 Forbidden | HTTP 403 Forbidden | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
 | **API-DSH-19** | API | **BR-15** | Unauthenticated or expired token request receives 401 Unauthorized | HTTP 401 Unauthorized | `server/tests/lab-04/staff-dashboard.api.test.ts` | Passed |
@@ -94,6 +105,7 @@ cd e2e && npx playwright test lab-04
 | **UI-ACT-02** | UI | **AC-03** | Requester sees read-only view without create/edit controls | Form buttons hidden; action data readable | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
 | **UI-ACT-03** | UI | **AC-04, BR-04** | Follow-Up checkbox reveals note field with inline validation | Note input expands with `aria-expanded`; validates required on submit | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
 | **UI-ACT-04** | UI | **AC-10** | Double click prevention & in-flight disable | Button disables while in-flight; prevents double submissions; handles 200/201 responses gracefully | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
+| **UI-ACT-04B** | UI | **AC-10** | Idempotent HTTP 200 duplicate response handling | Gracefully handles 200 OK deduplicated response without duplicate rows or UI errors | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
 | **UI-ACT-05** | UI | **DoD-7** | Action submission fails with 500 error | Form preserves entered text; displays safe error alert for retry | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
 | **UI-ACT-06** | UI | **FR-01** | Inline action editing | Staff clicks Edit, row expands to form; Cancel reverts without API call; Save dispatches PATCH | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
 | **UI-ACT-07** | UI | **BR-07** | Terminal state locking | On Closed or Cancelled tickets, create and edit controls are hidden with locked notice | `client/tests/lab-04/ActionsTaken.test.tsx` | Passed |
@@ -135,6 +147,7 @@ cd e2e && npx playwright test lab-04
 | **UI-DSH-03** | UI | **AC-02** | Requester Dashboard renders Attention Needed list | Verified `WaitingForRequester` | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
 | **UI-DSH-04** | UI | **AC-08** | Requester with zero tickets renders welcoming empty state | Displays empty state with "Create Ticket" button | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
 | **UI-DSH-05** | UI | **AC-02** | Refresh button in-flight state and throttling | Refresh button disables and announces update | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
+| **UI-DSH-05b** | UI | **AC-02, AC-08** | Non-empty requester dashboard when only Cancelled/older Resolved tickets exist | Renders metric cards and recent history when `recentTickets.length > 0` even if active subset counts are 0 | `client/tests/lab-04/RequesterDashboard.test.tsx` | Passed |
 | **UI-DSH-11** | UI | **AC-09, DoD-6** | Staff Dashboard renders 4 operational cards with correct counts | Verified Unassigned, Assigned, Appears Resolved, Updated 24h | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
 | **UI-DSH-12** | UI | **AC-09, DoD-6** | Operational cards link to exact `/queue` query destinations | Verified exact URLSearchParams drill-down links | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
 | **UI-DSH-13** | UI | **AC-09** | Status chips render all 8 statuses with non-negative counts | Verified 8 status chips with drill-down links | `client/tests/lab-04/StaffDashboard.test.tsx` | Passed |
@@ -203,27 +216,28 @@ cd e2e && npx playwright test lab-04
 | **E2E-RES-03b** | E2E | **AC-07, DoD-7** | Two Concurrent Browser Sessions Conflict | Simultaneous mutation across two browser contexts triggers 409 conflict dialog and reload | `e2e/lab-04/ticket-resolution.spec.ts` | Passed |
 | **E2E-REG-01** | E2E | **AC-13, DoD-3** | Labs 1-3 Representative Regression Suite | Attachments upload/delete, public comment vs internal note isolation, cross-tenant isolation, admin user management | `e2e/lab-04/regression-lab1-3.spec.ts` | Passed |
 | **E2E-SMK-01** | E2E | **DoD-4, DoD-5** | Quality & Smoke Sweep | Crawls all registered routes across 3 roles: asserts 0 console errors, 0 broken links, 0 unrendered placeholders | `e2e/lab-04/quality-smoke.spec.ts` | Passed |
+| **E2E-EVD-01** | E2E | **AC-08, AC-09, AC-12, DoD-5, DoD-6** | Automated Release Evidence Screenshot Suite (`@screenshots`) | Generates and verifies all 161 `@2x` screenshots across Desktop (1280px), Tablet (768px), and Mobile (375px) plus live PostgreSQL SQL equivalence | `e2e/lab-04/screenshots.spec.ts` | Passed |
 | **REG-01** | Regression | **AC-13** | Labs 1–3 regression test suite passes | All previous server tests, client tests, and E2E flows pass | `server/tests/`, `client/tests/`, `e2e/` | Passed |
 
 ---
 
 ## 4. Acceptance Criteria Verification Summary
 
-- **AC-01**: Verified by `API-ACT-01`, `UI-ACT-01`, `E2E-01`
-- **AC-02**: Verified by `API-DSH-01`, `API-DSH-02`, `API-DSH-05`, `API-DSH-08`, `API-DSH-09`, `API-DSH-10`, `UI-DSH-03`, `E2E-03`
-- **AC-03**: Verified by `API-ACT-02`, `API-ACT-03`, `UI-ACT-02`, `E2E-01`
-- **AC-04**: Verified by `API-ACT-05`, `UI-ACT-03`
-- **AC-05**: Verified by `API-WKF-02`, `UI-WKF-01`
-- **AC-06**: Verified by `API-WKF-03`, `API-WKF-04`, `API-WKF-05`, `UI-WKF-02`, `E2E-02`
-- **AC-07**: Verified by `API-WKF-06`, `UI-WKF-03`, `E2E-02`
-- **AC-08**: Verified by `API-ACT-08`, `API-DSH-03`, `UI-ACT-01`, `UI-DSH-04`
-- **AC-09**: Verified by `API-DSH-11` through `API-DSH-24`, `UI-DSH-01`, `E2E-03`
-- **AC-10**: Verified by `API-ACT-11`, `UI-ACT-04`
+- **AC-01**: Verified by `API-ACT-01`, `UI-ACT-01`, `E2E-ACT-01`, `E2E-ACT-06`
+- **AC-02**: Verified by `API-DSH-01`, `API-DSH-02`, `API-DSH-05`, `API-DSH-08`, `API-DSH-09`, `API-DSH-09b`, `API-DSH-10`, `UI-DSH-01` through `UI-DSH-05b`, `E2E-DSH-01`
+- **AC-03**: Verified by `API-ACT-02`, `API-ACT-03`, `UI-ACT-02`, `E2E-ACT-01`, `E2E-ACT-06`
+- **AC-04**: Verified by `API-ACT-05`, `UI-ACT-03`, `E2E-ACT-03`
+- **AC-05**: Verified by `API-WKF-01`, `API-WKF-02`, `API-WKF-10`, `UI-WKF-01`, `UI-WKF-14`
+- **AC-06**: Verified by `API-WKF-03`, `API-WKF-04`, `API-WKF-05`, `UI-ACT-11`, `UI-WKF-02`, `UI-WKF-03`, `UI-WKF-04`, `UI-WKF-14`, `E2E-RES-01`
+- **AC-07**: Verified by `API-WKF-06`, `UI-WKF-05`, `UI-WKF-09`, `UI-WKF-10`, `E2E-RES-03`, `E2E-RES-03b`
+- **AC-08**: Verified by `API-ACT-08`, `API-DSH-03`, `UI-ACT-01`, `UI-DSH-04`, `UI-DSH-21`, `E2E-DSH-07`, `E2E-EVD-01`
+- **AC-09**: Verified by `API-DSH-11` through `API-DSH-24`, `UI-DSH-11` through `UI-DSH-20`, `E2E-DSH-02`, `E2E-DSH-03`, `E2E-EVD-01`
+- **AC-10**: Verified by `API-ACT-11`, `UI-ACT-04`, `UI-ACT-04B`, `UI-WKF-21`, `UI-DSH-22`, `E2E-DSH-04`
 - **AC-11**: Verified by `API-MIG-01`, `API-MIG-02`
-- **AC-12**: Verified by `E2E-04`
-- **AC-13**: Verified by `REG-01` (199/199 server tests, 140/140 client tests, 51/51 E2E tests, 100% pass)
-- **AC-14**: Verified by `UI-NAV-01` through `UI-NAV-11`, `UI-NAV-17`, `UI-NAV-18`, `E2E-NAV-01` through `E2E-NAV-04`, `E2E-NAV-06`
-- **AC-15**: Verified by `UI-NAV-12` through `UI-NAV-16`, `E2E-NAV-05`
+- **AC-12**: Verified by `UI-DSH-26`, `E2E-DSH-05`, `E2E-DSH-06`, `E2E-EVD-01`
+- **AC-13**: Verified by `E2E-REG-01`, `REG-01` (199/199 server tests, 140/140 client tests, 51/51 E2E tests, 5/5 `@screenshots` evidence suites — 100% pass)
+- **AC-14**: Verified by `UI-NAV-01` through `UI-NAV-11`, `UI-NAV-17`, `UI-NAV-18`, `E2E-NAV-01` through `E2E-NAV-04`
+- **AC-15**: Verified by `UI-FLT-01` through `UI-FLT-04`, `UI-NAV-12` through `UI-NAV-16`, `E2E-NAV-05`
 - **AC-16**: Verified by `API-SEC-01`, `API-DSH-24`
 - **AC-17**: Verified by `API-PRF-01`
 

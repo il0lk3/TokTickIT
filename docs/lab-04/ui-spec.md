@@ -55,8 +55,8 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 - **Dynamic Document Title**:
   - Automatically synchronizes `document.title` on every route transition (e.g. `TokTickIT — Ticket Queue`, `TokTickIT — Ticket #1`).
 - **Profile Controls**:
-  - Shows authenticated user's name and role badge (e.g., `Michael Staff (IT Staff)`).
-  - Contains **Sign Out** button with keyboard accessible triggers.
+  - Shows authenticated user's name and role badge (e.g., `Somchai Staff (IT_STAFF)`).
+  - Contains **Logout** button with keyboard accessible triggers.
 
 ### 2.2 Client Route Map & Route Guards
 
@@ -65,7 +65,7 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 | `/login` | Public (Unauthenticated) | `Login` | Redirects to `from` location or `/dashboard` if already authenticated |
 | `/change-password` | Authenticated (`requiresPasswordChange: true`) | `ChangePassword` | All protected routes quarantine here until initial password is changed |
 | `/` | Authenticated | Redirect | Redirects to role landing route (`/dashboard`) |
-| `/dashboard` | Requester, Staff, Admin | `DashboardShell` / Role Dashboards | Role-aware dashboard landing frame with drill-down links |
+| `/dashboard` | Requester, Staff, Admin | `DashboardRoute` (`RequesterDashboard` / `StaffDashboard`) | Role-aware dashboard landing frame with drill-down links |
 | `/tickets` | Requester | `MyTicketsRoute` | URL searchParams sync: `?status=...&categoryId=...&requestedPriority=...` |
 | `/tickets/new` | Requester | `CreateTicketRoute` | Strict requester boundary (enforces Lab 3 API contract); Staff/Admin get in-place 403 |
 | `/tickets/:ticketId` | Requester (own), Staff, Admin | `TicketDetailRoute` | Validates numeric ID (404 if invalid); deep-linkable; in-app Back button falls back to parent list |
@@ -134,42 +134,38 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
   - 1-to-1 drill-down destinations:
     1. **Open Requests**: Count of `New`, `Open`, and `Reopened` -> `/tickets?status=New,Open,Reopened`.
     2. **In Progress**: Count of `InProgress` -> `/tickets?status=InProgress`.
-    3. **Waiting on You**: Count of `WaitingForRequester` -> `/tickets?status=WaitingForRequester`.
+    3. **Waiting for You**: Count of `WaitingForRequester` -> `/tickets?status=WaitingForRequester`.
     4. **Recently Resolved**: Count of `Resolved` within past 7 days -> `/tickets?status=Resolved&updatedSince={ISO}`.
     5. **Closed**: Count of `Closed` -> `/tickets?status=Closed`.
 - **Activity Sections**:
   - **Attention Needed**: Tickets with status `WaitingForRequester` requiring requester response.
-  - **My Recent Requests**: Up to 5 most recently updated tickets owned by user, with links to `/tickets/:id`.
+  - **Recent Activity**: Up to 5 most recently updated tickets owned by user, with links to `/tickets/:id`.
 
 ### 4.2 UI States
 - **Loading State**: Shimmer skeleton blocks matching card layout.
-- **Empty State**: When requester has zero tickets, displays welcoming banner: *"You have no tickets yet. All caught up! You have not submitted any support tickets."* with a "Create Ticket" button.
+- **Empty State**: When requester has zero total tickets and zero recent tickets (`totalCount === 0 && recentTickets.length === 0`), displays welcoming banner: *"You have no tickets yet. All caught up! You have not submitted any support tickets."* with a "Create Ticket" button.
 - **Safe Failure & Forbidden States**: Consistent with Zen Green standard alerts.
 
----
-
-## 5. Active Filter Chips & List Parity (DoD-6)
-
-### 5.1 Active Filter Chips Bar
+### 4.3 Active Filter Chips & List Parity (DoD-6)
 - **Location**: Positioned directly beneath filter controls on `/tickets` and `/queue`.
 - **Accessibility**: Enclosed in `<div data-testid="active-filter-chips" role="region" aria-label="Active filters">`.
 - **Behavior**:
   - Displays interactive pill badges for each active filter (e.g., `Status: In Progress`, `Owner: Unassigned`, `Active Only`, `Priority: HIGH`).
   - Each chip features an accessible remove button (`aria-label="Remove filter: ..."`) that clears that single filter parameter and resets pagination to page 1.
   - "Clear all" button clears all filter parameters back to the default list view.
-  - Exposes `data-testid="list-total-count"` which renders `meta.total`, ensuring strict dynamic equality with dashboard metric card numbers.
+  - Exposes `data-testid="list-total-count"` which renders `meta.total`, ensuring strict 1-to-1 dynamic equality with dashboard metric card numbers.
 
 ---
 
-## 6. Actions Taken on Ticket Detail
+## 5. Actions Taken on Ticket Detail
 
 *Positioned on Ticket Detail (`/tickets/:ticketId`).*
 
-### 6.1 Placement & Visual Hierarchy
+### 5.1 Placement & Visual Hierarchy
 - Placed immediately below the Ticket Details card and above the Public Comments / Internal Notes tabbed container.
 - Container title: `Actions Taken ({count})` with a badge showing total actions logged.
 
-### 6.2 Actions Taken Table / List
+### 5.2 Actions Taken Table / List
 - **Desktop (>= 768px)**: Clean responsive data table.
   - **Columns**:
     1. `Date / Time`: Formatted as `YYYY-MM-DD HH:mm`.
@@ -275,11 +271,13 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
     - Direct action button: *"Review Actions Taken"* smoothly scrolls and focuses `#actions-taken-section`.
   - When staff transitions the ticket status, `ticket.appearsResolved` is reset and the advisory banner automatically unmounts.
 
-### 6.5 Terminal State Locking
-- When ticket is `Closed` or `Cancelled`:
+### 6.5 Terminal & Comment State Locking (`isWorkflowLocked` vs `isCommentLocked`)
+- **Workflow Locking (`isWorkflowLocked` — `Closed` or `Cancelled`)**:
   - `Ticket Owner` dropdown, `Claim Ticket` button, and `IT Priority` dropdown are strictly `disabled`.
   - For `Closed` tickets, only the `Reopen` transition action is permitted.
   - For `Cancelled` tickets, all workflow transitions are locked (`allowedTransitions = []`).
+- **Comment & Internal Note Locking (`isCommentLocked` — `Resolved`, `Closed`, or `Cancelled`)**:
+  - Public comment and internal note submission forms are locked once a ticket reaches `Resolved`, `Closed`, or `Cancelled` (matching backend validation), while `Resolved` tickets keep workflow transition controls (`Close Ticket`, `Reopen`, `Cancel Ticket`) active.
 
 ---
 
