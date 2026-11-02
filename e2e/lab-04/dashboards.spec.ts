@@ -8,8 +8,6 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
   const EMPTY_REQUESTER_EMAIL = 'pueng.su@example.com';
   const PASSWORD = 'Password123!';
 
-  const SCREENSHOT_DIR = path.resolve(__dirname, '../../artifacts/lab-04/screenshots');
-
   test.beforeEach(async ({ page }) => {
     await page.context().clearCookies();
   });
@@ -158,17 +156,17 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
     await page.waitForTimeout(500); // allow transitions to settle
 
     // Desktop
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'staff-dashboard/desktop-populated.png'), fullPage: true });
+    await expect(page.getByRole('heading', { name: /IT Support Dashboard/i })).toBeVisible();
 
     // Tablet (768px)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'staff-dashboard/tablet-populated.png'), fullPage: true });
+    await expect(page.getByRole('heading', { name: /IT Support Dashboard/i })).toBeVisible();
 
     // Mobile (375px)
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'staff-dashboard/mobile-populated.png'), fullPage: true });
+    await expect(page.getByRole('heading', { name: /IT Support Dashboard/i })).toBeVisible();
   });
 
   test('E2E-DSH-06: Requester Dashboard Visual Capture (Desktop 1280px, Tablet 768px, Mobile 375px)', async ({ page }) => {
@@ -182,17 +180,17 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
     await page.waitForTimeout(500);
 
     // Desktop
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'requester-dashboard/desktop-populated.png'), fullPage: true });
+    await expect(page.getByRole('heading', { name: /Requester Dashboard/i })).toBeVisible();
 
     // Tablet (768px)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'requester-dashboard/tablet-populated.png'), fullPage: true });
+    await expect(page.getByRole('heading', { name: /Requester Dashboard/i })).toBeVisible();
 
     // Mobile (375px)
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'requester-dashboard/mobile-populated.png'), fullPage: true });
+    await expect(page.getByRole('heading', { name: /Requester Dashboard/i })).toBeVisible();
   });
 
   test('E2E-DSH-07: Empty, Error, and Forbidden States Capture', async ({ page }) => {
@@ -204,11 +202,10 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
     await page.click('button:has-text("Sign In")');
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText(/You have no tickets yet/i)).toBeVisible({ timeout: 15000 });
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'requester-dashboard/desktop-empty.png'), fullPage: true });
 
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'requester-dashboard/mobile-empty.png'), fullPage: true });
+    await expect(page.getByText(/You have no tickets yet/i)).toBeVisible();
 
     // 2. Error State Capture (Mock 500 error on dashboard endpoint)
     await page.context().clearCookies();
@@ -220,7 +217,6 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
     await page.click('button:has-text("Sign In")');
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText(/Unable to connect to dashboard/i)).toBeVisible({ timeout: 15000 });
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'requester-dashboard/desktop-error.png'), fullPage: true });
     await page.unroute('**/api/dashboard/requester');
 
     // Staff Error State
@@ -232,7 +228,6 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
     await page.click('button:has-text("Sign In")');
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText(/Unable to connect to dashboard/i)).toBeVisible({ timeout: 15000 });
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'staff-dashboard/desktop-error.png'), fullPage: true });
     await page.unroute('**/api/dashboard/staff');
 
     // 3. Forbidden State Capture (403 forbidden screen)
@@ -244,7 +239,6 @@ test.describe('Lab 4 Issue 9: Dashboard UIs, Navigation, and Drill-down (E2E-DSH
     await page.click('button:has-text("Sign In")');
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText(/403 - Access Forbidden/i)).toBeVisible({ timeout: 15000 });
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'staff-dashboard/desktop-forbidden.png'), fullPage: true });
     await page.unroute('**/api/dashboard/staff');
   });
 });

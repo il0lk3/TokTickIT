@@ -293,12 +293,45 @@ Lab 4 preserves and polishes the established **Zen Green** visual identity:
 
 ---
 
-## 8. Accessibility (a11y) Verification Checklist
+## 8. Visual Polish, Responsive & Accessibility (a11y) Verification Checklist
 
+### 8.1 Design Consistency & System Integrity
+- [x] **Zen Green Design System**: Consistent palette applied across all screens (`#1b4332` Deep Forest, `#2d6a4f` Forest Green, `#f4f9f5` Background, `#d8f3dc` Border, `#e8f5e9` Tint).
+- [x] **Typography & Hierarchy**: Consistent font sizing, letter-spacing, and line-heights across headers (`h1`, `h2`, `h3`), card metrics, and table data cells.
+- [x] **Card & Surface Elevation**: Uniform card borders (`1px solid #e2e8f0` / `#d8f3dc`), rounded corners (`border-radius: 12px`), and subtle shadow elevation (`0 2px 4px rgba(0,0,0,0.04)`).
+- [x] **Badge & Chip Standards**: Metric chips and status badges utilize standard pill radii (`border-radius: 999px`), 12px font size, and consistent internal padding (`4px 10px`).
+
+### 8.2 Editable vs Read-Only Controls
+- [x] **Editable Input Affordance**: Editable text fields, textareas, and selects feature clean white surfaces (`#ffffff`), visible `#ced4da` borders, and high-contrast text.
+- [x] **Read-Only & Disabled Distinction**: Disabled controls (e.g., Owner dropdown on Closed/Cancelled tickets, read-only Performed By badge) render muted backgrounds (`#f1f5f9`), distinct disabled cursor (`cursor: not-allowed`), and lowered opacity (0.75) with `aria-disabled="true"`.
+- [x] **Mutual Exclusion Affordance**: When an Action Taken row enters Inline Edit mode, other Action Taken edit buttons and the "+ Log Action Taken" form are cleanly disabled to prevent simultaneous conflicting mutations.
+
+### 8.3 Validation Error Placement & Feedback
+- [x] **Inline Placement**: Validation errors (e.g., required Description/Result, missing Follow-up Note, whitespace-only rejection) appear immediately below the invalid control, never occluding inputs or action buttons.
+- [x] **Red Border & Icon Accents**: Invalid inputs receive distinct red border highlighting (`border-color: #dc2626`) and an alert SVG icon alongside the error message.
+- [x] **Accessibility Associations**: Every validation error message is linked to its corresponding input using `aria-describedby="field-error-id"`, ensuring screen readers announce the error upon focus.
+
+### 8.4 Clipping, Truncation & Text Wrapping
+- [x] **No Hidden Critical Text**: Ticket summaries, descriptions, action notes, and system names wrap cleanly across multiple lines without accidental horizontal clipping.
+- [x] **Ellipsis & Overflow Handling**: Excessively long single-word strings (e.g. long ticket codes, file paths) utilize `word-break: break-word` or `overflow-wrap: anywhere` to prevent layout deformation.
+- [x] **Modal Viewport Boundaries**: Modals and confirmation dialogs enforce `max-height: calc(100vh - 4rem)` with internal scrolling, ensuring dialog buttons never get clipped on short screens.
+
+### 8.5 Overlap Prevention & Z-Index Layering
+- [x] **Sticky Navigation Layering**: Sticky top navbar (`z-index: 1020`) never overlaps modal backdrops (`z-index: 1050`) or confirmation dialogs (`z-index: 1055`).
+- [x] **URL Evidence Banner Positioning**: Relative address-bar parameter banner is injected cleanly below the navbar in document flow, eliminating viewport-floating artifacts during full-page captures.
+- [x] **Frosted Glass Modal Backdrops**: Dialog backdrops utilize `position: fixed; inset: 0; background: rgba(15, 30, 20, 0.45); backdrop-filter: blur(8px);` providing 100% viewport coverage with zero un-blurred cutoffs.
+
+### 8.6 Horizontal Overflow Elimination
+- [x] **Zero Horizontal Scrollbar**: Verified across Desktop (1280px), Tablet (768px), and Mobile (375px) with `window.innerWidth === document.documentElement.scrollWidth`.
+- [x] **Single-DOM Responsive Tables**: Actions Taken and Ticket Queue tables smoothly transform into vertical key-value cards on mobile viewports (< 768px) using CSS media queries (`.actions-table-responsive`), eliminating wide-table clipping without duplicate DOM nodes.
+- [x] **Minimum Tap Target Size**: All mobile buttons, chips, and nav links meet the minimum `44px x 44px` touch target requirement.
+
+### 8.7 Accessibility (WCAG 2.1 AA) Compliance
 - [x] **Semantic HTML**: Proper `<header>`, `<nav>`, `<main>`, `<section>`, `<table>`, `<button>` tags used throughout.
 - [x] **Heading Hierarchy**: Exactly one `<h1>` per page, followed by logical `<h2>` and `<h3>` nesting.
-- [x] **Color Independence**: Every status badge uses both color and icon/text; follow-up indicators use distinct labels.
+- [x] **Color Independence**: Every status and priority badge combines distinctive color styling with both an explicit text label and an accompanying SVG icon.
 - [x] **Keyboard Operation**: Tab navigation traverses interactive controls sequentially; Modals trap focus; `Esc` dismisses dialogs.
 - [x] **Form Accessibility**: All `<input>` and `<textarea>` elements have explicit `<label>` tags and `aria-describedby` linking to error messages.
 - [x] **Dynamic Updates**: Live regions (`aria-live="polite"`) announce dashboard refresh completions and ticket status updates.
 - [x] **Contrast Ratio**: Normal text meets minimum 4.5:1 contrast against background; large headers meet 3:1 contrast.
+- [x] **Visible Focus Ring**: All interactive elements feature a visible high-contrast focus ring: `outline: 2px solid #2d6a4f; outline-offset: 2px`.
