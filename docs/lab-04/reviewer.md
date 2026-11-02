@@ -38,7 +38,7 @@ A living document tracking the code review process. Reviews run in both directio
 | [#76](https://github.com/il0lk3/TokTickIT/pull/76) | Issue 8 — Dashboard APIs (Requester and IT Staff) | `feature/lab4-dashboard-api` | Approved & Merged |
 | [#77](https://github.com/il0lk3/TokTickIT/pull/77) | Issue 9 — Dashboard UIs, Navigation, and Drill-down | `feature/lab4-dashboard-ui` | Approved & Merged |
 | [#78](https://github.com/il0lk3/TokTickIT/pull/78) | Issue 10 — Regression Hardening, Polish & Evidence | `feature/lab4-regression-hardening` | Approved & Merged |
-| [#79](https://github.com/il0lk3/TokTickIT/pull/79) | Issue 11 — Release Evidence (Screenshots & Verification) | `feature/lab4-release-evidence` | Pending Review |
+| [#79](https://github.com/il0lk3/TokTickIT/pull/79) | Issue 11 — Visual, Responsive, and Accessibility Pass + Release Evidence | `feature/lab4-release-evidence` | Pending Review |
 
 > *Note: PR #67 was prematurely merged during automated script setup before peer review; base branch `lab4-staging` was immediately reset to `main`, and the official deliverable was submitted in PR #69 for review by @Achikan.*
 
@@ -273,7 +273,7 @@ git grep "UNSET" client/src/
 
 ---
 
-### PR #79 — Issue 11: Release Evidence (Screenshots & Verification)
+### PR #79 — Issue 11: Visual, Responsive, and Accessibility Pass + Release Evidence
 
 | Field | Detail |
 |---|---|

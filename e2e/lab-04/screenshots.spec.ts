@@ -50,10 +50,15 @@ async function showUrlBanner(page: Page) {
     if (!b) {
       b = document.createElement('div');
       b.id = 'e2e-url-banner';
-      b.style.cssText =
-        'position:fixed;bottom:0;left:0;right:0;z-index:999999;background:rgba(15,23,42,0.92);backdrop-filter:blur(4px);color:#38bdf8;padding:6px 16px;font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;border-top:2px solid #0284c7;box-shadow:0 -2px 10px rgba(0,0,0,0.3);';
-      document.body.appendChild(b);
+      const mainEl = document.getElementById('main-content') || document.body.firstChild;
+      if (mainEl && mainEl.parentNode) {
+        mainEl.parentNode.insertBefore(b, mainEl);
+      } else {
+        document.body.appendChild(b);
+      }
     }
+    b.style.cssText =
+      'position:relative;background:#0f172a;color:#38bdf8;padding:8px 24px;font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #0284c7;box-shadow:0 2px 8px rgba(0,0,0,0.15);width:100%;z-index:1000;';
     b.innerHTML = `<span><strong>URL:</strong> ${u}</span><span style="color:#94a3b8;font-size:11px">TokTickIT Evidence @2x</span>`;
   }, currentUrl);
 }
@@ -63,6 +68,20 @@ async function hideUrlBanner(page: Page) {
     const b = document.getElementById('e2e-url-banner');
     if (b) b.remove();
   });
+}
+
+async function waitForQueueLoaded(page: Page) {
+  await page.waitForFunction(() => {
+    return document.querySelectorAll('tbody tr, [data-testid="desktop-table"], .glass-panel').length > 0;
+  }, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(600);
+}
+
+async function waitForMyTicketsLoaded(page: Page) {
+  await page.waitForFunction(() => {
+    return document.querySelectorAll('tbody tr, .ticket-card, [data-testid="my-tickets-table"], .glass-panel').length > 0;
+  }, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(600);
 }
 
 async function disableStickyAndFloating(page: Page) {
@@ -306,6 +325,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     const unassignedCard = page.locator('a[aria-label*="Unassigned"]');
     await unassignedCard.click();
     await page.waitForURL(/\/queue\?ownerId=unassigned/, { timeout: 15000 });
+    await waitForQueueLoaded(page);
     await showUrlBanner(page);
     await captureFullPage(page, path.join(DIRS.staff, '11b-drilldown-unassigned-queue-desktop.png'));
     await hideUrlBanner(page);
@@ -319,6 +339,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     const meCard = page.locator('a[aria-label*="Assigned to Me"]');
     await meCard.click();
     await page.waitForURL(/\/queue\?ownerId=me/, { timeout: 15000 });
+    await waitForQueueLoaded(page);
     await showUrlBanner(page);
     await captureFullPage(page, path.join(DIRS.staff, '12b-drilldown-ownedbyme-queue-desktop.png'));
     await hideUrlBanner(page);
@@ -333,6 +354,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
       await hideUrlBanner(page);
       await resolvedCard.click();
       await page.waitForURL(/\/queue\?.*appearsResolved/, { timeout: 15000 });
+      await waitForQueueLoaded(page);
       await showUrlBanner(page);
       await captureFullPage(page, path.join(DIRS.staff, '13b-drilldown-resolved-queue-desktop.png'));
       await hideUrlBanner(page);
@@ -348,6 +370,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
       await hideUrlBanner(page);
       await updatedCard.click();
       await page.waitForURL(/\/queue\?.*active=true/, { timeout: 15000 });
+      await waitForQueueLoaded(page);
       await showUrlBanner(page);
       await captureFullPage(page, path.join(DIRS.staff, '14b-drilldown-updated24h-queue-desktop.png'));
       await hideUrlBanner(page);
@@ -363,6 +386,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
       await hideUrlBanner(page);
       await waitingChip.click();
       await page.waitForURL(/\/queue\?status=WaitingForRequester/, { timeout: 15000 });
+      await waitForQueueLoaded(page);
       await showUrlBanner(page);
       await captureFullPage(page, path.join(DIRS.staff, '15b-drilldown-status-chip-queue-desktop.png'));
       await hideUrlBanner(page);
@@ -378,6 +402,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
       await hideUrlBanner(page);
       await highChip.click();
       await page.waitForURL(/\/queue\?itPriority=HIGH/, { timeout: 15000 });
+      await waitForQueueLoaded(page);
       await showUrlBanner(page);
       await captureFullPage(page, path.join(DIRS.staff, '16b-drilldown-priority-chip-queue-desktop.png'));
       await hideUrlBanner(page);
@@ -638,6 +663,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await hideUrlBanner(page);
     await openCard.click();
     await page.waitForURL(/\/tickets\?status=New/, { timeout: 15000 });
+    await waitForMyTicketsLoaded(page);
     await showUrlBanner(page);
     await captureFullPage(page, path.join(DIRS.requester, '10b-drilldown-open-mytickets-desktop.png'));
     await hideUrlBanner(page);
@@ -650,6 +676,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await hideUrlBanner(page);
     await progressCard.click();
     await page.waitForURL(/\/tickets\?status=InProgress/, { timeout: 15000 });
+    await waitForMyTicketsLoaded(page);
     await showUrlBanner(page);
     await captureFullPage(page, path.join(DIRS.requester, '11b-drilldown-inprogress-mytickets-desktop.png'));
     await hideUrlBanner(page);
@@ -666,12 +693,14 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     if (waitingCardExists) {
       await waitingCard.click();
       await page.waitForURL(/\/tickets\?status=WaitingForRequester/, { timeout: 15000 });
+      await waitForMyTicketsLoaded(page);
       await showUrlBanner(page);
       await captureFullPage(page, path.join(DIRS.requester, '12b-drilldown-waiting-mytickets-desktop.png'));
       await hideUrlBanner(page);
     } else {
       // Fallback: navigate directly
       await page.goto('/tickets?status=WaitingForRequester');
+      await waitForMyTicketsLoaded(page);
       await showUrlBanner(page);
       await captureFullPage(page, path.join(DIRS.requester, '12b-drilldown-waiting-mytickets-desktop.png'));
       await hideUrlBanner(page);
@@ -685,6 +714,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await hideUrlBanner(page);
     await resolvedCard.click();
     await page.waitForURL(/\/tickets\?status=Resolved/, { timeout: 15000 });
+    await waitForMyTicketsLoaded(page);
     await showUrlBanner(page);
     await captureFullPage(page, path.join(DIRS.requester, '13b-drilldown-resolved-mytickets-desktop.png'));
     await hideUrlBanner(page);
@@ -697,6 +727,7 @@ test.describe('Lab 4 Evidence Screenshots @screenshots', () => {
     await hideUrlBanner(page);
     await closedCard.click();
     await page.waitForURL(/\/tickets\?status=Closed/, { timeout: 15000 });
+    await waitForMyTicketsLoaded(page);
     await showUrlBanner(page);
     await captureFullPage(page, path.join(DIRS.requester, '14b-drilldown-closed-mytickets-desktop.png'));
     await hideUrlBanner(page);
