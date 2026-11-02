@@ -3,35 +3,31 @@ import http from "http";
 import { app } from "./app.js";
 import { afterAll } from "vitest";
 
-// In test environment, bind a single persistent HTTP server for Supertest to prevent
-// ephemeral port cycling from colliding with local proxy ports (52000-65000).
-let testServer: http.Server | null = null;
+// In the test environment, Supertest's `request(app)` normally wraps the app in a
+// brand-new ephemeral HTTP server for EVERY request (http.createServer(app) +
+// listen(0)). Hundreds of short-lived ports can collide with other local
+// listeners (e.g. a local proxy daemon) and return foreign responses.
+// We bind ONE persistent server on 127.0.0.1 and hand it to Supertest only.
+// Explicit `app.listen()` calls made by individual tests are left untouched so
+// they cannot close the shared server.
 const origCreateServer = http.createServer;
 
-http.createServer = function (...args: any[]) {
-  if (args[0] === app) {
-    if (!testServer) {
-      testServer = origCreateServer.apply(http, args as any);
-      testServer.listen(0, "127.0.0.1");
-    }
+const testServer: http.Server = origCreateServer.call(http, app);
+await new Promise<void>((resolve, reject) => {
+  testServer.once("error", reject);
+  testServer.listen(0, "127.0.0.1", () => resolve());
+});
+
+http.createServer = function (this: unknown, ...args: any[]) {
+  const calledFromSupertest = new Error().stack?.includes("supertest") ?? false;
+  if (args[0] === app && calledFromSupertest && testServer.listening) {
     return testServer;
   }
   return origCreateServer.apply(http, args as any);
-};
-
-// Start and verify listening on 127.0.0.1 before tests begin
-if (!testServer) {
-  testServer = origCreateServer.call(http, app);
-  await new Promise<void>((resolve, reject) => {
-    testServer!.listen(0, "127.0.0.1", () => resolve());
-    testServer!.once("error", reject);
-  });
-}
+} as typeof http.createServer;
 
 afterAll(async () => {
-  if (testServer && testServer.listening) {
-    await new Promise<void>((resolve) => {
-      testServer!.close(() => resolve());
-    });
+  if (testServer.listening) {
+    await new Promise<void>((resolve) => testServer.close(() => resolve()));
   }
 });
