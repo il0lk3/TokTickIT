@@ -8,6 +8,7 @@ import path from "path";
 const router = Router();
 const prisma = getPrisma();
 import { authenticateToken, requireRole } from "../middleware/auth.js";
+import { actionsTakenRouter } from "./actions-taken.js";
 
 // Setup Multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -40,6 +41,10 @@ router.use(authenticateToken, (req: Request, res: Response, next: NextFunction) 
   res.locals.requesterId = res.locals.user.id;
   next();
 });
+
+// Actions Taken Sub-Router (Issue 3)
+router.use("/:id/actions-taken", actionsTakenRouter);
+
 
 // POST /api/tickets - Create a new ticket
 router.post("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) => {
@@ -320,6 +325,8 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
       categoryId, 
       requestedPriority, 
       status, 
+      active,
+      updatedSince,
       page = "1", 
       limit = "10", 
       sortBy = "createdAt", 
@@ -352,12 +359,38 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
       where.requestedPriority = String(requestedPriority) as import("@prisma/client").TicketPriority;
     }
     
+    const statusConditions: import("@prisma/client").Prisma.TicketWhereInput[] = [];
+
     if (status) {
       const validStatuses = ["New", "Open", "InProgress", "WaitingForRequester", "Resolved", "Closed", "Reopened", "Cancelled"];
-      if (!validStatuses.includes(String(status))) {
-        return res.status(400).json({ error: "Invalid status parameter" });
+      const statusList = String(status).split(",").map(s => s.trim()).filter(Boolean);
+      for (const s of statusList) {
+        if (!validStatuses.includes(s)) {
+          return res.status(400).json({ error: "Invalid status parameter" });
+        }
       }
-      where.currentStatus = String(status) as import("@prisma/client").TicketStatus;
+      if (statusList.length === 1) {
+        statusConditions.push({ currentStatus: statusList[0] as import("@prisma/client").TicketStatus });
+      } else if (statusList.length > 1) {
+        statusConditions.push({ currentStatus: { in: statusList as import("@prisma/client").TicketStatus[] } });
+      }
+    }
+
+    if (active === "true") {
+      statusConditions.push({ currentStatus: { notIn: ["Closed", "Cancelled"] as import("@prisma/client").TicketStatus[] } });
+    }
+
+    if (statusConditions.length === 1) {
+      where.currentStatus = statusConditions[0].currentStatus;
+    } else if (statusConditions.length > 1) {
+      where.AND = statusConditions;
+    }
+
+    if (updatedSince) {
+      const date = new Date(String(updatedSince));
+      if (!isNaN(date.getTime())) {
+        where.updatedAt = { gte: date };
+      }
     }
 
     // Ensure valid sort fields
@@ -374,7 +407,7 @@ router.get("/", requireRole(["REQUESTER"]), async (req: Request, res: Response) 
         where,
         skip,
         take: limitNum,
-        orderBy: { [sortField]: sortDir },
+        orderBy: [{ [sortField]: sortDir }, { id: 'desc' }],
         include: {
           category: true,
           relatedSystem: true
@@ -492,33 +525,56 @@ router.post("/:id/notes", async (req: Request, res: Response) => {
 router.patch("/:id/appears-resolved", async (req: Request, res: Response) => {
   const userId = res.locals.user.id;
   const userRole = res.locals.user.role;
+  
+  if (!/^\d+$/.test(req.params.id)) {
+    return res.status(400).json({ error: "Invalid ticket ID", code: "INVALID_ID_FORMAT" });
+  }
   const ticketId = parseInt(req.params.id, 10);
 
   try {
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
     if (!ticket) {
-      return res.status(404).json({ error: "Ticket not found" });
+      return res.status(404).json({ error: "Ticket not found", code: "TICKET_NOT_FOUND" });
     }
 
     if (userRole !== "REQUESTER" || ticket.requesterId !== userId) {
-      return res.status(403).json({ error: "Only the requester of this ticket can mark it as resolved" });
+      return res.status(403).json({ error: "Only the requester of this ticket can mark it as resolved", code: "FORBIDDEN" });
+    }
+
+    if (ticket.currentStatus === "New") {
+      return res.status(400).json({ error: "Cannot signal resolution on a new ticket", code: "CANNOT_SIGNAL_ON_NEW_TICKET" });
     }
 
     const terminalStatuses = ["Resolved", "Closed", "Cancelled"];
     if (terminalStatuses.includes(ticket.currentStatus)) {
-      return res.status(400).json({ error: "Ticket is already closed or resolved" });
+      return res.status(400).json({ error: "Ticket is already closed or resolved", code: "TICKET_ALREADY_RESOLVED_OR_CLOSED" });
     }
 
     if (ticket.appearsResolved) {
-      return res.status(400).json({ error: "Ticket is already marked as appears resolved" });
+      return res.status(400).json({ error: "Ticket is already marked as appears resolved", code: "TICKET_ALREADY_MARKED_RESOLVED" });
     }
 
-    // Update ticket and add a comment in a single transaction
+    // Atomic update to avoid race conditions with duplicate clicks
+    const updateResult = await prisma.ticket.updateMany({
+      where: {
+        id: ticketId,
+        appearsResolved: false,
+        currentStatus: { in: ["Open", "InProgress", "WaitingForRequester"] }
+      },
+      data: {
+        appearsResolved: true,
+        version: { increment: 1 },
+        updatedAt: new Date()
+      }
+    });
+
+    if (updateResult.count === 0) {
+      return res.status(400).json({ error: "Ticket is already marked as appears resolved", code: "TICKET_ALREADY_MARKED_RESOLVED" });
+    }
+
+    // Fetch updated record and create advisory comment
     const [updatedTicket, comment] = await prisma.$transaction([
-      prisma.ticket.update({
-        where: { id: ticketId },
-        data: { appearsResolved: true }
-      }),
+      prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } }),
       prisma.publicComment.create({
         data: {
           content: "The problem appears to be resolved.",
@@ -531,7 +587,7 @@ router.patch("/:id/appears-resolved", async (req: Request, res: Response) => {
 
     res.json({ ticket: updatedTicket, comment });
   } catch (error) {
-    console.error(error);
+    console.error("Error in appears-resolved:", error);
     res.status(500).json({ error: "Failed to mark ticket as appears resolved" });
   }
 });

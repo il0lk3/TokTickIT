@@ -6,6 +6,17 @@ import { useMediaQuery } from "../hooks/useMediaQuery";
 interface TicketQueueProps {
   categories: Category[];
   onSelectTicket: (id: number) => void;
+  status?: string;
+  ownerId?: string;
+  itPriority?: string;
+  requestedPriority?: string;
+  categoryId?: string;
+  search?: string;
+  active?: string;
+  appearsResolved?: string;
+  updatedSince?: string;
+  page?: number;
+  onFilterChange?: (updated: Record<string, string | number | undefined>) => void;
 }
 
 type QueueTicket = TicketResponse & { 
@@ -14,7 +25,21 @@ type QueueTicket = TicketResponse & {
   requester?: { id: number; name: string; email: string } | null;
 };
 
-export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
+export function TicketQueue({
+  categories,
+  onSelectTicket,
+  status: propStatus,
+  ownerId: propOwnerId,
+  itPriority: propItPriority,
+  requestedPriority: propRequestedPriority,
+  categoryId: propCategoryId,
+  search: propSearch,
+  active: propActive,
+  appearsResolved: propAppearsResolved,
+  updatedSince: propUpdatedSince,
+  page: propPage,
+  onFilterChange
+}: TicketQueueProps) {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<QueueTicket[]>([]);
   const [staffUsers, setStaffUsers] = useState<UserResponse[]>([]);
@@ -25,33 +50,63 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
-  // Filters
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [requestedPriority, setRequestedPriority] = useState("");
-  const [itPriority, setItPriority] = useState("");
-  const [status, setStatus] = useState("");
-  const [ownerId, setOwnerId] = useState("");
+  // Uncontrolled fallback state
+  const [localSearch, setLocalSearch] = useState(propSearch ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(propSearch ?? "");
+  const [localCategoryId, setLocalCategoryId] = useState(propCategoryId ?? "");
+  const [localRequestedPriority, setLocalRequestedPriority] = useState(propRequestedPriority ?? "");
+  const [localItPriority, setLocalItPriority] = useState(propItPriority ?? "");
+  const [localStatus, setLocalStatus] = useState(propStatus ?? "");
+  const [localOwnerId, setLocalOwnerId] = useState(propOwnerId ?? "");
+  const [localPage, setLocalPage] = useState(propPage ?? 1);
   
-  // Pagination
-  const [page, setPage] = useState(1);
+  // Effective filter values (Controlled if prop passed, otherwise fallback to local state)
+  const status = propStatus !== undefined ? propStatus : localStatus;
+  const ownerId = propOwnerId !== undefined ? propOwnerId : localOwnerId;
+  const itPriority = propItPriority !== undefined ? propItPriority : localItPriority;
+  const requestedPriority = propRequestedPriority !== undefined ? propRequestedPriority : localRequestedPriority;
+  const categoryId = propCategoryId !== undefined ? propCategoryId : localCategoryId;
+  const active = propActive !== undefined ? propActive : "";
+  const appearsResolved = propAppearsResolved !== undefined ? propAppearsResolved : "";
+  const updatedSince = propUpdatedSince !== undefined ? propUpdatedSince : "";
+  const page = propPage !== undefined ? propPage : localPage;
+  const search = localSearch;
+
+  // Pagination totals
   const [totalPages, setTotalPages] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
+
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const next = typeof updater === "function" ? updater(page) : updater;
+    setLocalPage(next);
+    if (onFilterChange) {
+      onFilterChange({ page: next });
+    }
+  };
+
+  // Sync external search prop (e.g. Back/Forward navigation)
+  useEffect(() => {
+    if (propSearch !== undefined && propSearch !== localSearch) {
+      setLocalSearch(propSearch);
+      setDebouncedSearch(propSearch);
+    }
+  }, [propSearch]);
 
   // Fetch IT staff for owner filter dropdown
   useEffect(() => {
     getItStaff().then(setStaffUsers).catch(console.error);
   }, []);
 
-  // Debounce search input
+  // Debounce search input and notify parent
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1); // Reset page on search change
-    }, 500);
+      setDebouncedSearch(localSearch);
+      if (onFilterChange && localSearch !== (propSearch ?? "")) {
+        onFilterChange({ search: localSearch, page: 1 });
+      }
+    }, 300);
     return () => clearTimeout(handler);
-  }, [search]);
+  }, [localSearch]);
 
   const fetchTickets = useCallback(async () => {
     if (!user) return;
@@ -66,6 +121,9 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
         itPriority,
         status,
         ownerId,
+        active: active === "true" ? "true" : undefined,
+        appearsResolved: appearsResolved === "true" ? "true" : undefined,
+        updatedSince: updatedSince || undefined,
         page,
         limit: 10,
         sortBy,
@@ -83,7 +141,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
     } finally {
       setLoading(false);
     }
-  }, [user, debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, page, sortBy, sortOrder]);
+  }, [user, debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, active, appearsResolved, updatedSince, page, sortBy, sortOrder]);
 
   const isMobile = useMediaQuery('(max-width: 991.98px)');
 
@@ -118,9 +176,13 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
     fetchTickets();
   }, [fetchTickets]);
 
-  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setter(e.target.value);
+  const handleFilterChange = (field: string, setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setter(val);
     setPage(1); // Reset to page 1 on filter change
+    if (onFilterChange) {
+      onFilterChange({ [field]: val, page: 1 });
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -159,14 +221,34 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
 
   const activeFilters = useMemo(() => {
     const filters = [];
-    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => setSearch("") });
-    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => setCategoryId("") });
-    if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => setRequestedPriority("") });
-    if (itPriority) filters.push({ label: `IT Priority: ${itPriority}`, clear: () => setItPriority("") });
-    if (status) filters.push({ label: `Status: ${status === 'InProgress' ? 'In Progress' : status}`, clear: () => setStatus("") });
-    if (ownerId) filters.push({ label: `Owner: ${ownerId === 'unassigned' ? 'Unassigned' : ownerMap[Number(ownerId)] || ownerId}`, clear: () => setOwnerId("") });
+    if (debouncedSearch) filters.push({ label: `Search: "${debouncedSearch}"`, clear: () => { setLocalSearch(""); setDebouncedSearch(""); onFilterChange?.({ search: "", page: 1 }); } });
+    if (categoryId) filters.push({ label: `Category: ${categoryMap[Number(categoryId)] || categoryId}`, clear: () => { setLocalCategoryId(""); onFilterChange?.({ categoryId: "", page: 1 }); } });
+    if (requestedPriority) filters.push({ label: `Req Priority: ${requestedPriority}`, clear: () => { setLocalRequestedPriority(""); onFilterChange?.({ requestedPriority: "", page: 1 }); } });
+    if (itPriority) {
+      filters.push({
+        label: `Priority: ${itPriority}`,
+        clear: () => { setLocalItPriority(""); onFilterChange?.({ itPriority: "", page: 1 }); }
+      });
+    }
+    if (status) {
+      const statusDisplay = status === 'InProgress' ? 'In Progress' : status;
+      filters.push({ label: `Status: ${statusDisplay}`, clear: () => { setLocalStatus(""); onFilterChange?.({ status: "", page: 1 }); } });
+    }
+    if (ownerId) {
+      const ownerLabel = ownerId === 'unassigned' ? 'Unassigned' : (ownerId === 'me' ? 'Assigned to Me' : (ownerMap[Number(ownerId)] || ownerId));
+      filters.push({ label: `Owner: ${ownerLabel}`, clear: () => { setLocalOwnerId(""); onFilterChange?.({ ownerId: "", page: 1 }); } });
+    }
+    if (active === "true") {
+      filters.push({ label: "Active Only", clear: () => onFilterChange?.({ active: "", page: 1 }) });
+    }
+    if (appearsResolved === "true") {
+      filters.push({ label: "Appears Resolved", clear: () => onFilterChange?.({ appearsResolved: "", page: 1 }) });
+    }
+    if (updatedSince) {
+      filters.push({ label: "Recently Updated", clear: () => onFilterChange?.({ updatedSince: "", page: 1 }) });
+    }
     return filters;
-  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, categoryMap, ownerMap]);
+  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, ownerId, active, appearsResolved, updatedSince, categoryMap, ownerMap, onFilterChange]);
 
   if (isForbidden) {
     return (
@@ -191,7 +273,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
           <p className="text-muted mb-0 small">Manage and triage all support requests</p>
         </div>
         <div className="d-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm border border-light">
-          <span className="fw-bold text-zen-primary">{totalTickets}</span>
+          <span data-testid="list-total-count" className="fw-bold text-zen-primary">{totalTickets}</span>
           <span className="text-muted small fw-medium">Total Tickets</span>
         </div>
       </div>
@@ -211,12 +293,12 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
                 className="form-control border-start-0 ps-0" 
                 placeholder="Search ticket number or summary..." 
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </div>
           </div>
           <div className="col-4 col-md-2">
-            <select className="form-select" value={status} onChange={handleFilterChange(setStatus)}>
+            <select className="form-select" aria-label="Status" value={status} onChange={handleFilterChange("status", setLocalStatus)}>
               <option value="">Status</option>
               <option value="New">New</option>
               <option value="Open">Open</option>
@@ -228,13 +310,13 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
             </select>
           </div>
           <div className="col-4 col-md-2">
-            <select className="form-select" value={categoryId} onChange={handleFilterChange(setCategoryId)}>
+            <select className="form-select" aria-label="Category" value={categoryId} onChange={handleFilterChange("categoryId", setLocalCategoryId)}>
               <option value="">Category</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={requestedPriority} onChange={handleFilterChange(setRequestedPriority)}>
+            <select className="form-select" aria-label="Requested Priority" value={requestedPriority} onChange={handleFilterChange("requestedPriority", setLocalRequestedPriority)}>
               <option value="">Req Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -242,7 +324,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
             </select>
           </div>
           <div className="col-6 col-md-2">
-            <select className="form-select" value={itPriority} onChange={handleFilterChange(setItPriority)}>
+            <select className="form-select" aria-label="IT Priority" value={itPriority} onChange={handleFilterChange("itPriority", setLocalItPriority)}>
               <option value="">IT Priority</option>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -250,7 +332,7 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
             </select>
           </div>
           <div className="col-6 col-md-3">
-            <select className="form-select" value={ownerId} onChange={handleFilterChange(setOwnerId)}>
+            <select className="form-select" aria-label="Owner" value={ownerId} onChange={handleFilterChange("ownerId", setLocalOwnerId)}>
               <option value="">Owner</option>
               <option value="unassigned">Unassigned</option>
               {staffUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -259,17 +341,27 @@ export function TicketQueue({ categories, onSelectTicket }: TicketQueueProps) {
         </div>
 
         {activeFilters.length > 0 && (
-          <div className="d-flex align-items-center gap-2 mt-3 flex-wrap">
+          <div data-testid="active-filter-chips" role="region" aria-label="Active filters" className="d-flex align-items-center gap-2 mt-3 flex-wrap">
             <span className="small text-muted me-1 fw-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Filters:</span>
             {activeFilters.map((f, i) => (
               <span key={i} className="badge bg-white text-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-sm fw-medium">
                 {f.label}
-                <button type="button" aria-label="Clear filter" className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
+                <button type="button" aria-label={`Remove filter: ${f.label}`} className="btn-close btn-close-sm" style={{ fontSize: '0.45rem' }} onClick={f.clear}></button>
               </span>
             ))}
             <button 
               className="btn btn-link btn-sm text-zen-primary text-decoration-none fw-medium ms-1" 
-              onClick={() => { setSearch(""); setCategoryId(""); setRequestedPriority(""); setItPriority(""); setStatus(""); setOwnerId(""); }}
+              onClick={() => {
+                setLocalSearch("");
+                setDebouncedSearch("");
+                setLocalCategoryId("");
+                setLocalRequestedPriority("");
+                setLocalItPriority("");
+                setLocalStatus("");
+                setLocalOwnerId("");
+                setPage(1);
+                onFilterChange?.({ search: "", categoryId: "", requestedPriority: "", itPriority: "", status: "", ownerId: "", active: "", appearsResolved: "", updatedSince: "", page: 1 });
+              }}
             >
               Clear All
             </button>

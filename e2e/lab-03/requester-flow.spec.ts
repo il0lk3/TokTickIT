@@ -15,14 +15,14 @@ test.describe('E2E-05: Requester Flow (Lab 3)', () => {
     await page.click('button:has-text("Sign In")');
 
     // Verify successful login to dashboard
-    await expect(page.getByRole('heading', { name: 'My Tickets' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
 
     // 2. Create Ticket
     if (await page.locator('.navbar-toggler').isVisible()) {
       await page.locator('.navbar-toggler').click();
       await page.waitForTimeout(300); // wait for collapse animation
     }
-    await page.getByRole('button', { name: 'Create Ticket' }).click();
+    await page.getByRole('link', { name: 'Create Ticket' }).first().click();
     
     const summaryText = `E2E Network Issue ${Date.now()}`;
     await page.getByPlaceholder('Brief summary of the issue').fill(summaryText);
@@ -42,7 +42,7 @@ test.describe('E2E-05: Requester Flow (Lab 3)', () => {
         await page.waitForTimeout(300); // wait for collapse animation
       }
     }
-    await page.getByRole('button', { name: 'My Tickets' }).click();
+    await page.getByRole('link', { name: 'My Tickets' }).first().click();
     
     // Close the navbar on mobile so it doesn't cover the ticket list
     if (await page.locator('.navbar-toggler').isVisible()) {
@@ -77,12 +77,22 @@ test.describe('E2E-05: Requester Flow (Lab 3)', () => {
     await expect(page.getByText('This is a test public comment')).toBeVisible();
 
     // 5. Test "Problem Appears Resolved" feature
+    // Under Sprint 4 rules, problem can be signaled once work begins (status != New)
+    await prisma.ticket.updateMany({
+      where: { summary: summaryText },
+      data: { currentStatus: 'InProgress' }
+    });
+    await page.reload();
+
     // Button should be visible
     const appearsResolvedBtn = page.getByRole('button', { name: 'Problem Appears Resolved' });
     await expect(appearsResolvedBtn).toBeVisible();
 
-    // Click it
+    // Click it and confirm via modal (introduced in Lab 4 Issue 7)
     await appearsResolvedBtn.click();
+    const confirmModal = page.getByRole('dialog', { name: /Confirm Resolution Signal/i });
+    await expect(confirmModal).toBeVisible();
+    await confirmModal.getByRole('button', { name: 'Confirm' }).click();
 
     // Verify comment is posted automatically
     await expect(page.getByText('The problem appears to be resolved.')).toBeVisible();

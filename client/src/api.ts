@@ -128,7 +128,9 @@ export interface TicketResponse {
   appearsResolved: boolean;
   requestedPriority: string;
   itPriority: string;
+  version?: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export async function createTicket(payload: CreateTicketPayload): Promise<TicketResponse> {
@@ -145,7 +147,7 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
   return res.json();
 }
 
-export async function updateTicket(ticketId: number, updates: any, isStaff?: boolean): Promise<TicketResponse> {
+export async function updateTicket(ticketId: number, updates: any, isStaff?: boolean): Promise<TicketDetailResponse> {
   const url = isStaff ? `${API_URL}/api/staff/tickets/${ticketId}` : `${API_URL}/api/tickets/${ticketId}`;
   const res = await fetch(url, {
     method: "PATCH",
@@ -155,7 +157,16 @@ export async function updateTicket(ticketId: number, updates: any, isStaff?: boo
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || "Failed to update ticket");
+    throw new ApiError(
+      errorData.error || "Failed to update ticket",
+      res.status,
+      errorData.code,
+      errorData.fields,
+      errorData.details,
+      errorData.currentStatus,
+      errorData.currentVersion,
+      errorData.updatedAt
+    );
   }
   return res.json();
 }
@@ -171,13 +182,26 @@ export interface TicketListResponse {
 }
 
 export async function getTickets(
-  params: { search?: string, categoryId?: string, requestedPriority?: string, status?: string, page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc' }
+  params: {
+    search?: string;
+    categoryId?: string;
+    requestedPriority?: string;
+    status?: string;
+    active?: boolean | string;
+    updatedSince?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }
 ): Promise<TicketListResponse> {
   const query = new URLSearchParams();
   if (params.search) query.append("search", params.search);
   if (params.categoryId) query.append("categoryId", params.categoryId);
   if (params.requestedPriority) query.append("requestedPriority", params.requestedPriority);
   if (params.status) query.append("status", params.status);
+  if (params.active !== undefined && params.active !== null) query.append("active", String(params.active));
+  if (params.updatedSince) query.append("updatedSince", params.updatedSince);
   if (params.page) query.append("page", params.page.toString());
   if (params.limit) query.append("limit", params.limit.toString());
   if (params.sortBy) query.append("sortBy", params.sortBy);
@@ -200,6 +224,9 @@ export async function getStaffTickets(params: {
   itPriority?: string;
   categoryId?: number | string;
   ownerId?: string | number;
+  active?: boolean | string;
+  appearsResolved?: boolean | string;
+  updatedSince?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }): Promise<TicketListResponse> {
@@ -212,6 +239,9 @@ export async function getStaffTickets(params: {
   if (params.itPriority) query.append("itPriority", params.itPriority);
   if (params.categoryId) query.append("categoryId", params.categoryId.toString());
   if (params.ownerId) query.append("ownerId", params.ownerId.toString());
+  if (params.active !== undefined && params.active !== null) query.append("active", String(params.active));
+  if (params.appearsResolved !== undefined && params.appearsResolved !== null) query.append("appearsResolved", String(params.appearsResolved));
+  if (params.updatedSince) query.append("updatedSince", params.updatedSince);
   if (params.sortBy) query.append("sortBy", params.sortBy);
   if (params.sortOrder) query.append("sortOrder", params.sortOrder);
 
@@ -253,18 +283,27 @@ export interface InternalNote {
   };
 }
 
+export interface ResolutionGateInfo {
+  met: boolean;
+  hasActiveOwner: boolean;
+  validActionCount: number;
+  missing: string[];
+}
+
 export interface TicketDetailResponse extends TicketResponse {
   description: string;
   category: Category;
   relatedSystem: RelatedSystem;
   requester: Requester;
-  owner?: { id: number, name: string, email: string } | null;
+  owner?: { id: number, name: string, email: string, isActive?: boolean, role?: string } | null;
   ownerId?: number | null;
   attachments: Attachment[];
   publicComments: PublicComment[];
   internalNotes?: InternalNote[]; // Only if Staff
   ownerName?: string;
   resolutionSummary?: string;
+  allowedTransitions?: string[];
+  resolutionGate?: ResolutionGateInfo;
 }
 
 export async function getTicketDetail(id: number, isStaff?: boolean): Promise<TicketDetailResponse> {
@@ -353,7 +392,13 @@ export async function markAppearsResolved(ticketId: number): Promise<{ ticket: T
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || "Failed to mark as resolved");
+    throw new ApiError(
+      errorData.error || "Failed to mark as resolved",
+      res.status,
+      errorData.code,
+      errorData.fields,
+      errorData.details
+    );
   }
   return res.json();
 }
@@ -427,3 +472,208 @@ export async function setInitialPassword(id: number, newInitialPassword: string)
   }
   return res.json();
 }
+
+// --- LAB 4: ACTIONS TAKEN API ---
+export type UserRole = "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR";
+
+export interface ActionTakenPerformer {
+  id: number;
+  name: string;
+  role: UserRole;
+}
+
+export interface ActionTaken {
+  id: number;
+  ticketId: number;
+  actionAt: string;
+  description: string;
+  result: string;
+  performedById: number;
+  performedBy: ActionTakenPerformer;
+  followUpRequired: boolean;
+  followUpNote: string | null;
+  attachmentNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateActionTakenPayload {
+  actionAt?: string;
+  description: string;
+  result: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+}
+
+export interface UpdateActionTakenPayload {
+  description?: string;
+  result?: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+}
+
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  fields?: Record<string, string>;
+  details?: string[];
+  currentStatus?: string;
+  currentVersion?: number;
+  updatedAt?: string;
+
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    fields?: Record<string, string>,
+    details?: string[],
+    currentStatus?: string,
+    currentVersion?: number,
+    updatedAt?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.fields = fields;
+    this.details = details;
+    this.currentStatus = currentStatus;
+    this.currentVersion = currentVersion;
+    this.updatedAt = updatedAt;
+  }
+}
+
+export async function getActionsTaken(ticketId: number): Promise<ActionTaken[]> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions-taken`, {
+    method: "GET",
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to fetch actions taken", res.status, errorData.code, errorData.fields);
+  }
+  return res.json();
+}
+
+export async function createActionTaken(ticketId: number, payload: CreateActionTakenPayload): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions-taken`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to create action taken", res.status, errorData.code, errorData.fields);
+  }
+  return res.json();
+}
+
+export async function updateActionTaken(ticketId: number, actionId: number, payload: UpdateActionTakenPayload): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions-taken/${actionId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include"
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to update action taken", res.status, errorData.code, errorData.fields);
+  }
+  return res.json();
+}
+
+// --- DASHBOARD API ---
+export interface MetricDrillDown {
+  path: string;
+  query: Record<string, string>;
+}
+
+export interface DashboardMetric {
+  count: number;
+  drillDown: MetricDrillDown;
+}
+
+export interface DashboardRecentTicket {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  currentStatus: string;
+  appearsResolved?: boolean;
+  itPriority?: string;
+  updatedAt: string;
+  category: { id: number; name: string };
+  owner?: { id: number; name: string } | null;
+  requester?: { id: number; name: string } | null;
+}
+
+export interface RequesterDashboardResponse {
+  metrics: {
+    openRequests: DashboardMetric;
+    inProgress: DashboardMetric;
+    waitingForRequester: DashboardMetric;
+    recentlyResolved: DashboardMetric;
+    closed: DashboardMetric;
+  };
+  attentionTickets: DashboardRecentTicket[];
+  recentTickets: DashboardRecentTicket[];
+  generatedAt: string;
+}
+
+export interface AdminUserCounts {
+  total: number;
+  active?: number;
+  requesters: number;
+  staff: number;
+  admins: number;
+  unassignedStaff?: number;
+}
+
+export interface StaffDashboardResponse {
+  metrics: {
+    unassigned: DashboardMetric;
+    ownedByMe: DashboardMetric;
+    appearsResolved: DashboardMetric;
+    recentlyUpdated: DashboardMetric;
+    byStatus: Record<string, number>;
+    byPriority: {
+      LOW: number;
+      MEDIUM: number;
+      HIGH: number;
+    };
+    adminUserCounts?: AdminUserCounts | null;
+  };
+  myRecentTickets: DashboardRecentTicket[];
+  urgentTickets: DashboardRecentTicket[];
+  generatedAt: string;
+}
+
+export async function getRequesterDashboard(signal?: AbortSignal): Promise<RequesterDashboardResponse> {
+  const res = await fetch(`${API_URL}/api/dashboard/requester`, {
+    method: "GET",
+    credentials: "include",
+    signal
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to fetch requester dashboard", res.status, errorData.code);
+  }
+  return res.json();
+}
+
+export async function getStaffDashboard(signal?: AbortSignal): Promise<StaffDashboardResponse> {
+  const res = await fetch(`${API_URL}/api/dashboard/staff`, {
+    method: "GET",
+    credentials: "include",
+    signal
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new ApiError(errorData.error || "Failed to fetch staff dashboard", res.status, errorData.code);
+  }
+  return res.json();
+}
+
+

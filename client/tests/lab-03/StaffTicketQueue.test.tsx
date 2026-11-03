@@ -152,4 +152,57 @@ describe("TicketQueue Component", () => {
       expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
     });
   });
+
+  it("renders valid IT Priority filter options (LOW, MEDIUM, HIGH) without UNSET dead control", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (url.includes("/api/auth/me") || url.includes("/api/auth/session")) {
+        return {
+          ok: true,
+          json: async () => ({
+            id: 1, name: "Test User", email: "test@example.com", role: "IT_STAFF", isActive: true, requiresPasswordChange: false
+          })
+        };
+      }
+      if (url.includes("/api/it-staff")) {
+        return {
+          ok: true,
+          json: async () => ([
+            { id: 1, name: "IT Staff 1", email: "staff1@example.com", role: "IT_STAFF" }
+          ])
+        };
+      }
+      if (url.includes("/api/staff/tickets")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [],
+            meta: { total: 0, page: 1, limit: 10, totalPages: 0 }
+          })
+        };
+      }
+      return { ok: true, json: async () => ({}) };
+    }));
+
+    renderWithAuth(<TicketQueue categories={mockCategories} onSelectTicket={vi.fn()} />);
+
+    await waitFor(() => {
+      const itPrioritySelect = screen.getByLabelText(/IT Priority/i);
+      expect(itPrioritySelect).toBeInTheDocument();
+
+      const options = Array.from(itPrioritySelect.querySelectorAll("option")).map((o) => ({
+        value: o.getAttribute("value"),
+        text: o.textContent?.trim()
+      }));
+
+      expect(options).toEqual([
+        { value: "", text: "IT Priority" },
+        { value: "LOW", text: "Low" },
+        { value: "MEDIUM", text: "Medium" },
+        { value: "HIGH", text: "High" }
+      ]);
+
+      expect(options.some((o) => o.value === "UNSET" || o.text === "Unset")).toBe(false);
+    });
+  });
 });
+

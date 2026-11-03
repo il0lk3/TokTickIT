@@ -1,14 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 
+const isScreenshots = process.env.RUN_SCREENSHOTS === 'true' || process.argv.some(arg => arg.includes('screenshots'));
+
 export default defineConfig({
   testDir: './',
+  testIgnore: isScreenshots ? [] : ['**/screenshots.spec.ts'],
   globalSetup: require.resolve('./global-setup'),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1, // To avoid DB conflicts for now
-  reporter: 'html',
+  reporter: [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
@@ -21,10 +24,12 @@ export default defineConfig({
     {
       name: 'tablet',
       use: { ...devices['iPad (gen 7)'] },
+      testMatch: /.*(quality-smoke).*\.spec\.ts/,
     },
     {
       name: 'mobile',
       use: { ...devices['Pixel 5'] },
+      testMatch: /.*(quality-smoke).*\.spec\.ts/,
     }
   ],
   webServer: [

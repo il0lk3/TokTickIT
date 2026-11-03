@@ -26,6 +26,7 @@ model User {
   ownedTickets       Ticket[]         @relation("TicketOwner")
   publicComments     PublicComment[]
   internalNotes      InternalNote[]
+  performedActions   ActionTaken[]    @relation("ActionPerformer")
 }
 
 // 2. Reference Data: Ticket Category
@@ -80,6 +81,7 @@ model Ticket {
   itPriority        TicketPriority @default(LOW)
   currentStatus     TicketStatus   @default(New)
   appearsResolved   Boolean        @default(false)
+  version           Int            @default(1)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -97,12 +99,15 @@ model Ticket {
   attachments       Attachment[]
   publicComments    PublicComment[]
   internalNotes     InternalNote[]
+  actionsTaken      ActionTaken[]
 
   @@index([requesterId])
   @@index([ownerId])
   @@index([categoryId])
   @@index([relatedSystemId])
   @@index([createdAt])
+  @@index([currentStatus])
+  @@index([updatedAt])
 }
 
 // 5. Attachment Model (Soft Removal enabled)
@@ -156,3 +161,25 @@ model InternalNote {
   @@index([authorId])
   @@index([ticketId])
 }
+
+// 8. Action Taken Model
+model ActionTaken {
+  id               Int      @id @default(autoincrement())
+  ticketId         Int
+  actionAt         DateTime @default(now())
+  description      String   @db.VarChar(1000)
+  result           String   @db.VarChar(1000)
+  performedById    Int
+  followUpRequired Boolean  @default(false)
+  followUpNote     String?  @db.VarChar(1000)
+  attachmentNotes  String?  @db.VarChar(500)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  performedBy      User     @relation("ActionPerformer", fields: [performedById], references: [id])
+
+  @@index([ticketId, actionAt])
+  @@index([performedById])
+}
+
