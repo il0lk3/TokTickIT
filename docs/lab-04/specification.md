@@ -126,7 +126,7 @@ The UI extends the established **Zen Green** design language. Complete wireframe
   - Top navigation updated with a role-aware **Dashboard** link as real anchor tags (`<NavLink>` / `<Link>`).
   - Active-page state is styled with high-contrast indicator and semantic `aria-current="page"`.
   - Requesters navigate between `Dashboard`, `My Tickets`, and `Create Ticket`.
-  - IT Staff navigate between `Dashboard`, `Ticket Queue`, and `Create Ticket`.
+  - IT Staff navigate between `Dashboard` and `Ticket Queue` in the top navigation bar (with Quick Action shortcuts on the Dashboard).
   - Administrators navigate between `Dashboard`, `Ticket Queue`, and `User Management`.
 
 ### 6.1 Client Route Map
@@ -137,22 +137,22 @@ The UI extends the established **Zen Green** design language. Complete wireframe
 | `/` | Authenticated | Redirect | Redirects to role default landing route (`/dashboard`) |
 | `/dashboard` | Requester, Staff, Admin | `RequesterDashboard` / `StaffDashboard` | Role-aware operational landing screen with summary metrics |
 | `/tickets` | Requester | `MyTickets` | Full searchable/paginated list; supports URL query filters |
-| `/tickets/new` | Requester, Staff, Admin | `CreateTicket` | Create service request; IT Staff can log tickets on behalf of users |
+| `/tickets/new` | Requester | `CreateTicket` | Create service request (role-guarded to match Lab 3 `POST /api/tickets`) |
 | `/tickets/:ticketId` | Requester (own), Staff, Admin | `TicketDetail` | Deep-linkable ticket view; preserves filter state on Back |
-| `/queue` | Staff, Admin | `TicketQueue` | IT Staff operational queue; supports `status`, `owner`, etc. query filters |
+| `/queue` | Staff, Admin | `TicketQueue` | IT Staff operational queue; supports `status`, `ownerId`, `active`, etc. query filters |
 | `/admin/users` | Administrator | `UserManagement` | Admin user CRUD and account management |
 | `*` | All | `NotFound` | Zen Green 404 page |
 - **IT Staff Dashboard (`/dashboard`)**:
   - Operational banner welcoming the authenticated staff member with a quick **Refresh** button.
-  - Operational metric cards: `Unassigned`, `Owned By Me`, `Appears Resolved`, `Recently Updated`, along with normalized breakdowns by status and priority.
+  - Operational metric cards: **Unassigned** (`unassigned`), **Assigned to Me** (`ownedByMe`), **Appears Resolved** (`appearsResolved`), and **Updated in 24h** (`recentlyUpdated`), along with normalized breakdowns by status (`byStatus`) and priority (`byPriority`).
   - Each card features an accessible drill-down click action linking to the Ticket Queue (`/queue`) filtered by that specific criterion.
-  - "My Recent Tickets" (staff owned active tickets) and "Urgent Tickets" (HIGH priority active tickets) tables with status badges, date, and detail links.
-  - Quick Action shortcuts: `+ Create Ticket`, `Search Tickets`, `My Queue` (links to `/queue?ownerId=me`).
+  - "My Recent Tickets" (`myRecentTickets`, staff owned active tickets) and "Urgent Active Tickets" (`urgentTickets`, HIGH priority active tickets) tables with status badges, date, and detail links.
+  - Quick Action shortcuts: `+ Create Ticket`, `Search Tickets` (`/queue`), and `My Queue` (`/queue?ownerId=me&active=true`).
 - **Requester Dashboard (`/dashboard`)**:
   - Concise personal overview summarizing tickets owned by the authenticated Requester.
-  - Metric cards: `Open Requests`, `In Progress`, `Waiting for Requester`, `Recently Resolved`, `Closed` (each with View all drill-down to `/tickets?status=...`).
-  - "Attention Tickets" (tickets in WaitingForRequester status) and "Recent Tickets" summary list with status badges and timestamps.
-  - Quick Action buttons: `+ Create Ticket` and `View My Tickets` (links to `/tickets`).
+  - Metric cards: **Open Requests** (`openRequests`), **In Progress** (`inProgress`), **Waiting for You** (`waitingForRequester`), **Recently Resolved** (`recentlyResolved`), and **Closed** (`closed`), each with drill-down to `/tickets?status=...`.
+  - "Attention Needed" (`attentionTickets`, tickets in `WaitingForRequester` status) and "Recent Activity" (`recentTickets`) summary lists with status badges and timestamps.
+  - Quick Action buttons: `+ Create Ticket` (`/tickets/new`) and `View My Tickets` (`/tickets`).
 - **Actions Taken on Ticket Detail (`/tickets/:ticketId`)**:
   - Dedicated "Actions Taken" card/section positioned below Ticket Description and above Comments/Notes.
   - Displays a structured table on desktop and stacked card view on mobile.
@@ -259,7 +259,10 @@ The API contract is formally documented in `docs/lab-04/api-spec.md`. Key endpoi
 | `GET` | `/api/tickets/:id/actions-taken` | Requester (own), Staff, Admin | Retrieve chronological list of actions taken for a ticket |
 | `POST` | `/api/tickets/:id/actions-taken` | Staff, Admin | Create a new Action Taken record (actor = session user) |
 | `PATCH` | `/api/tickets/:id/actions-taken/:actionId` | Staff, Admin | Update an existing Action Taken record |
+| `GET` | `/api/staff/tickets/:id` | Staff, Admin | Retrieve ticket detail enriched with `allowedTransitions` and `resolutionGate` |
 | `PATCH` | `/api/staff/tickets/:id` | Staff, Admin | Update ticket owner, priority, status with version check & resolution gate |
+| `POST` | `/api/staff/tickets/:id/claim` | Staff (`IT_STAFF`) | Claim ticket ownership, auto-open if `New`, and increment `version` |
+| `PATCH` | `/api/tickets/:id/appears-resolved` | Requester (own) | Set advisory `appearsResolved = true` and post audit comment |
 | `GET` | `/api/dashboard/requester` | Requester | Retrieve compact operational metrics for authenticated requester |
 | `GET` | `/api/dashboard/staff` | Staff, Admin | Retrieve operational queue metrics and activity counts |
 
@@ -322,8 +325,8 @@ A feature or pull request in Sprint 4 is considered **Done** only when meeting a
 - **Dashboard Timezone and Date Boundaries**:
   - In accordance with API Spec Section 5, timestamps and rolling interval boundaries (`recentlyResolved` within 7 rolling days, `recentlyUpdated` within 24 rolling hours) operate on deterministic UTC millisecond intervals (`Date.now() - durationMs`), ensuring timezone-invariant accuracy and repeatable test execution.
 - **Decision on IT Staff "Create Ticket" Capability**:
-  - In accordance with Lab 3 backend middleware (`requireRole(["REQUESTER"])` on `POST /api/tickets`), `/tickets/new` is role-guarded strictly to `REQUESTER`. IT Staff and Administrators attempting to navigate to `/tickets/new` are shown the in-place 403 Forbidden screen, preventing client-side submission of calls that the backend rejects. IT Staff and Administrators manage tickets via the operational Ticket Queue (`/queue`) and Ticket Detail (`/tickets/:id`).
+  - While the conceptual domain matrix (Section 5.1) notes that service desks permit staff to log tickets on behalf of users, the implementation preserves Lab 3's backend middleware (`requireRole(["REQUESTER"])` on `POST /api/tickets`) for strict cross-sprint regression compatibility. Accordingly, `/tickets/new` is role-guarded to `REQUESTER` in `App.tsx`, and IT Staff or Administrators navigating to `/tickets/new` are shown the in-place 403 Forbidden screen while managing operational tickets via `/queue` and `/tickets/:id`.
 - **Decision on Requester Default Landing Screen & Navigation**:
-  - In accordance with Handout Section 4.6 and Section 8.2, the default landing route after login for all roles is `/dashboard`. For Requesters, `/dashboard` displays high-level operational counts (`openRequests`, `inProgress`, `recentlyResolved`, `closed`), recent tickets, and quick action shortcuts. The global navigation bar provides distinct links for both `Dashboard` and `My Tickets` (`/tickets`), ensuring Requesters can effortlessly switch between executive summaries and the full searchable ticket archive without UI ambiguity.
+  - In accordance with Handout Section 4.6 and Section 8.2, the default landing route after login for all roles is `/dashboard`. For Requesters, `/dashboard` displays high-level operational counts (`openRequests`, `inProgress`, `waitingForRequester`, `recentlyResolved`, `closed`), attention tickets, recent tickets, and quick action shortcuts. The global navigation bar provides distinct links for both `Dashboard` and `My Tickets` (`/tickets`), ensuring Requesters can effortlessly switch between executive summaries and the full searchable ticket archive without UI ambiguity.
 - **Administrator Extended Operational Access**:
   - Administrators can access the Dashboard (`/dashboard`), Ticket Queue (`/queue`), Ticket Detail (`/tickets/:ticketId`), and User Management (`/admin/users`), satisfying Handout Section 4.3 ("Administrator: Perform IT Staff behavior and retain administrative access needed for support and testing").

@@ -153,6 +153,9 @@ npm run test
 # Or target Lab 4 E2E tests specifically (38 tests)
 npm test -- lab-04
 
+# Regenerate Lab 4 Release Evidence Screenshots (@screenshots — 5 suites, 161 @2x PNGs)
+npm run test:screenshots
+
 # Verify requirements traceability against codebase
 cd ..
 node scripts/verify-traceability.js
@@ -177,62 +180,60 @@ Follow these steps to demonstrate the end-to-end multi-role capabilities of TokT
 ### 1. Role: Requester (`e2e.requester@example.com` / `Password123!`)
 1. **Sign In**: Navigate to `http://localhost:5173/login`. Enter email and password. Click **Sign In**.
 2. **Requester Dashboard**: The landing view displays live personal metrics:
-   - Metric cards: **Open Requests**, **In Progress**, **Waiting for Requester**, **Recently Resolved**, and **Closed** (all 5 cards feature 1-click drill-downs to `/tickets?status=...`).
-   - Attention Needed panel for tickets requiring user response.
-   - Recent Tickets table sorted chronologically.
+   - Metric cards: **Open Requests**, **In Progress**, **Waiting for You** (`waitingForRequester`), **Recently Resolved**, and **Closed** (all 5 cards feature 1-click drill-downs to `/tickets?status=...`).
+   - **Attention Needed** panel for tickets in `WaitingForRequester` status requiring user response.
+   - **Recent Activity** list sorted chronologically (`updatedAt DESC, id DESC`).
 3. **Create Ticket**:
-   - Click **+ New Ticket** (or Quick Action on dashboard) -> navigates to `/tickets/new`.
-   - Select Category (e.g. *Hardware*), Priority (*High*), enter Title and Description.
-   - Attach a file (e.g. `.png` screenshot). Click **Submit Ticket**.
+   - Click **Create Ticket** in the navbar (or Quick Action on dashboard) -> navigates to `/tickets/new`.
+   - Select Category (e.g. *Hardware*), Related System, Priority (*HIGH*), enter Summary and Description.
+   - Click **Submit Ticket** (and upload a `.png` attachment on the Ticket Detail **Attachments** tab).
 4. **Ticket Detail & Conversation**:
-   - Automatically redirects to `/tickets/:id`.
-   - Open **Attachments** tab to inspect or preview the uploaded attachment.
-   - Open **Conversation** tab and post a public comment. Note: Internal Notes are completely hidden from Requesters.
+   - Opens `/tickets/:id`.
+   - Open **Attachments** tab to upload, inspect, or remove attachments.
+   - Open **Public Comments** tab and post a public comment. Note: the **Internal Notes** tab is completely hidden from Requesters.
 5. **Actions Taken (Read-Only)**:
-   - Scroll to the **Actions Taken** section. Note that Requesters can see action history in read-only mode (no creation or editing controls).
+   - Scroll to the **Actions Taken** section. Note that Requesters can view the complete action history (Date/Time, Description, Result, Performed By, Follow-up, Attachment Notes) in read-only mode with zero create/edit controls.
 6. **Advisory Resolution Signal**:
    - When the ticket is in an active state (*Open*, *In Progress*, or *Waiting for Requester*), click **Problem Appears Resolved**.
-   - Confirm in the accessible modal. An advisory banner is published for IT Staff, and a public confirmation comment is appended.
-7. **Sign Out**: Click user menu in navbar and select **Sign Out**.
+   - Confirm in the accessible modal. The ticket's `appearsResolved` flag is set, an advisory banner is published for IT Staff, and the public comment `"The problem appears to be resolved."` is automatically appended.
+7. **Logout**: Click the **Logout** button in the top navigation bar.
 
 ### 2. Role: IT Staff (`e2e.staff@example.com` / `Password123!`)
 1. **Sign In**: Navigate to `http://localhost:5173/login`. Enter email and password. Click **Sign In**.
 2. **Staff Operational Dashboard**:
-   - View operational metric cards: **Unassigned** (unclaimed tickets), **Assigned to Me** (tickets owned by current staff), **Appears Resolved** (tickets with requester resolution advisory signal), and **Updated in 24h** (activity in last 24 rolling hours).
-   - View Priority Distribution chips (*High*, *Medium*, *Low*), Status breakdown chips, and Urgent Tickets table.
+   - View operational metric cards: **Unassigned** (unclaimed active tickets), **Assigned to Me** (active tickets owned by current staff), **Appears Resolved** (active tickets with requester advisory signal), and **Updated in 24h** (active tickets updated in last 24 rolling hours).
+   - View **Queue Status Breakdown** chips (all 8 statuses), **Priority Overview** chips (*Low*, *Medium*, *High*), **Urgent Active Tickets**, and **My Recent Tickets** tables.
 3. **Drill-down to Queue**:
-   - Click any metric card (e.g. **Unassigned**) or status chip (e.g. **In Progress**) or **High** priority chip.
-   - Navigates to `/queue?ownerId=unassigned` or `/queue?status=InProgress` or `/queue?itPriority=HIGH` with 1-to-1 matching ticket counts.
-   - Notice the active filter chips above the queue. Click the '×' button on a chip to remove that filter in-place, or click 'Clear all filters'.
+   - Click any metric card (e.g. **Unassigned**), status chip (e.g. **In Progress**), or **High** priority chip.
+   - Navigates to `/queue?ownerId=unassigned&active=true`, `/queue?status=InProgress&active=true`, or `/queue?itPriority=HIGH&active=true` with strict 1-to-1 matching ticket counts (`meta.total === card.count`).
+   - Notice the **Active Filter Chips** bar above the queue. Click the remove (`×`) button on a chip to clear that single filter in-place, or click **Clear all**.
 4. **Open Ticket & Advisory Banner**:
-   - Select an assigned or active ticket to open `/tickets/:id`.
-   - If the Requester signaled resolution, notice the amber Requester Advisory Banner at the top with a **Review Actions Taken** shortcut button.
+   - Select an active ticket to open `/tickets/:id`.
+   - If the Requester signaled resolution, notice the green Requester Advisory Banner (`#requester-advisory-banner`) with a **Review Actions Taken** shortcut button.
 5. **Log Action Taken**:
-   - Scroll to **Actions Taken** section (or click shortcut in banner).
-   - Click **+ Log Action Taken** (or **Assign Owner** shortcut if unassigned).
-   - Fill in Description, Action Category, Outcome, and optional Follow-up Date/Note. Click **Save Action**.
-   - The action is immediately appended to the audit timeline. Use inline edit to update the action outcome if needed.
+   - Scroll to the **Actions Taken** section (or click the shortcut button).
+   - Click **+ Log Action Taken**.
+   - Fill in **Action Date/Time**, **Description**, **Result**, optional **Follow-Up Required** (which reveals the mandatory **Follow-up Note** input), and optional **Attachment Notes**. Click **Log Action**.
+   - The action is immediately appended to the chronological table, and the parent ticket's Resolution Gate status updates automatically. Click **Edit** on any row to test inline editing and **Save Changes** / **Cancel**.
 6. **Resolution Gate & State Transitions**:
-   - Attempt to resolve a ticket without owner or without actions taken: the Resolution Gate displays clear inline validation blocks.
-   - Assign Owner to self, log required actions, then click **Resolve Ticket**.
-   - Enter Resolution Summary and select Root Cause Category in the Resolution Modal. Click **Confirm Resolution**.
-   - The ticket transitions to `RESOLVED`, locks public comments, and increments the ticket version.
+   - On a ticket missing an active IT Staff Owner or a completed Action Taken with a result, observe that **Resolve** is disabled (`aria-disabled="true"`) and the **Resolution Gate Requirements** banner provides actionable **Assign Owner** and **Log Action** shortcut buttons.
+   - Once an active IT Staff Owner is assigned and at least one Action Taken with a non-empty `result` is logged, the gate banner clears and **Resolve** becomes enabled. Click **Resolve** to transition the ticket to `Resolved` (which increments `version` and locks public comments while keeping `Close Ticket` / `Reopen` transitions active).
+   - Clicking terminal actions (**Close Ticket** or **Cancel Ticket**) opens the focus-trapped confirmation dialog (`AccessibleDialog`).
 7. **Concurrency Conflict Handling (409)**:
-   - If two staff members modify a ticket simultaneously (e.g. across two browser tabs), submitting a stale version prompts the accessible **Conflict Dialog (409)** with a **Reload Latest Data** button to prevent data loss.
-8. **Sign Out**: Sign out from user menu.
+   - If two staff sessions modify a ticket simultaneously (e.g. across two browser tabs), submitting a stale `expectedVersion` triggers HTTP `409 Conflict` and opens the accessible **Conflict Dialog** displaying the server's current status and version with a **Reload Ticket** button.
+8. **Logout**: Click **Logout** in the top navigation bar.
 
 ### 3. Role: Administrator (`e2e.admin@example.com` / `Password123!`)
 1. **Sign In**: Navigate to `http://localhost:5173/login`. Enter email and password. Click **Sign In**.
 2. **Admin Dashboard Parity**:
-   - Lands on Staff Operational Dashboard, with an additional **User Counts** panel (Active Requesters, Active IT Staff, Administrators, Inactive Users).
+   - Lands on the **IT Administration Dashboard**, which includes the **User Administration** summary card (`adminUserCounts`: Total Users, Active Users, Requesters, IT Staff, Administrators) with a direct link to `/admin/users`.
 3. **Full Operational Authority**:
-   - Navigate to `/queue` and `/tickets/:id`. Administrators have complete operational permissions to triage, claim, log actions, and resolve tickets.
+   - Navigate to `/queue` and `/tickets/:id`. Administrators have full operational permissions to assign owners, update priorities, log/edit Actions Taken, and execute workflow status transitions.
 4. **User Management**:
-   - Navigate to `/admin/users` via navbar.
-   - Search users by name or email, or filter by Role and Active status.
-   - Toggle user activation (Active / Inactive) or promote user roles.
-   - **Self-Deactivation Guard**: Verify that deactivating the currently logged-in admin account (`e2e.admin@example.com`) is strictly disabled to prevent system lockout.
-5. **Sign Out**: Complete session.
+   - Navigate to `/admin/users` via the navbar.
+   - Create users, edit roles/details, or deactivate accounts.
+   - **Self-Deactivation Guard**: Open Edit on the currently logged-in admin account (`e2e.admin@example.com`) and verify that **Deactivate User** is strictly disabled with `"You cannot deactivate your own account."`
+5. **Logout**: Click **Logout** in the top navigation bar.
 
 ## Repository Layout
 
@@ -258,14 +259,16 @@ toktickit/
 │   ├── lab-03/                 # Lab 3 engineering specification, test plan, UI/API specs
 │   └── lab-04/                 # specification.md, api-spec.md, ui-spec.md, tests.md, reviewer.md, ai-use.md
 ├── e2e/
-│   ├── lab-02/                 # Playwright E2E specs (Lab 2)
 │   ├── lab-03/                 # Playwright E2E specs (Lab 3)
-│   └── lab-04/                 # Playwright E2E specs (Lab 4 Actions, Dashboard, Regression, Quality Smoke)
+│   └── lab-04/                 # Playwright E2E specs (Lab 4 Actions, Dashboard, Regression, Quality Smoke, Screenshots)
 ├── artifacts/
+│   ├── lab-02/                 # Lab 2 evidence artifacts
 │   ├── lab-03/screenshots/     # Lab 3 responsive evidence screenshots
-│   └── lab-04/                 # Lab 4 responsive screenshots (Actions Taken, Dashboards) & SQL analysis
+│   └── lab-04/                 # Lab 4 161 @2x evidence screenshots (5 domains) & SQL comparison evidence
 ├── scripts/
-│   └── verify-traceability.js  # Automated requirements & test traceability verifier
+│   ├── get-sql-evidence.cjs    # Executes live PostgreSQL raw queries for SQL equivalence evidence
+│   ├── reset-test-fixtures.cjs # Restores deterministic seed state before screenshot scenarios
+│   └── verify-traceability.js  # Automated bidirectional requirements & test traceability verifier
 ├── docker-compose.yml           # PostgreSQL container config
 └── README.md
 ```
@@ -312,15 +315,15 @@ Development continues following the strict feature-branch workflow. Work is neve
 |-------|----------------|---------------------|
 | 1. Sprint 4 Engineering Contract (Spec DD + Test DD) | `feature/lab4-specs` | `lab4-staging` |
 | 2. Database Increment — ActionTaken Model, Migration, Backfill, Seed | `feature/lab4-db-actions-taken` | `lab4-staging` |
-| 3. Actions Taken API — CRUD, Validation, and Isolation | `feature/lab4-actions-taken-api` | `lab4-staging` |
-| 4. Ticket Workflow API — Concurrency, Resolution Gate & State Transitions | `feature/lab4-ticket-workflow-api` | `lab4-staging` |
-| 5. Client Routing and Role-aware Application Shell | `feature/lab4-client-routing` | `lab4-staging` |
-| 6. Actions Taken UI — Timeline, Drawer, and Inline Edit | `feature/lab4-actions-taken-ui` | `lab4-staging` |
-| 7. Ticket Workflow UI — Controls, Resolution Gate & 409 Reload | `feature/lab4-ticket-workflow-ui` | `lab4-staging` |
-| 8. Operational Dashboard API — Metrics & Drill-downs | `feature/lab4-dashboard-api` | `lab4-staging` |
-| 9. Operational Dashboard UI — Metrics, Cards & Queue Filters | `feature/lab4-dashboard-ui` | `lab4-staging` |
+| 3. Actions Taken API and Authorization (TDD) | `feature/lab4-actions-taken-api` | `lab4-staging` |
+| 4. Ticket Workflow Rules and Conflict Handling (API) | `feature/lab4-ticket-workflow-api` | `lab4-staging` |
+| 5. Client Routing and Role-aware Application Shell | `feature/lab4-client-routing-shell` | `lab4-staging` |
+| 6. Actions Taken UI on Ticket Detail | `feature/lab4-actions-taken-ui` | `lab4-staging` |
+| 7. Ticket Workflow UI and Resolution Feedback | `feature/lab4-ticket-workflow-ui` | `lab4-staging` |
+| 8. Dashboard APIs (Requester and IT Staff) | `feature/lab4-dashboard-api` | `lab4-staging` |
+| 9. Dashboard UIs, Navigation, and Drill-down | `feature/lab4-dashboard-ui` | `lab4-staging` |
 | 10. Regression Hardening, Polish & Evidence | `feature/lab4-regression-hardening` | `lab4-staging` |
-| 11. Final Polish, Review Verification & Release | `feature/lab4-polish-release` | `lab4-staging` → `main` |
+| 11. Visual, Responsive, and Accessibility Pass + Release Evidence | `feature/lab4-release-evidence` | `lab4-staging` → `main` |
 
 
 

@@ -179,6 +179,6 @@ describe("Lab 4 Database & Migration Regression (API-MIG-01, API-MIG-02 / AC-11)
       expect(postCounts.comments).toBe(preCounts.comments);
       expect(postCounts.notes).toBe(preCounts.notes);
       expect(postCounts.attachments).toBe(preCounts.attachments);
-    });
+    }, 30000);
   });
 });

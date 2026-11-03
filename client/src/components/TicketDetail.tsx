@@ -554,6 +554,8 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
                     {user?.role === 'REQUESTER' && !ticket.appearsResolved && ['Open', 'InProgress', 'WaitingForRequester'].includes(ticket.currentStatus) && (
                       <button 
                         type="button"
+                        id="requester-advisory-resolve-btn"
+                        data-testid="requester-advisory-resolve-btn"
                         className="btn btn-outline-success btn-sm px-2 rounded-pill fw-medium"
                         onClick={() => setAdvisoryModal(true)}
                         disabled={updating}
